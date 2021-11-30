@@ -41,7 +41,9 @@ class PlayerAI(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-        pass
+        grid.print_grid()
+        available_moves = grid.get_neighbors(self.pos, only_available = True)
+        # search in available moves
 
     def getTrap(self, grid : Grid) -> tuple:
         """ 
@@ -57,4 +59,5 @@ class PlayerAI(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-        pass
+        available_cells = grid.getAvailableCells()
+        # search in available cells
