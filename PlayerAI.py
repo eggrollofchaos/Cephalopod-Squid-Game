@@ -60,4 +60,4 @@ class PlayerAI(BaseAI):
         
         """
         available_cells = grid.getAvailableCells()
-        # search in available cells
+        # search in available cells and make a judgment
