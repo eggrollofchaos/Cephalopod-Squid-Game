@@ -1,3 +1,6 @@
+# mhr2145
+# gc2950
+# wax1
 import numpy as np
 import random
 import time
@@ -5,12 +8,11 @@ import sys
 import os 
 from BaseAI import BaseAI
 from Grid import Grid
+from Utils import manhattan_distance
 
-# TO BE IMPLEMENTED
-# 
 class PlayerAI(BaseAI):
     def __init__(self) -> None:
-        # You may choose to add attributes to your player - up to you!
+        self.cape_color = 'blue'
         super().__init__()
         self.pos = None
         self.player_num = None
@@ -42,8 +44,66 @@ class PlayerAI(BaseAI):
         
         """
         grid.print_grid()
-        available_moves = grid.get_neighbors(self.pos, only_available = True)
+        player_pos = self.getPosition()
+        available_moves = grid.get_neighbors(player_pos, only_available = True)
         # search in available moves
+
+        # find opponent
+        player_num = self.getPlayerNum()
+        opp_num = 3 - player_num
+        opp_coord = grid.find(opp_num)
+
+        # compute Manhattan distance from opponent to all of player's neighbor's
+        for move in available_moves:
+
+
+            # manhattan_distance(player_pos, moves)
+
+        return move
+
+
+    def evaluate_grid(grid: Grid) -> int:
+
+        gameover_result = Game.is_over(grid)
+        if gameover_result:
+            if gameover_result == player_num:
+                return 1
+            else:
+                return -1
+
+    def __minimize(grid : Grid) -> tuple:
+        if evaluate_grid(grid):
+            return 1
+
+        minChild, minUtility = None, np.inf
+
+        for child in grid.children():
+            _, utility = self.__maximize(child)
+
+            if utility < minUtility:
+                minChild, minUtility = child, utility
+
+        return minChild, minUtility
+
+    def __maximize(grid : Grid) -> tuple:
+
+        if Game.is_over(grid):
+            return None, evaluate(grid)
+
+        maxChild, maxUtility = None, -np.inf
+
+        for child in grid.children():
+            _, utility = self.__minimize(child)
+
+            if utility < maxUtility:
+                maxChild, maxUtility = child, utility
+
+        return maxChild, maxUtility
+
+    def __decision(grid : Grid) -> object:
+        child, _ = self.__maximize(grid)
+
+        return child
 
     def getTrap(self, grid : Grid) -> tuple:
         """ 

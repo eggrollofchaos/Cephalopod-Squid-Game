@@ -64,7 +64,7 @@ class Grid():
         # find all neighbors
         neighbors = list({(a,b) for a in valid_range(x) for b in valid_range(y)} - {(x,y)})
         
-        # select only neighboring cells which aren't occupying by a player or trap
+        # select only neighboring cells which aren't occupied by a player or trap
         if only_available:
             return [neighbor for neighbor in neighbors if self.map[neighbor] == 0]
         
