@@ -52,8 +52,6 @@ class PlayerAI(BaseAI):
         
         """
         max_grid = self.__decision(grid)
-        max_grid.print_grid()
-
         self.optimal_trap_position = max_grid.trap_position
         return max_grid.move_position
 
@@ -103,11 +101,12 @@ class PlayerAI(BaseAI):
             other_position = self.getPosition()
 
         children = []
-        available_moves = grid.get_neighbors(position, only_available = True)
+        available_moves = grid.get_neighbors(position, only_available=True)
         for move_position in available_moves:
             move_clone = grid.clone()
             move_clone.move(move_position, player)
-            available_traps = grid.get_neighbors(other_position, only_available = True)
+            # get neighbors for available traps from the new grid *after* the move (AKA move_clone)
+            available_traps = move_clone.get_neighbors(other_position, only_available=True)
             for trap_position in available_traps:
                 trap_clone = move_clone.clone()
                 trap_clone.trap(trap_position)
@@ -124,7 +123,7 @@ class PlayerAI(BaseAI):
 
         minChild, minUtility = None, np.inf
 
-        for child in self.__children(grid):
+        for child in self.__children(grid, is_me=False):
             _, utility = self.__maximize(child)
 
             if utility < minUtility:
@@ -139,7 +138,7 @@ class PlayerAI(BaseAI):
 
         maxChild, maxUtility = None, -np.inf
 
-        for child in self.__children(grid):
+        for child in self.__children(grid, is_me=True):
             _, utility = self.__minimize(child)
 
             if utility > maxUtility:
