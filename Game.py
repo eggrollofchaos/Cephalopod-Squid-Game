@@ -227,7 +227,7 @@ class Game():
 def main():
     #### EDIT HERE ####
     playerAI = PlayerAI() # change this to PlayerAI() to test your player!
-    playerAI = None
+    # playerAI = None
     computerAI = EasyAI() # change this to a more sophisticated player you've coded
     #### EDIT HERE ####
 

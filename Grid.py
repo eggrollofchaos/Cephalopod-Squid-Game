@@ -13,7 +13,6 @@ class Grid():
         """
         Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)]
         """
-        
         return [(x,y) for x,y in np.argwhere(self.map == 0)]
     
     def getMap(self):
@@ -43,7 +42,6 @@ class Grid():
         return result
 
     def get_neighbors(self, pos, only_available = False):
-
         """
         Description
         -----------
@@ -70,9 +68,7 @@ class Grid():
         
         return neighbors
 
-
     def move(self, move, player):
-
         """
         Description 
         -----------
@@ -90,7 +86,6 @@ class Grid():
         the grid with the new configuration. 
 
         """
-
         old_pos = np.where(self.map == player)
         self.map[old_pos] = 0
         self.map[move] = player
