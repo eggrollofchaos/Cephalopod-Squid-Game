@@ -52,10 +52,8 @@ class PlayerAI(BaseAI):
         
         """
         max_grid = self.__decision(grid)
+        max_grid.print_grid()
 
-        # # compute Manhattan distance from opponent to all of player's neighbor's
-        # for move in available_moves:
-        #     manhattan_distance(player_pos, moves)
         self.optimal_trap_position = max_grid.trap_position
         return max_grid.move_position
 
@@ -109,14 +107,14 @@ class PlayerAI(BaseAI):
         for move_position in available_moves:
             move_clone = grid.clone()
             move_clone.move(move_position, player)
-            available_throws = grid.get_neighbors(other_position, only_available = True)
-            for throw_position in available_throws:
-                throw_clone = move_clone.clone()
-                throw_clone.trap(throw_position)
+            available_traps = grid.get_neighbors(other_position, only_available = True)
+            for trap_position in available_traps:
+                trap_clone = move_clone.clone()
+                trap_clone.trap(trap_position)
                 # dynamically creating class attributes at runtime for access at the very top of the search tree
-                throw_clone.move_position = move_position
-                throw_clone.trap_position = throw_position
-                children.append(throw_clone)
+                trap_clone.move_position = move_position
+                trap_clone.trap_position = trap_position
+                children.append(trap_clone)
         return children
 
     def __minimize(self, grid: Grid) -> tuple:
@@ -151,10 +149,11 @@ class PlayerAI(BaseAI):
 
     def __decision(self, grid: Grid) -> object:
         child, _ = self.__maximize(grid)
+        self.over = False
         return child
 
     def getTrap(self, grid: Grid) -> tuple:
-        """ 
+        """
         YOUR CODE GOES HERE
 
         The function should return a tuple of (x,y) coordinates to which the player *WANTS* to throw the trap.
