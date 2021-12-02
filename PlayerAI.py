@@ -184,4 +184,5 @@ class PlayerAI(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
+        # use cached optimal trap position that we computed in getMove()
         return self.optimal_trap_position
