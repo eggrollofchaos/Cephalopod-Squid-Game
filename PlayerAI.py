@@ -18,6 +18,8 @@ class PlayerAI(BaseAI):
         self.player_num = None
         self.over = False
         self.optimal_trap_position = None
+        # self.alpha = -np.inf
+        # self.beta = np.inf
 
     def getPosition(self):
         return self.pos
@@ -51,7 +53,9 @@ class PlayerAI(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-        max_grid = self.__decision(grid)
+        alpha = -np.inf
+        beta = np.inf
+        max_grid = self.__decision(grid, alpha, beta)
         self.optimal_trap_position = max_grid.trap_position
         return max_grid.move_position
 
@@ -116,7 +120,7 @@ class PlayerAI(BaseAI):
                 children.append(trap_clone)
         return children
 
-    def __minimize(self, grid: Grid) -> tuple:
+    def __minimize(self, grid: Grid, alpha, beta) -> tuple:
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
@@ -124,14 +128,20 @@ class PlayerAI(BaseAI):
         minChild, minUtility = None, np.inf
 
         for child in self.__children(grid, is_me=False):
-            _, utility = self.__maximize(child)
+            _, utility = self.__maximize(child, alpha, beta)
 
             if utility < minUtility:
                 minChild, minUtility = child, utility
 
+            if minUtility <= alpha:
+                break
+
+            if minUtility < beta:
+                beta = minUtility
+
         return minChild, minUtility
 
-    def __maximize(self, grid: Grid) -> tuple:
+    def __maximize(self, grid: Grid, alpha, beta) -> tuple:
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
@@ -139,15 +149,24 @@ class PlayerAI(BaseAI):
         maxChild, maxUtility = None, -np.inf
 
         for child in self.__children(grid, is_me=True):
-            _, utility = self.__minimize(child)
+            _, utility = self.__minimize(child, alpha, beta)
 
             if utility > maxUtility:
                 maxChild, maxUtility = child, utility
 
+            if maxUtility >= beta:
+                break
+
+            if maxUtility > alpha:
+                alpha = maxUtility
+
         return maxChild, maxUtility
 
-    def __decision(self, grid: Grid) -> object:
-        child, _ = self.__maximize(grid)
+    def __decision(self, grid: Grid, alpha, beta) -> object:
+        start = time.time()
+        child, _ = self.__maximize(grid, alpha, beta)
+        end = time.time()
+        print(f'This move took {end-start:.3f} seconds.')
         self.over = False
         return child
 
