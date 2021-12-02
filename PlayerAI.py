@@ -18,14 +18,15 @@ class PlayerAI(BaseAI):
         self.player_num = None
         self.over = False
         self.optimal_trap_position = None
-        # self.alpha = -np.inf
-        # self.beta = np.inf
 
     def getPosition(self):
         return self.pos
 
+    def getPlayerPosition(self, grid):
+        return grid.find(self.getPlayerNum())
+
     def setPosition(self, new_position):
-        self.pos = new_position 
+        self.pos = new_position
 
     def getPlayerNum(self):
         return self.player_num
@@ -69,7 +70,7 @@ class PlayerAI(BaseAI):
             return 1
 
         # check if Opponent has won
-        player_neighbors = grid.get_neighbors(self.getPosition(), only_available=True)
+        player_neighbors = grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)
 
         if len(player_neighbors) == 0:
             self.over = True
@@ -99,12 +100,12 @@ class PlayerAI(BaseAI):
         """
         if is_me:
             player = self.getPlayerNum()
-            position = self.getPosition()
+            position = self.getPlayerPosition(grid)
             other_position = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
             position = self.getOpponentPosition(grid)
-            other_position = self.getPosition()
+            other_position = self.getPlayerPosition(grid)
 
         children = []
         available_moves = grid.get_neighbors(position, only_available=True)
@@ -119,22 +120,23 @@ class PlayerAI(BaseAI):
     def __trap_children(self, grid, is_me=True):
         if is_me:
             player = self.getPlayerNum()
-            position = self.getPosition()
+            position = self.getPlayerPosition(grid)
             other_position = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
             position = self.getOpponentPosition(grid)
-            other_position = self.getPosition()
+            other_position = self.getPlayerPosition(grid)
 
         children = []
         available_traps = grid.get_neighbors(other_position, only_available=True)
         for trap_position in available_traps:
-            trap_clone = grid.clone()
-            trap_clone.trap(trap_position)
-            # dynamically creating class attributes at runtime for access at the very top of the search tree
-            trap_clone.trap_position = trap_position
-            trap_clone.probability = self.__probability(position, trap_position)
-            children.append(trap_clone)
+            if trap_position != position:
+                trap_clone = grid.clone()
+                trap_clone.trap(trap_position)
+                # dynamically creating class attributes at runtime for access at the very top of the search tree
+                trap_clone.trap_position = trap_position
+                trap_clone.probability = self.__probability(position, trap_position)
+                children.append(trap_clone)
 
         return children
 
@@ -166,7 +168,11 @@ class PlayerAI(BaseAI):
         maxChild, maxUtility = None, -np.inf
 
         expected_utility = 0
-        for child in self.__trap_children(grid, is_me=True):
+        if parent_type == "maximize":
+            is_me = True
+        else:
+            is_me = False
+        for child in self.__trap_children(grid, is_me=is_me):
             if parent_type == "maximize":
                 _, utility = self.__move_minimize(child, alpha, beta)
             else:
