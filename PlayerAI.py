@@ -75,9 +75,13 @@ class PlayerAI(BaseAI):
     def __evaluate(self, grid: Grid, gameover_result) -> int:
         if gameover_result:
             if gameover_result == self.getPlayerNum():
-                return grid, 1
+                return grid, 99999
             else:
-                return grid, -1
+                return grid, -99999
+
+    def IS_heuristic(self, grid):
+        return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
+            grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
 
     def __probability(self, position, trap_position):
         alpha = manhattan_distance(position, trap_position)
@@ -146,7 +150,7 @@ class PlayerAI(BaseAI):
 
         # break if hit depth limit
         if depth == depth_limit:
-            return None, 1
+            return self.IS_heuristic(grid)
 
         minChild, minUtility = None, np.inf
 
@@ -176,7 +180,7 @@ class PlayerAI(BaseAI):
 
         # break if hit depth limit
         if depth == depth_limit:
-            return 0
+            return self.IS_heuristic(grid)[1]
 
         if parent_type == "maximize":
             maxChild, maxUtility = None, -np.inf
@@ -208,7 +212,7 @@ class PlayerAI(BaseAI):
 
         # break if hit depth limit
         if depth == depth_limit:
-            return None, -1
+            return self.IS_heuristic(grid)
 
         maxChild, maxUtility = None, -np.inf
 
