@@ -79,4 +79,4 @@ run_time = end_batch - start_batch
 print('> ... Done.')
 print(f'\n{run_success} scripts ran successfully out of {n}.')
 print(f'\nOf those, Player Won {player_wins} times.')
-print(f'All processes took {run_time:.3f} to complete.\n')
+print(f'All processes took {run_time:.3f} seconds to complete.\n')
