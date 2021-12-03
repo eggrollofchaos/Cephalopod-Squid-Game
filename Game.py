@@ -1,4 +1,5 @@
 import numpy as np
+from sys import argv, exit
 from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
@@ -10,11 +11,11 @@ import time
 PLAYER_TURN, COMPUTER_TURN = 1,2
 
 # Time Limit Before Losing
-timeLimit = 0.75
+timeLimit = 0.05
 allowance = 0.05
 
 class Game():
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None):
+    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False):
         '''
         Description
         ----------
@@ -34,7 +35,8 @@ class Game():
         self.computerAI = computerAI or ComputerAI() 
         self.dim        = N
         self.over       = False
-        self.displayer = displayer
+        self.displayer  = displayer
+        self.test_mode  = test_mode
 
     def initialize_game(self):
 
@@ -133,6 +135,7 @@ class Game():
         return neighbors[result]
 
     def updateAlarm(self, currTime):
+        print('Time')
         if currTime - self.prevTime > timeLimit + allowance:
             self.over = True
             print("Went over time. Doll Shot!")
@@ -218,7 +221,8 @@ class Game():
             if self.is_over(turn):
                 self.over = True
             
-            self.updateAlarm(time.process_time())
+            if not self.test_mode:
+                self.updateAlarm(time.process_time())
             turn = 3 - turn
             self.displayer.display(self.grid)
 
@@ -229,16 +233,21 @@ def main():
     playerAI = PlayerAI() # change this to PlayerAI() to test your player!
     # playerAI = None
     computerAI = EasyAI() # change this to a more sophisticated player you've coded
+    test_mode = False
+    if len(argv)>1:
+        if argv[1] == '-t':
+            test_mode = True
     #### EDIT HERE ####
 
     displayer = Displayer()
-    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer)
+    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
     
     result = game.play()
     if result == 1: 
         print("Player 1 wins!")
     elif result == 2:
         print("Player 1 loses!")
+        exit(2)
 
 if __name__ == "__main__":
     main()

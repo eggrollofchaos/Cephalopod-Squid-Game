@@ -16,16 +16,16 @@ class PlayerAI(BaseAI):
         super().__init__()
         self.pos = None
         self.player_num = None
-        self.over = False
         self.optimal_trap_position = None
-        # self.alpha = -np.inf
-        # self.beta = np.inf
 
     def getPosition(self):
         return self.pos
 
+    def getPlayerPosition(self, grid):
+        return grid.find(self.getPlayerNum())
+
     def setPosition(self, new_position):
-        self.pos = new_position 
+        self.pos = new_position
 
     def getPlayerNum(self):
         return self.player_num
@@ -59,27 +59,18 @@ class PlayerAI(BaseAI):
         return max_grid.move_position
 
     def __is_over(self, grid: Grid, turn):
-        """Check if game is over, i.e., Player or Opponent has no moves to make"""
+        """
+        Check if game is over, i.e., Player or Opponent has no moves to make
+        """
         # check if Player has won
-        # find available neighbors of player 1
         opponent_neighbors = grid.get_neighbors(self.getOpponentPosition(grid), only_available=True)
-        # if none - win
         if len(opponent_neighbors) == 0:
-            self.over = True
-            return 1
+            return self.getPlayerNum()
 
         # check if Opponent has won
-        player_neighbors = grid.get_neighbors(self.getPosition(), only_available=True)
-
+        player_neighbors = grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)
         if len(player_neighbors) == 0:
-            self.over = True
-            return 2
-        
-        elif self.over:
-            return turn
-
-        else: 
-            return 0
+            return self.getOpponentNum()
 
     def __evaluate(self, grid: Grid, gameover_result) -> int:
         if gameover_result:
@@ -99,54 +90,68 @@ class PlayerAI(BaseAI):
         """
         if is_me:
             player = self.getPlayerNum()
-            position = self.getPosition()
+            position = self.getPlayerPosition(grid)
             other_position = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
             position = self.getOpponentPosition(grid)
-            other_position = self.getPosition()
+            other_position = self.getPlayerPosition(grid)
 
         children = []
         available_moves = grid.get_neighbors(position, only_available=True)
         for move_position in available_moves:
             move_clone = grid.clone()
             move_clone.move(move_position, player)
+            # dynamically creating class attributes at runtime for access in level above in recursive tree
             move_clone.move_position = move_position
             children.append(move_clone)
 
         return children
 
+    def get_all_available_traps(self, grid):
+        map_ = grid.getMap()
+        open_spots = (map_ == 0).nonzero()
+        available_traps = []
+        for x, y in zip(list(open_spots[0]), list(open_spots[1])):
+            available_traps.append((x, y))
+        return available_traps
+
     def __trap_children(self, grid, is_me=True):
         if is_me:
             player = self.getPlayerNum()
-            position = self.getPosition()
+            position = grid.move_position # hypothetical move
             other_position = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
-            position = self.getOpponentPosition(grid)
-            other_position = self.getPosition()
+            position = grid.move_position # hypothetical move
+            other_position = self.getPlayerPosition(grid)
 
         children = []
-        available_traps = grid.get_neighbors(other_position, only_available=True)
+        available_traps = self.get_all_available_traps(grid)
         for trap_position in available_traps:
-            trap_clone = grid.clone()
-            trap_clone.trap(trap_position)
-            # dynamically creating class attributes at runtime for access at the very top of the search tree
-            trap_clone.trap_position = trap_position
-            trap_clone.probability = self.__probability(position, trap_position)
-            children.append(trap_clone)
+            if trap_position != position:
+                trap_clone = grid.clone()
+                trap_clone.trap(trap_position)
+                # dynamically creating class attributes at runtime for access at the very top of the search tree
+                trap_clone.trap_position = trap_position
+                trap_clone.probability = self.__probability(position, trap_position)
+                children.append(trap_clone)
 
         return children
 
-    def __move_minimize(self, grid: Grid, alpha, beta) -> tuple:
+    def __move_minimize(self, grid: Grid, alpha, beta, depth_limit, depth=1) -> tuple:
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
+        # break if hit depth limit
+        if depth == depth_limit:
+            return None, 1
+
         minChild, minUtility = None, np.inf
 
         for child in self.__move_children(grid, is_me=False):
-            utility = self.__random_trap(child, alpha, beta, parent_type="minimize")
+            utility = self.__random_trap(child, alpha, beta, depth_limit, depth=depth+1, parent_type="minimize")
 
             if utility < minUtility:
                 minChild, minUtility = child, utility
@@ -159,37 +164,56 @@ class PlayerAI(BaseAI):
 
         return minChild, minUtility
 
-    def __random_trap(self, grid: Grid, alpha, beta, parent_type="maximize"):
+    def __random_trap(self, grid: Grid, alpha, beta, depth_limit, depth=1, parent_type="maximize"):
         """
         Returns expected value of trap
+
+        Keeps track of max utility trap position if parent was maximize
         """
-        maxChild, maxUtility = None, -np.inf
+        gameover_result = self.__is_over(grid, self.getOpponentNum())
+        if gameover_result:
+            return self.__evaluate(grid, gameover_result)[1]
+
+        # break if hit depth limit
+        if depth == depth_limit:
+            return 0
+
+        if parent_type == "maximize":
+            maxChild, maxUtility = None, -np.inf
+            is_me = True
+        else:
+            is_me = False
 
         expected_utility = 0
-        for child in self.__trap_children(grid, is_me=True):
+        for child in self.__trap_children(grid, is_me=is_me):
             if parent_type == "maximize":
-                _, utility = self.__move_minimize(child, alpha, beta)
+                _, utility = self.__move_minimize(child, alpha, beta, depth_limit, depth=depth+1)
             else:
-                _, utility = self.__move_maximize(child, alpha, beta)
+                _, utility = self.__move_maximize(child, alpha, beta, depth_limit, depth=depth+1)
 
             expected_utility += child.probability * utility
 
-            if utility > maxUtility:
-                maxChild, maxUtility = child, utility
+            if parent_type == "maximize" and child.probability * utility > maxUtility:
+                maxChild, maxUtility = child, child.probability * utility
 
-        self.optimal_trap_position = maxChild.trap_position
+        if parent_type == "maximize":
+            self.optimal_trap_position = maxChild.trap_position
 
         return expected_utility
 
-    def __move_maximize(self, grid: Grid, alpha, beta) -> tuple:
+    def __move_maximize(self, grid: Grid, alpha, beta, depth_limit, depth=1) -> tuple:
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
+        # break if hit depth limit
+        if depth == depth_limit:
+            return None, -1
+
         maxChild, maxUtility = None, -np.inf
 
         for child in self.__move_children(grid, is_me=True):
-            utility = self.__random_trap(child, alpha, beta, parent_type="maximize")
+            utility = self.__random_trap(child, alpha, beta, depth_limit, depth=depth+1, parent_type="maximize")
 
             if utility > maxUtility:
                 maxChild, maxUtility = child, utility
@@ -202,12 +226,11 @@ class PlayerAI(BaseAI):
 
         return maxChild, maxUtility
 
-    def __decision(self, grid: Grid, alpha, beta) -> object:
+    def __decision(self, grid: Grid, alpha, beta, depth_limit=5) -> object:
         start = time.time()
-        child, _ = self.__move_maximize(grid, alpha, beta)
+        child, _ = self.__move_maximize(grid, alpha, beta, depth_limit)
         end = time.time()
         print(f'This move took {end-start:.5f} seconds.')
-        self.over = False
         return child
 
     def getTrap(self, grid: Grid) -> tuple:
