@@ -1,0 +1,18 @@
+Run 1: Runtime error...
+line 186, in __random_trap
+    self.optimal_trap_position = maxChild.trap_position
+AttributeError: 'NoneType' object has no attribute 'trap_position'
+'
+Run 2: Player Loses! Process completed in 0.412 seconds.
+Run 3: Player Loses! Process completed in 0.424 seconds.
+Run 4: Player Loses! Process completed in 0.343 seconds.
+Run 5: Player Wins! Process completed in 0.368 seconds.
+Run 6: Player Wins! Process completed in 0.258 seconds.
+Run 7: Runtime error...
+line 186, in __random_trap
+    self.optimal_trap_position = maxChild.trap_position
+AttributeError: 'NoneType' object has no attribute 'trap_position'
+'
+Run 8: Player Wins! Process completed in 0.309 seconds.
+Run 9: Player Loses! Process completed in 0.295 seconds.
+Run 10: Player Wins! Process completed in 0.314 seconds.
