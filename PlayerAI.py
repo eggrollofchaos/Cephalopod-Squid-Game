@@ -112,6 +112,7 @@ class PlayerAI(BaseAI):
         for move_position in available_moves:
             move_clone = grid.clone()
             move_clone.move(move_position, player)
+            # dynamically creating class attributes at runtime for access in level above in recursive tree
             move_clone.move_position = move_position
             children.append(move_clone)
 
@@ -120,11 +121,11 @@ class PlayerAI(BaseAI):
     def __trap_children(self, grid, is_me=True):
         if is_me:
             player = self.getPlayerNum()
-            position = self.getPlayerPosition(grid)
+            position = grid.move_position # hypothetical move
             other_position = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
-            position = self.getOpponentPosition(grid)
+            position = grid.move_position # hypothetical move
             other_position = self.getPlayerPosition(grid)
 
         children = []
@@ -164,14 +165,20 @@ class PlayerAI(BaseAI):
     def __random_trap(self, grid: Grid, alpha, beta, parent_type="maximize"):
         """
         Returns expected value of trap
-        """
-        maxChild, maxUtility = None, -np.inf
 
-        expected_utility = 0
+        Keeps track of max utility trap position if parent was maximize
+        """
+        gameover_result = self.__is_over(grid, self.getOpponentNum())
+        if gameover_result:
+            return self.__evaluate(grid, gameover_result)[1]
+
         if parent_type == "maximize":
+            maxChild, maxUtility = None, -np.inf
             is_me = True
         else:
             is_me = False
+
+        expected_utility = 0
         for child in self.__trap_children(grid, is_me=is_me):
             if parent_type == "maximize":
                 _, utility = self.__move_minimize(child, alpha, beta)
@@ -180,10 +187,11 @@ class PlayerAI(BaseAI):
 
             expected_utility += child.probability * utility
 
-            if utility > maxUtility:
-                maxChild, maxUtility = child, utility
+            if parent_type == "maximize" and child.probability * utility > maxUtility:
+                maxChild, maxUtility = child, child.probability * utility
 
-        self.optimal_trap_position = maxChild.trap_position
+        if parent_type == "maximize":
+            self.optimal_trap_position = maxChild.trap_position
 
         return expected_utility
 
