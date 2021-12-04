@@ -21,8 +21,9 @@ class Run_Games():
     -v  : verbose output to terminal
     -c  : clear terminal screen prior to running
     '''
-    def __init__(self, n, verbose):
+    def __init__(self, n, progress, verbose):
         self.n = n
+        self.progress = progress
         self.verbose = verbose
         self.run_success = 0
         self.player_wins = 0
@@ -35,7 +36,7 @@ class Run_Games():
         start_batch = time()
         run_times = []
 
-        if self.verbose:
+        if self.progress:
             for it in tqdm(range(1, self.n+1)):       # show progress bars
                 run_time = self.__run_process(it)
                 run_times.append(run_time)
@@ -97,19 +98,22 @@ def main():
     clear = lambda: system('clear')
     n = 100
     verbose = False
+    progress = False
 
     if len(argv)>1:
         num = [arg for arg in argv if arg.isnumeric()]
         if num:
             n = int(num[0])
-        if '-v' in argv:
-            verbose = True
         if '-c' in argv:
             clear()
+        if '-p' in argv:
+            progress = True
+        if '-v' in argv:
+            verbose = True
 
     cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
 
-    run_games = Run_Games(n, verbose)
+    run_games = Run_Games(n, progress, verbose)
     total_time, run_success, player_wins = run_games.start_batch()
 
     print('> ... Done.')
