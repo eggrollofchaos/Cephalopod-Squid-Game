@@ -135,7 +135,6 @@ class Game():
         return neighbors[result]
 
     def updateAlarm(self, currTime):
-        print('Time')
         if currTime - self.prevTime > timeLimit + allowance:
             self.over = True
             print("Went over time. Doll Shot!")
