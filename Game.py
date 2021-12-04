@@ -11,7 +11,7 @@ import time
 PLAYER_TURN, COMPUTER_TURN = 1,2
 
 # Time Limit Before Losing
-timeLimit = 0.05
+timeLimit = 0.5
 allowance = 0.05
 
 class Game():
