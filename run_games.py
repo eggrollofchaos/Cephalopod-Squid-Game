@@ -1,4 +1,6 @@
-
+# gc2950
+# mhr2145
+# wax1
 from sys import argv
 from subprocess import run
 from time import time
@@ -6,22 +8,31 @@ from os import system, remove
 from os.path import exists
 from ast import literal_eval
 from termcolor import cprint
-import tqdm
+from tqdm import tqdm
 
-clear = lambda: system('clear')
-clear()
+'''
+Helper script to run Game.py n times to test successful execution, win/loss, and gather statistics.
+Outputs results to batch_results.txt
 
-n = 100
+Usage:
+$ python run_games.py [N] -v -c
+[N] : number of processes to run
+-v  : verbose output to terminal
+-c  : clear terminal screen prior to running
+'''
+
+CLEAR = lambda: system('clear')
+N = 100
 VERBOSE = False
 
-if len(argv) > 1:
-    n = int(argv[1])
-if len(argv) > 2:
-    VERBOSE = argv[2]
-
-cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
-if VERBOSE == '-v':
+if '-v' in argv:
     VERBOSE = True
+if '-c' in argv:
+    CLEAR()
+N = int([arg for arg in argv if arg.isnumeric()][0])
+
+cprint(f'Running batch test on {argv[0]}, {N} times...\n', 'blue')
+if VERBOSE:
     print()
 
 if exists("batch_results.txt"):
@@ -32,7 +43,7 @@ player_wins = 0
 
 start_batch = time()
 
-for i in tqdm.tqdm(range(1, n+1)):
+for i in tqdm(range(1, N+1)):
 
     start_run = time()
     result = run(['python', 'Game.py', '-t'], capture_output=True)
@@ -78,6 +89,6 @@ end_batch = time()
 run_time = end_batch - start_batch
 
 print('> ... Done.')
-print(f'\n{run_success} scripts ran successfully out of {n}.')
+print(f'\n{run_success} scripts ran successfully out of {N}.')
 print(f'\nOf those, Player Won {player_wins} times.')
 print(f'All processes took {run_time:.3f} seconds to complete.\n')
