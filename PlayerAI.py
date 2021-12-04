@@ -8,7 +8,7 @@ import sys
 import os 
 from BaseAI import BaseAI
 from Grid import Grid
-from Utils import manhattan_distance
+from Utils import manhattan_distance, grad_distance
 
 class PlayerAI(BaseAI):
     def __init__(self) -> None:
@@ -84,7 +84,8 @@ class PlayerAI(BaseAI):
             grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
 
     def __probability(self, position, trap_position):
-        alpha = manhattan_distance(position, trap_position)
+        # alpha = manhattan_distance(position, trap_position)
+        alpha = grad_distance(position, trap_position)
         p = 1 - 0.05 * (alpha - 1)
         return p
 
