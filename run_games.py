@@ -6,6 +6,7 @@ from os import system, remove
 from os.path import exists
 from ast import literal_eval
 from termcolor import cprint
+import tqdm
 
 clear = lambda: system('clear')
 clear()
@@ -31,10 +32,10 @@ player_wins = 0
 
 start_batch = time()
 
-for i in range(1, n+1):
+for i in tqdm.tqdm(range(1, n+1)):
 
     start_run = time()
-    result = run(['python3', 'Game.py', '-t'], capture_output=True)
+    result = run(['python', 'Game.py', '-t'], capture_output=True)
     end_run = time()
 
     # animation to show progress indicator

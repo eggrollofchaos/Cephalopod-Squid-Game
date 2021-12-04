@@ -143,6 +143,42 @@ class PlayerAI(BaseAI):
 
         return children
 
+    def __trap_neighbors(self, grid, trap_position):
+        neighbors = []
+
+        for trap_position in grid.get_neighbors(trap_position, only_available=True):
+            trap_clone = grid.clone()
+            trap_clone.trap(trap_position)
+            # dynamically creating class attributes at runtime
+            trap_clone.trap_position = trap_position
+            neighbors.append(trap_clone)
+
+        return neighbors
+
+    def __trap_minimize(self, grid, alpha, beta, depth, depth_limit):
+        gameover_result = self.__is_over(grid, self.getPlayerNum())
+        if gameover_result:
+            # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
+            grid = self.__trap_children(grid, is_me=False)[0]
+            return self.__evaluate(grid, gameover_result)
+
+        minTrap, minUtility = None, np.inf
+
+        for trap in self.__trap_children(grid, is_me=False):
+            # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
+            _, utility = self.__move_maximize(trap, alpha, beta, depth+1, depth_limit)
+            expected_utility = trap.probability * utility
+
+            neighbors = self.__trap_neighbors(grid, trap.trap_position)
+            for neighbor in neighbors:
+                _, utility = self.__move_maximize(neighbor, alpha, beta, depth+1, depth_limit)
+                expected_utility += (1-trap.probability)/len(neighbors) * utility
+
+            if expected_utility < minUtility:
+                minUtility = expected_utility
+
+        return minTrap, minUtility
+
     def __move_minimize(self, grid: Grid, alpha, beta, depth_limit, depth=1) -> tuple:
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
@@ -155,7 +191,7 @@ class PlayerAI(BaseAI):
         minChild, minUtility = None, np.inf
 
         for child in self.__move_children(grid, is_me=False):
-            utility = self.__random_trap(child, alpha, beta, depth_limit, depth=depth+1, parent_type="minimize")
+            _, utility = self.__trap_minimize(child, alpha, beta, depth+1, depth_limit)
 
             if utility < minUtility:
                 minChild, minUtility = child, utility
@@ -168,44 +204,32 @@ class PlayerAI(BaseAI):
 
         return minChild, minUtility
 
-    def __random_trap(self, grid: Grid, alpha, beta, depth_limit, depth=1, parent_type="maximize"):
-        """
-        Returns expected value of trap
-
-        Keeps track of max utility trap position if parent was maximize
-        """
-        gameover_result = self.__is_over(grid, self.getOpponentNum())
+    def __trap_maximize(self, grid, alpha, beta, depth, depth_limit):
+        gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
-            return self.__evaluate(grid, gameover_result)[1]
+            # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
+            grid = self.__trap_children(grid, is_me=True)[0]
+            return self.__evaluate(grid, gameover_result)
 
-        # break if hit depth limit
-        if depth == depth_limit:
-            return self.IS_heuristic(grid)[1]
+        maxTrap, maxUtility = None, -np.inf
 
-        if parent_type == "maximize":
-            maxChild, maxUtility = None, -np.inf
-            is_me = True
-        else:
-            is_me = False
+        for trap in self.__trap_children(grid, is_me=True):
+            # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
+            _, utility = self.__move_minimize(trap, alpha, beta, depth_limit, depth+1)
+            expected_utility = trap.probability * utility
 
-        expected_utility = 0
-        for child in self.__trap_children(grid, is_me=is_me):
-            if parent_type == "maximize":
-                _, utility = self.__move_minimize(child, alpha, beta, depth_limit, depth=depth+1)
-            else:
-                _, utility = self.__move_maximize(child, alpha, beta, depth_limit, depth=depth+1)
+            neighbors = self.__trap_neighbors(grid, trap.trap_position)
+            for neighbor in neighbors:
+                _, utility = self.__move_minimize(neighbor, alpha, beta, depth+1, depth_limit)
+                expected_utility += (1-trap.probability)/len(neighbors) * utility
 
-            expected_utility += child.probability * utility
+            if expected_utility > maxUtility:
+                maxTrap, maxUtility = trap, expected_utility
 
-            if parent_type == "maximize" and child.probability * utility > maxUtility:
-                maxChild, maxUtility = child, child.probability * utility
+        # returns max trap so maximize can cache it
+        return maxTrap, maxUtility
 
-        if parent_type == "maximize":
-            self.optimal_trap_position = maxChild.trap_position
-
-        return expected_utility
-
-    def __move_maximize(self, grid: Grid, alpha, beta, depth_limit, depth=1) -> tuple:
+    def __move_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
@@ -214,13 +238,13 @@ class PlayerAI(BaseAI):
         if depth == depth_limit:
             return self.IS_heuristic(grid)
 
-        maxChild, maxUtility = None, -np.inf
+        maxMove, maxTrap, maxUtility = None, None, -np.inf
 
-        for child in self.__move_children(grid, is_me=True):
-            utility = self.__random_trap(child, alpha, beta, depth_limit, depth=depth+1, parent_type="maximize")
+        for move in self.__move_children(grid, is_me=True):
+            trap, utility = self.__trap_maximize(move, alpha, beta, depth+1, depth_limit)
 
             if utility > maxUtility:
-                maxChild, maxUtility = child, utility
+                maxMove, maxTrap, maxUtility = move, trap, utility
 
             if maxUtility >= beta:
                 break
@@ -228,11 +252,13 @@ class PlayerAI(BaseAI):
             if maxUtility > alpha:
                 alpha = maxUtility
 
-        return maxChild, maxUtility
+        self.optimal_trap_position = maxTrap.trap_position
 
-    def __decision(self, grid: Grid, alpha, beta, depth_limit=5) -> object:
+        return maxMove, maxUtility
+
+    def __decision(self, grid: Grid, alpha, beta, depth_limit=3) -> object:
         start = time.time()
-        child, _ = self.__move_maximize(grid, alpha, beta, depth_limit)
+        child, _ = self.__move_maximize(grid, alpha, beta, 1, depth_limit)
         end = time.time()
         print(f'This move took {end-start:.5f} seconds.')
         return child
