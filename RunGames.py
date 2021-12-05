@@ -16,7 +16,7 @@ class RunGames(object):
     Outputs results to batch_results.txt
 
     Usage:
-    $ python run_games.py [n] -v -c -p -d [depth_limit]
+    $ python run_games.py [n] -v -c -p -g -d [depth_limit]
     [N] : number of processes to run
     -v  : verbose output to terminal
     -c  : clear terminal screen prior to running
@@ -24,13 +24,14 @@ class RunGames(object):
     -g  : show game output (note: very verbose)
     -d  : set search depth limit of [depth_limit], default 4
     '''
-    def __init__(self, n, progress, verbose, depth_limit):
+    def __init__(self, n, verbose, progress, suppress_output, depth_limit):
         self.n = n
-        self.progress = progress
         self.verbose = verbose
+        self.progress = progress
+        self.suppress_output = suppress_output
+        self.depth_limit = depth_limit
         self.run_success = 0
         self.player_wins = 0
-        self.depth_limit = depth_limit
 
     def start_batch(self):
         if exists("batch_results.txt"):
@@ -63,9 +64,9 @@ class RunGames(object):
         start_run = time()
         try:
             # result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit)]) #, capture_output=True)
-            result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit)], capture_output=True)
+            result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit)], capture_output=self.suppress_output)
         except:
-            result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit)], capture_output=True)
+            result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit)], capture_output=self.suppress_output)
 
         # result = run(['python', 'Game.py', '-t'])
         end_run = time()
@@ -123,18 +124,21 @@ def main():
     n = 100
     verbose = False
     progress = False
+    suppress_output = True
     depth_limit = 0
 
     if len(argv)>1:
         num = [arg for arg in argv if arg.isnumeric()]
         if num:
             n = int(num[0])
+        if '-v' in argv:
+            verbose = True
         if '-c' in argv:
             clear()
         if '-p' in argv:
             progress = True
-        if '-v' in argv:
-            verbose = True
+        if '-g' in argv:
+            game_output = False
         if '-d' in argv:
             try:
                 depth_limit = argv[argv.index('-d')+1]
@@ -146,7 +150,7 @@ def main():
     else:
         cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
 
-    run_games = Run_Games(n, progress, verbose, depth_limit)
+    run_games = RunGames(n, verbose, progress, game_output, depth_limit)
     total_time, run_times, total_moves, run_success, player_wins = run_games.start_batch()
 
     print('> ... Done.')
