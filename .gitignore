@@ -1,6 +1,6 @@
 *.icloud
 *.csv
-batch_results.txt
+batch_results*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
