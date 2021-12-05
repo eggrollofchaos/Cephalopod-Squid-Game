@@ -252,6 +252,7 @@ def main():
     displayer = Displayer()
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
     result, moves, traps = game.play()
+    exit_code = int(str(result) + str(moves))
 
     if result == 1: 
         print("Player 1 wins!")
@@ -259,7 +260,7 @@ def main():
     elif result == 2:
         print("Player 1 loses!")
         print(f"Total turns: {moves}")
-        exit(2)
+    exit(exit_code)
 
 if __name__ == "__main__":
     main()
