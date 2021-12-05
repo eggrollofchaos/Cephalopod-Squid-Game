@@ -39,7 +39,7 @@ class PlayerAI(BaseAI):
     def setPlayerNum(self, num):
         self.player_num = num
 
-    def getMove(self, grid: Grid) -> tuple:
+    def getMove(self, grid: Grid, depth_limit=4) -> tuple:
         """
         YOUR CODE GOES HERE
 
@@ -55,7 +55,9 @@ class PlayerAI(BaseAI):
         """
         alpha = -np.inf
         beta = np.inf
-        max_grid = self.__decision(grid, alpha, beta)
+        if depth_limit == 0:
+            depth_limit = 4
+        max_grid = self.__decision(grid, alpha, beta, depth_limit)
         return max_grid.move_position
 
     def __is_over(self, grid: Grid, turn):

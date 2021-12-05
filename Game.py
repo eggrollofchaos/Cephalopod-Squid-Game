@@ -15,7 +15,7 @@ timeLimit = 0.5
 allowance = 0.05
 
 class Game():
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False):
+    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False, depth_limit=4):
         '''
         Description
         ----------
@@ -37,6 +37,7 @@ class Game():
         self.over       = False
         self.displayer  = displayer
         self.test_mode  = test_mode
+        self.depth_limit = depth_limit
 
     def initialize_game(self):
 
@@ -167,7 +168,7 @@ class Game():
                 print("Player's Turn: ")
 
                 # find best move; should return two coordinates - new position and bombed tile.
-                move = self.playerAI.getMove(grid_copy)
+                move = self.playerAI.getMove(grid_copy, self.depth_limit)
 
                 # if move is valid, perform it
                 if self.is_valid_move(self.grid, self.playerAI, move):
@@ -239,21 +240,25 @@ def main():
     # playerAI = None
     computerAI = EasyAI() # change this to a more sophisticated player you've coded
     test_mode = False
+    depth_limit = 0
     if len(argv)>1:
         if argv[1] == '-t':
             test_mode = True
+    if len(argv)>3:
+        if argv[2] == '-d':
+            depth_limit = int(argv[3])
     #### EDIT HERE ####
 
     displayer = Displayer()
-    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
+    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
     result, moves, traps = game.play()
 
     if result == 1: 
         print("Player 1 wins!")
-        print(moves)
+        print(f"Total turns: {moves}")
     elif result == 2:
         print("Player 1 loses!")
-        print(moves)
+        print(f"Total turns: {moves}")
         exit(2)
 
 if __name__ == "__main__":
