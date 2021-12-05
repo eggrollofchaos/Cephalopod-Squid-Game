@@ -113,12 +113,13 @@ class PlayerAI(BaseAI):
 
         return children
 
-    def get_all_available_traps(self, grid):
-        map_ = grid.getMap()
-        open_spots = (map_ == 0).nonzero()
+    def get_all_available_traps(self, grid, position):
+        all_available_pos = grid.getAvailableCells()
         available_traps = []
-        for x, y in zip(list(open_spots[0]), list(open_spots[1])):
-            available_traps.append((x, y))
+        threshold = 3
+        for trap_pos in all_available_pos:
+            if manhattan_distance(position, trap_pos) < threshold:
+                available_traps.append(trap_pos)
         return available_traps
 
     def __trap_children(self, grid, is_me=True):
@@ -132,7 +133,7 @@ class PlayerAI(BaseAI):
             other_position = self.getPlayerPosition(grid)
 
         children = []
-        available_traps = self.get_all_available_traps(grid)
+        available_traps = self.get_all_available_traps(grid, other_position)
         for trap_position in available_traps:
             if trap_position != position:
                 trap_clone = grid.clone()
@@ -162,6 +163,8 @@ class PlayerAI(BaseAI):
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result)
+        if depth >= depth_limit:
+            return self.IS_heuristic(grid)
 
         minTrap, minUtility = None, np.inf
 
@@ -212,8 +215,11 @@ class PlayerAI(BaseAI):
             grid = self.__trap_children(grid, is_me=True)[0]
             return self.__evaluate(grid, gameover_result)
 
-        maxTrap, maxUtility = None, -np.inf
+        if depth >= depth_limit:
+            return self.IS_heuristic(grid)
 
+        maxTrap, maxUtility = None, -np.inf
+        cache = {}
         for trap in self.__trap_children(grid, is_me=True):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
             _, utility = self.__move_minimize(trap, alpha, beta, depth_limit, depth+1)
@@ -257,7 +263,7 @@ class PlayerAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def __decision(self, grid: Grid, alpha, beta, depth_limit=3) -> object:
+    def __decision(self, grid: Grid, alpha, beta, depth_limit=4) -> object:
         start = time.time()
         child, _ = self.__move_maximize(grid, alpha, beta, 1, depth_limit)
         end = time.time()
