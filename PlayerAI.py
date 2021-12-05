@@ -161,7 +161,7 @@ class PlayerAI(BaseAI):
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
-            grid = self.__trap_children(grid, is_me=False)[0]
+            # grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result)
         if depth >= depth_limit:
             return self.IS_heuristic(grid)
@@ -212,7 +212,7 @@ class PlayerAI(BaseAI):
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
-            grid = self.__trap_children(grid, is_me=True)[0]
+            # grid = self.__trap_children(grid, is_me=True)[0]
             return self.__evaluate(grid, gameover_result)
 
         if depth >= depth_limit:
@@ -259,7 +259,8 @@ class PlayerAI(BaseAI):
             if maxUtility > alpha:
                 alpha = maxUtility
 
-        self.optimal_trap_position = maxTrap.trap_position
+        if hasattr(maxTrap, 'trap_position'):
+            self.optimal_trap_position = maxTrap.trap_position
 
         return maxMove, maxUtility
 
@@ -285,4 +286,6 @@ class PlayerAI(BaseAI):
         
         """
         # use cached optimal trap position that we computed in getMove()
+        if self.optimal_trap_position is None:
+            return grid.getAvailableCells()[0]
         return self.optimal_trap_position
