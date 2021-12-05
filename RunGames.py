@@ -22,7 +22,7 @@ class RunGames(object):
     -c  : clear terminal screen prior to running
     -p  : show progress bars
     -g  : show game output (note: very verbose)
-    -d  : set search depth limit of [depth_limit], default 4
+    -d  : set search depth limit of [depth_limit], min 1, default 4
     '''
     def __init__(self, n, verbose, progress, suppress_output, depth_limit):
         self.n = n
@@ -128,7 +128,13 @@ def main():
     depth_limit = 0
 
     if len(argv)>1:
-        num = [arg for arg in argv if arg.isnumeric()]
+        if '-d' in argv:
+            try:
+                dl_flag_index = argv.index('-d')
+                depth_limit = argv[dl_flag_index+1]
+            except:
+                pass
+        num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n != dl_flag_index+1]
         if num:
             n = int(num[0])
         if '-v' in argv:
@@ -138,19 +144,14 @@ def main():
         if '-p' in argv:
             progress = True
         if '-g' in argv:
-            game_output = False
-        if '-d' in argv:
-            try:
-                depth_limit = argv[argv.index('-d')+1]
-            except:
-                pass
+            suppress_output = False
 
     if depth_limit:
         cprint(f'Running batch test on {argv[0]}, {n} times, custom search depth limit of {depth_limit}...\n', 'blue')
     else:
         cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
 
-    run_games = RunGames(n, verbose, progress, game_output, depth_limit)
+    run_games = RunGames(n, verbose, progress, suppress_output, depth_limit)
     total_time, run_times, total_moves, run_success, player_wins = run_games.start_batch()
 
     print('> ... Done.')
