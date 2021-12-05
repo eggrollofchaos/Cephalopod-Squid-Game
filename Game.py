@@ -1,5 +1,5 @@
 import numpy as np
-from sys import argv, exit
+from sys import argv
 from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
@@ -15,7 +15,7 @@ timeLimit = 0.5
 allowance = 0.05
 
 class Game():
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False):
+    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False, depth_limit=4):
         '''
         Description
         ----------
@@ -37,6 +37,7 @@ class Game():
         self.over       = False
         self.displayer  = displayer
         self.test_mode  = test_mode
+        self.depth_limit = depth_limit
 
     def initialize_game(self):
 
@@ -146,6 +147,8 @@ class Game():
 
     def play(self):
         """ DO NOT MODIFY """
+        total_player_moves = 0
+        total_player_traps = 0
 
         print("AI SQUID GAME")
         self.initialize_game()
@@ -165,7 +168,7 @@ class Game():
                 print("Player's Turn: ")
 
                 # find best move; should return two coordinates - new position and bombed tile.
-                move = self.playerAI.getMove(grid_copy)
+                move = self.playerAI.getMove(grid_copy, self.depth_limit)
 
                 # if move is valid, perform it
                 if self.is_valid_move(self.grid, self.playerAI, move):
@@ -177,6 +180,8 @@ class Game():
                     print(f"Tried to move to : {move}")
                     print("invalid Player AI move!")
                 
+                total_player_moves += 1
+
                 intended_trap = self.playerAI.getTrap(self.grid.clone())
 
                 if self.is_valid_trap(self.grid, intended_trap):
@@ -188,6 +193,8 @@ class Game():
                     self.over = True
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
+
+                total_player_traps += 1
 
             else:
 
@@ -225,7 +232,7 @@ class Game():
             turn = 3 - turn
             self.displayer.display(self.grid)
 
-        return self.is_over(turn)
+        return self.is_over(turn), total_player_moves, total_player_traps
 
 def main():
     #### EDIT HERE ####
@@ -233,19 +240,25 @@ def main():
     # playerAI = None
     computerAI = EasyAI() # change this to a more sophisticated player you've coded
     test_mode = False
+    depth_limit = 0
     if len(argv)>1:
         if argv[1] == '-t':
             test_mode = True
+    if len(argv)>3:
+        if argv[2] == '-d':
+            depth_limit = int(argv[3])
     #### EDIT HERE ####
 
     displayer = Displayer()
-    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
-    
-    result = game.play()
+    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
+    result, moves, traps = game.play()
+
     if result == 1: 
         print("Player 1 wins!")
+        print(f"Total turns: {moves}")
     elif result == 2:
         print("Player 1 loses!")
+        print(f"Total turns: {moves}")
         exit(2)
 
 if __name__ == "__main__":
