@@ -10,7 +10,7 @@ from ast import literal_eval
 from termcolor import cprint
 from tqdm import tqdm
 
-class Run_Games():
+class RunGames(object):
     '''
     Helper script to run Game.py n times to test successful execution, win/loss, and gather statistics.
     Outputs results to batch_results.txt
@@ -21,6 +21,7 @@ class Run_Games():
     -v  : verbose output to terminal
     -c  : clear terminal screen prior to running
     -p  : show progress bars
+    -g  : show game output (note: very verbose)
     -d  : set search depth limit of [depth_limit], default 4
     '''
     def __init__(self, n, progress, verbose, depth_limit):
@@ -152,7 +153,7 @@ def main():
     print(f'\n{run_success} scripts ran successfully out of {n}.')
     print(f'Of those, Player won {player_wins} times, for a win rate of {100*player_wins/run_success:.2f}%.')
     print(f'Each run took an average of {total_time/n:.2f} seconds to complete.')
-    print(f'Max runtime: {max(run_times):.2f}; min runtime: {min(run_times):.2f}.')
+    print(f'Max runtime: {max(run_times) :.2f} seconds; min runtime: {min(run_times):.2f} seconds.')
     print(f'The average game length is {total_moves/n:.1f} rounds.')
     print(f'All processes took {total_time:.2f} seconds to complete.\n')
 
