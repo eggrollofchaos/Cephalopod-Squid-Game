@@ -35,26 +35,42 @@ class Run_Games():
         # begin batch run
         start_batch = time()
         run_times = []
+        total_moves = 0
 
         if self.progress:
             for it in tqdm(range(1, self.n+1)):       # show progress bars
-                run_time = self.__run_process(it)
-                run_times.append(run_time)
+                run_time, run_moves = self.__run_process(it)
+
         else:
             for it in range(1, self.n+1):             # no progress bars
-                run_time = self.__run_process(it)
-                run_times.append(run_time)
+                run_time, run_moves = self.__run_process(it)
+
+        run_times.append(run_time)
+        total_moves += run_moves
 
         end_batch = time()
         total_time = end_batch - start_batch
 
-        return total_time, self.run_success, self.player_wins
+        return total_time, total_moves, self.run_success, self.player_wins
 
     def __run_process(self, it):
+        run_moves = 0
         start_run = time()
-        result = run(['python', 'Game.py', '-t'], capture_output=True)
+        try:
+            result = run(['python', 'Game.py', '-t'], capture_output=True)
+        except:
+            result = run(['python3', 'Game.py', '-t'], capture_output=True)
+
+        # result = run(['python', 'Game.py', '-t'])
         end_run = time()
         run_time = end_run-start_run
+        stdout = str(result.stdout)
+        winning_player = result.returncode
+        print(winning_player)
+        print(stdout[-200:])
+        # print(stdout[stdout.rfind('!')+3:stdout.rfind('\\')])
+        # run_moves = int(stdout[stdout.rfind('!')+3:stdout.rfind('\\')])
+
 
         # animation to show progress indicator if self.verbose is False
         if not self.verbose:
@@ -68,20 +84,20 @@ class Run_Games():
 
         with open('batch_results.txt', 'a') as f:
 
-            if result.returncode == 0:		# normal exit code
+            if winning_player == 0:         # normal exit code is 0
                 win = f'Run {it}: Player Wins! Process completed in {run_time:.3f} seconds.\n'
                 cprint(win, 'green') if self.verbose else None
                 f.write(win)
                 self.run_success += 1            # increment number of successful runs
                 self.player_wins += 1            # increment number of player wins
 
-            elif result.returncode == 2:    # player has lost
+            elif winning_player == 2:       # player has lost
                 loss = f'Run {it}: Player Loses! Process completed in {run_time:.3f} seconds.\n'
                 cprint(loss, 'red') if self.verbose else None
                 f.write(loss)
                 self.run_success += 1            # increment number of successful runs
 
-            else:                           # encountered runtime error
+            else:                           # encountered runtime error, exit code == 1
                 error = f'Run {it}: Runtime error...\n'
                 cprint(error, 'yellow') if self.verbose else None
                 f.write(error)
@@ -92,7 +108,7 @@ class Run_Games():
                 f.write(stderr_str)
                 f.write('\n')
 
-        return run_time
+        return run_time, run_moves
 
 def main():
     clear = lambda: system('clear')
@@ -114,12 +130,13 @@ def main():
     cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
 
     run_games = Run_Games(n, progress, verbose)
-    total_time, run_success, player_wins = run_games.start_batch()
+    total_time, total_moves, run_success, player_wins = run_games.start_batch()
 
     print('> ... Done.')
     print(f'\n{run_success} scripts ran successfully out of {n}.')
     print(f'Of those, Player won {player_wins} times, for a win rate of {100*player_wins/run_success:.2f}%.')
-    print(f'Each run took an average of {total_time/n:.3f} seconds to complete.\n')
+    print(f'Each run took an average of {total_time/n:.3f} seconds to complete.')
+    print(f'The average game length is {total_moves/n:.3f} rounds.')
     print(f'All processes took {total_time:.3f} seconds to complete.\n')
 
 if __name__ == "__main__":

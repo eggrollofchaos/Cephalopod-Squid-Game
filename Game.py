@@ -1,5 +1,5 @@
 import numpy as np
-from sys import argv, exit
+from sys import argv
 from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
@@ -146,6 +146,8 @@ class Game():
 
     def play(self):
         """ DO NOT MODIFY """
+        total_player_moves = 0
+        total_player_traps = 0
 
         print("AI SQUID GAME")
         self.initialize_game()
@@ -177,6 +179,8 @@ class Game():
                     print(f"Tried to move to : {move}")
                     print("invalid Player AI move!")
                 
+                total_player_moves += 1
+
                 intended_trap = self.playerAI.getTrap(self.grid.clone())
 
                 if self.is_valid_trap(self.grid, intended_trap):
@@ -188,6 +192,8 @@ class Game():
                     self.over = True
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
+
+                total_player_traps += 1
 
             else:
 
@@ -225,7 +231,7 @@ class Game():
             turn = 3 - turn
             self.displayer.display(self.grid)
 
-        return self.is_over(turn)
+        return self.is_over(turn), total_player_moves, total_player_traps
 
 def main():
     #### EDIT HERE ####
@@ -240,12 +246,14 @@ def main():
 
     displayer = Displayer()
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
-    
-    result = game.play()
+    result, moves, traps = game.play()
+
     if result == 1: 
         print("Player 1 wins!")
+        print(moves)
     elif result == 2:
         print("Player 1 loses!")
+        print(moves)
         exit(2)
 
 if __name__ == "__main__":
