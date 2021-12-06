@@ -68,7 +68,7 @@ class PlayerAI(BaseAI):
         self.turns += 1
         return max_grid.move_position
 
-    def __is_over(self, grid: Grid, turn):
+    def __is_over(self, grid: Grid, turn) -> int:
         """
         Check if game is over, i.e., Player or Opponent has no moves to make
         """
@@ -83,25 +83,145 @@ class PlayerAI(BaseAI):
             return self.getOpponentNum()
 
     def __evaluate(self, grid: Grid, gameover_result) -> int:
+        """
+        Function for returning high or low utility based on gameover state.
+        """
         if gameover_result:
             if gameover_result == self.getPlayerNum():
                 return grid, 99999
             else:
                 return grid, -99999
 
-    def IS_heuristic(self, grid):
-        return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
-            grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
+    def __get_dof(self, grid: Grid, is_me) -> tuple:
+        """
+        Apply degrees of freedom calculation heuristic based on early, mid, late game.
+        Returns a tuple of Grid object, heuristic
+        """
+        n_conn_sq_heur = self.__n_conn_sq_heur(grid)
+        n_neighbors_heur = self.__n_neighbors_heur(grid)
+        edge_touch_heur = self.__edge_touch_heur(grid)
+        if self.turns <= 4:
+            return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur
+        elif self.turns <= 12:
+            return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur
+        else:            
+            # grid.print_grid()
+            graph_cut_heur = self.__graph_cut_heur(grid)
+            return grid, n_conn_sq_heur #+ n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
-    def __probability(self, position, trap_position):
+    def __edge_touch_heur(self, grid: Grid, is_me=True) -> int:
+        """
+        Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
+        Returns a heuristic int
+        """
+        if not is_me:
+            pos = self.getPlayerPosition(grid)
+        else:
+            pos = self.getOpponentPosition(grid)
+        edges_touched = 0
+        if pos[0] in (0,6):
+            edges_touched -= 1
+        if pos[1] in (0,6):
+            edges_touched -= 1
+        return 5*edges_touched
+
+    def __n_conn_sq_heur(self, grid: Grid, is_me=True) -> int:
+        """
+        Get number of connected squares for player.
+        Returns a heuristic int
+        """
+        if is_me:
+            pos = self.getPlayerPosition(grid)
+        else:
+            pos = self.getOpponentPosition(grid)
+        explored = [pos]                # track explored squares
+        stack = Q.LifoQueue()           # initialize stack
+        stack.put(pos)                  # push current position onto stack
+        conn_sq_heur = 1                # number of squares connected to position, initialize at 1
+
+        while not stack.empty():
+            current_sq = stack.get()
+            has_children = False
+            for child in grid.get_neighbors(current_sq, only_available=True):
+                if child not in explored:
+                    explored.append(child)
+                    stack.put(child)
+                    conn_sq_heur += 1
+                    has_children = True
+            if not has_children and not stack.empty():
+                stack.get_nowait()
+        # print(f'Current player has {connected_sq} connected squares.')
+        return 2*conn_sq_heur
+
+    def __graph_cut_heur(self, grid: Grid) -> int:
+        """
+        Heuristic based on how easy it is to increase the number of connected components within the board,
+        and how drastic the decrease in freedom resulting from the removal of one free space
+        Returns a heuristic int
+        """
+        conn_comps = self.__num_connected_components(grid)      # number of connected components
+        comp_size = self.__n_conn_sq_heur(grid)                 # size of the component that player is part of
+        all_available_pos = grid.getAvailableCells()
+        graph_cut_heur = 0
+        for trap_pos in all_available_pos:
+            trap_clone = grid.clone()
+            trap_clone.trap(trap_pos)
+            new_conn_comps = self.__num_connected_components(grid)
+            new_comp_size = self.__n_conn_sq_heur(grid)
+            comp_delta = new_conn_comps - conn_comps            # this will be 0 or 1
+            size_delta = new_comp_size - comp_size
+            utility = -10*comp_delta - size_delta
+            graph_cut_heur += utility
+        return graph_cut_heur
+
+    def __num_connected_components(self, grid: Grid) -> int:
+        """
+        Convert board to graph; get number of connected components.
+        """
+        graph = grid.map
+        graph = np.where(graph==0, 1, graph)
+        graph = np.where(graph==2, 0, graph)
+        graph = np.where(graph==-1, 0, graph)
+        graph = csr_matrix(graph)
+        return connected_components(csgraph=graph, directed=False, return_labels=False)
+
+    def __get_heuristics(self, grid: Grid, is_me) -> tuple:
+        """
+        Apply heuristics
+        Returns a tuple of Grid object, heuristic
+        """
+        # return self.__get_dof(grid, is_me)
+        # return self.__n_conn_sq_heur(grid, is_me)
+        return grid, self.__n_neighbors_heur(grid)
+
+    def __n_neighbors_heur(self, grid: Grid, is_me=True) -> int:
+        """
+        Returns the difference in available squares around player vs available squares around opponent.
+        """
+        if True:
+            pos = self.getPlayerPosition(grid)
+            other_pos = self.getOpponentPosition(grid)
+        else:
+            pos = self.getOpponentPosition(grid)
+            other_pos = self.getPlayerPosition(grid)
+        # return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
+        #     grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
+        return ( len(grid.get_neighbors(pos, only_available=True)) - len(
+            grid.get_neighbors(pos, only_available=True)) )
+
+    def __probability(self, position, trap_position) -> float:
+        """
+            Calculates probability of a trap landing in an intended square.
+        """
         # alpha = manhattan_distance(position, trap_position)
         alpha = grid_distance(position, trap_position)
         p = 1 - 0.05 * (alpha - 1)
         return p
 
-    def __move_children(self, grid: Grid, is_me=True) -> None:
+    def __move_children(self, grid: Grid, is_me=True) -> list:
         """
-        a player (either us or opponent) moves
+        get neighbors of a player's intended Move
+        returns a list of Grid objects
         """
         if is_me:
             player = self.getPlayerNum()
@@ -123,7 +243,12 @@ class PlayerAI(BaseAI):
 
         return children
 
-    def get_all_available_traps(self, grid, position):
+    def __get_all_available_traps(self, grid: Grid, position) -> list:
+        """
+        helper function to get a list of open spots on the board
+        default is threshold of 3 squares away from position param
+        returns a list of tuples (positions)
+        """
         all_available_pos = grid.getAvailableCells()
         available_traps = []
         threshold = 3
@@ -132,7 +257,12 @@ class PlayerAI(BaseAI):
                 available_traps.append(trap_pos)
         return available_traps
 
-    def __trap_children(self, grid, is_me=True):
+    def __trap_children(self, grid: Grid, is_me=True) -> list:
+        """
+        a player (either player or opponent) throws Trap
+        function expands node of trades from param position
+        returns a list of Grid objects
+        """
         if is_me:
             player = self.getPlayerNum()
             position = grid.move_position # hypothetical move
@@ -143,7 +273,7 @@ class PlayerAI(BaseAI):
             other_position = self.getPlayerPosition(grid)
 
         children = []
-        available_traps = self.get_all_available_traps(grid, other_position)
+        available_traps = self.__get_all_available_traps(grid, other_position)
         for trap_position in available_traps:
             if trap_position != position:
                 trap_clone = grid.clone()
@@ -155,7 +285,11 @@ class PlayerAI(BaseAI):
 
         return children
 
-    def __trap_neighbors(self, grid, trap_position):
+    def __trap_neighbors(self, grid: Grid, trap_position) -> list:
+        """
+        get neighbors of intended trap_pos
+        returns a list of Grid objects
+        """
         neighbors = []
 
         for trap_position in grid.get_neighbors(trap_position, only_available=True):
@@ -167,14 +301,18 @@ class PlayerAI(BaseAI):
 
         return neighbors
 
-    def __trap_minimize(self, grid, alpha, beta, depth, depth_limit):
+    def __trap_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+        """
+        opponent Min node for throwing Trap
+        returns a list of Grid objects
+        """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result)
         if depth >= depth_limit:
-            return self.IS_heuristic(grid)
+            return self.__get_heuristics(grid, is_me=True)
 
         minTrap, minUtility = None, np.inf
         cache = {}
@@ -204,13 +342,17 @@ class PlayerAI(BaseAI):
         return minTrap, minUtility
 
     def __move_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+        """
+        opponent Min node for making Move
+        returns a list of Grid objects
+        """
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
         # break if hit depth limit
         if depth == depth_limit:
-            return self.IS_heuristic(grid)
+            return self.__get_heuristics(grid, is_me=True)
 
         minChild, minUtility = None, np.inf
 
@@ -228,7 +370,11 @@ class PlayerAI(BaseAI):
 
         return minChild, minUtility
 
-    def __trap_maximize(self, grid, alpha, beta, depth, depth_limit):
+    def __trap_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+        """
+        player Max node for throwing Trap
+        returns a list of Grid objects
+        """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
@@ -236,7 +382,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result)
 
         if depth >= depth_limit:
-            return self.IS_heuristic(grid)
+            return self.__get_heuristics(grid, is_me=True)
 
         maxTrap, maxUtility = None, -np.inf
         cache = {}
@@ -266,13 +412,17 @@ class PlayerAI(BaseAI):
         return maxTrap, maxUtility
 
     def __move_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+        """
+        player Min node for making Move
+        returns a list of Grid objects
+        """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
         # break if hit depth limit
         if depth >= depth_limit:
-            return self.IS_heuristic(grid)
+            return self.__get_heuristics(grid, is_me=True)
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
 
@@ -292,9 +442,69 @@ class PlayerAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def __decision(self, grid: Grid, alpha, beta, depth_limit=4) -> object:
+    def __tie_break(self, Move_A: Grid, Move_B: Grid, Trap_A: Grid, Trap_B: Grid, is_me) -> tuple:
+        """
+        Breaks ties when two children have equal utility
+        returns a tuple of Grid objects
+
+        is_me == True means this is coming from a Max node. we will get the player position and maximize the marginal utility
+        is_me == False means this is coming from a Min node. we will get the opponent position and maximize their marginal utility
+        """
+        def __compare_and_return() -> None:
+            if marginal_utility_B > marginal_utility_A:
+                return Move_B, Trap_B
+            elif marginal_utility_B < marginal_utility_A:
+                return Move_A, Trap_A
+
+        if not is_me:
+            pos_A = self.getPlayerPosition(Move_A)
+            pos_B = self.getPlayerPosition(Move_B)
+        else:
+            pos_A = self.getOpponentPosition(Move_A)
+            pos_B = self.getOpponentPosition(Move_B)
+        marginal_utility_A = 0
+        marginal_utility_B = 0
+       
+        # maximize free spaces
+        num_free_spaces_A = self.__n_neighbors_heur(Move_A, is_me)
+        marginal_utility_A += num_free_spaces_A
+        num_free_spaces_B = self.__n_neighbors_heur(Move_B, is_me)
+        marginal_utility_B += num_free_spaces_B
+        __compare_and_return()      # waterfalls onward if tie is not broken yet
+
+        # avoid traps
+        neighbors = Move_A.get_neighbors(pos_A)
+        num_traps = len([neighbor for neighbor in neighbors if Move_A.map[neighbor] == -1])
+        marginal_utility_A -= num_traps
+        neighbors = Move_B.get_neighbors(pos_B)
+        num_traps = len([neighbor for neighbor in neighbors if Move_B.map[neighbor] == -1])
+        marginal_utility_B -= num_traps
+        __compare_and_return()
+
+        # avoid edges
+        marginal_utility_A += self.__edge_touch_heur(Move_A, is_me)
+        marginal_utility_B += self.__edge_touch_heur(Move_B, is_me)
+        __compare_and_return()      # waterfalls onward if tie is not broken yet
+
+        # if marginal_utility_B > marginal_utility_A:
+            # if is_me:
+                # print('Using tie break for Max node.')
+            # else:
+                # print('Using tie break for Min node.')
+            # time.sleep(1)
+            # return Move_B, Trap_B
+            # return Move_A, Trap_A
+        # else:
+            # return Move_A, Trap_A
+        return Move_A, Trap_A            # default to same behavior as before tie breaker
+
+    def __decision(self, grid: Grid, alpha, beta, depth_limit=DEFAULT_DEPTH_LIMIT) -> object:
+        """
+        Helper function to start the Expectiminimax algo
+        returns a Grid object
+        """
         start = time.time()
-        child, _ = self.__move_maximize(grid, alpha, beta, 1, depth_limit)
+        child, _ = self.__move_maximize(grid, alpha, beta, depth=1, depth_limit=depth_limit)
         end = time.time()
         print(f'This move took {end-start:.5f} seconds.')
         return child
@@ -316,4 +526,21 @@ class PlayerAI(BaseAI):
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
             return grid.getAvailableCells()[0]
-        return self.optimal_trap_position
+        return self.__enhance_throw(grid, self.optimal_trap_position)
+
+    def __enhance_throw(self, grid: Grid, trap_pos) -> tuple:
+        """
+        Looks for a way to improve a throw. If an intended trap_pos has at least one available neighbor, there is a chance for failure.
+        If one of the neighbors of the trap_pos has only trap_pos as a neighbor, throw to that spot instead.
+        Returns a tuple
+        """
+        error_traps = grid.get_neighbors(trap_pos, only_available=True)
+        print('Aiming for', trap_pos)
+        if error_traps:
+            for trap_nb in grid.get_neighbors(trap_pos, only_available=False):
+                trap_nb_nb = len(grid.get_neighbors(trap_nb, only_available=True))
+                trap_nb_value = int(grid.getCellValue(trap_nb))
+                if trap_nb_value != 0 and trap_nb_nb == 1:
+                    print('Found a way to guarantee trap placement!')
+                    return trap_nb
+        return trap_pos
