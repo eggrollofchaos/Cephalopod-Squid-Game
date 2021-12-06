@@ -207,7 +207,7 @@ class PlayerAI(BaseAI):
         # return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
         #     grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
         return ( len(grid.get_neighbors(pos, only_available=True)) - len(
-            grid.get_neighbors(pos, only_available=True)) )
+            grid.get_neighbors(other_pos, only_available=True)) )
 
     def __probability(self, position, trap_position) -> float:
         """
@@ -351,7 +351,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result)
 
         # break if hit depth limit
-        if depth == depth_limit:
+        if depth >= depth_limit:
             return self.__get_heuristics(grid, is_me=True)
 
         minChild, minUtility = None, np.inf
