@@ -241,10 +241,13 @@ def main():
     depth_limit = 0
     opp_depth_limit = 0
     test_mode = False
+    heur = False
     
     if len(argv)>1:
         if '-t' in argv:
             test_mode = True
+        if '-h' in argv:
+            heur = True
         if '-d' in argv:
             try:
                 dl_flag_index = argv.index('-d')
@@ -258,7 +261,7 @@ def main():
             except:
                 pass
     #### EDIT HERE ####
-    playerAI = PlayerAI(depth_limit) # change this to PlayerAI() to test your player!
+    playerAI = PlayerAI(depth_limit, heur) # change this to PlayerAI() to test your player!
     # playerAI = None
     # computerAI = EasyAI(opp_depth_limit) # change this to a more sophisticated player you've coded
     computerAI = PlayerAIOpp(opp_depth_limit) # change this to a more sophisticated player you've coded

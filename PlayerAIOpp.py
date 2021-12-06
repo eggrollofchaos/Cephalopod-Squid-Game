@@ -11,7 +11,7 @@ from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 
-DEFAULT_DEPTH_LIMIT = 2
+DEFAULT_DEPTH_LIMIT = 3
 
 class PlayerAIOpp(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT) -> None:
@@ -321,7 +321,7 @@ class PlayerAIOpp(BaseAI):
 
         return maxMove, maxUtility
 
-    def __decision(self, grid: Grid, alpha, beta, depth_limit=4) -> object:
+    def __decision(self, grid: Grid, alpha, beta, depth_limit=DEFAULT_DEPTH_LIMIT) -> object:
         """
         Helper function to start the Expectiminimax algo
         returns a Grid object
