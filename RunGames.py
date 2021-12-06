@@ -26,11 +26,12 @@ class RunGames(object):
     -d  : set opponent search depth limit of [opp_depth_limit], min 1, default 2
     '''
 
-    def __init__(self, n, verbose, progress, suppress_output, depth_limit, opp_depth_limit, results_filename):
+    def __init__(self, n, verbose, progress, suppress_output, heur, depth_limit, opp_depth_limit, results_filename):
         self.n = n
         self.verbose = verbose
         self.progress = progress
         self.suppress_output = suppress_output
+        self.heur = heur
         self.depth_limit = depth_limit
         self.opp_depth_limit = opp_depth_limit
         self.run_success = 0
@@ -69,11 +70,19 @@ class RunGames(object):
         return total_time, run_times, rounds_list, self.run_success, self.player_wins
 
     def __run_process(self, it):
+        run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)]
+        run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)]
+        if self.heur:
+            run_arg_list.append('-h')
+            run_arg_list3.append('-h')
+
         start_run = time()
         try:
-            result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
+            # result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
+            result = run(run_arg_list, capture_output=self.suppress_output)
         except:
-            result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
+            # result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
+            result = run(run_arg_list3, capture_output=self.suppress_output)
 
         end_run = time()
         run_time = end_run-start_run
@@ -143,6 +152,7 @@ def main():
     verbose = False
     progress = False
     suppress_output = True
+    heur = False
     depth_limit = 0
 
     if len(argv)>1:
@@ -170,15 +180,16 @@ def main():
             progress = True
         if '-g' in argv:
             suppress_output = False
+        if '-h' in argv:
+            heur = True
 
-    if depth_limit and opp_depth_limit:
-        cprint(f'Running batch test on {argv[0]}, {n} times...\nSetting Player search depth limit to {depth_limit}.\nSetting Opponent search depth limit to {opp_depth_limit}.\n', 'blue')
-    elif depth_limit:
-        cprint(f'Running batch test on {argv[0]}, {n} times...\nSetting Player search depth limit to {depth_limit}.\n', 'blue')
-    elif opp_depth_limit:
-        cprint(f'Running batch test on {argv[0]}, {n} times...\nSetting Opponent search depth limit to {opp_depth_limit}.\n', 'blue')
-    else:
-        cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
+    cprint(f'Running batch test on {argv[0]}, {n} times...', 'blue')
+    if depth_limit:
+        cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')
+    if opp_depth_limit:
+        cprint(f'Setting Opponent search depth limit to {opp_depth_limit}.', 'blue')
+    if heur:
+        cprint(f'Applying advanced heuristics.\n', 'blue')
 
     if depth_limit == 0:
         depth_str = ''
@@ -188,7 +199,7 @@ def main():
     if exists(results_filename):
       remove(results_filename)
 
-    run_games = RunGames(n, verbose, progress, suppress_output, depth_limit, opp_depth_limit, results_filename)
+    run_games = RunGames(n, verbose, progress, suppress_output, heur, depth_limit, opp_depth_limit, results_filename)
     total_time, run_times, rounds_list, run_success, player_wins = run_games.start_batch()
     total_moves = sum(rounds_list)
     avg_rounds = total_moves/n

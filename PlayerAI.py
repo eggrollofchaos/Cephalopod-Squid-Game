@@ -16,7 +16,7 @@ from scipy.sparse.csgraph import connected_components
 DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAI(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT) -> None:
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=False) -> None:
         self.cape_color = 'blue'
         super().__init__()
         self.pos = None
@@ -26,6 +26,7 @@ class PlayerAI(BaseAI):
         if self.depth_limit == 0:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
+        self.use_advanced_heuristics = heur
 
     def getPosition(self):
         return self.pos
@@ -100,9 +101,9 @@ class PlayerAI(BaseAI):
         n_conn_sq_heur = self.__n_conn_sq_heur(grid)
         n_neighbors_heur = self.__n_neighbors_heur(grid)
         edge_touch_heur = self.__edge_touch_heur(grid)
-        if self.turns <= 4:
+        if self.turns <= 3:
             return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur
-        elif self.turns <= 12:
+        elif self.turns <= 7:
             return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur
         else:            
             # grid.print_grid()
@@ -190,9 +191,11 @@ class PlayerAI(BaseAI):
         Apply heuristics
         Returns a tuple of Grid object, heuristic
         """
-        # return self.__get_dof(grid, is_me)
+        if self.use_advanced_heuristics:
+            return self.__get_dof(grid, is_me)
+        else:
+            return grid, self.__n_neighbors_heur(grid)
         # return self.__n_conn_sq_heur(grid, is_me)
-        return grid, self.__n_neighbors_heur(grid)
 
     def __n_neighbors_heur(self, grid: Grid, is_me=True) -> int:
         """
