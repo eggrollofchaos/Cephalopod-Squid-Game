@@ -3,7 +3,7 @@
 # wax1
 from sys import argv
 from subprocess import run
-from time import time
+from time import time, sleep
 from os import system, remove
 from os.path import exists
 from ast import literal_eval
@@ -16,29 +16,29 @@ class RunGames(object):
     Outputs results to batch_results.txt
 
     Usage:
-    $ python run_games.py [n] -v -c -p -g -d [depth_limit]
+    $ python RunGames.py [n] -v -c -p -g -d [depth_limit] -a [opponent_depth_limit]
     [N] : number of processes to run
     -v  : verbose output to terminal
     -c  : clear terminal screen prior to running
     -p  : show progress bars
     -g  : show game output (note: very verbose)
-    -d  : set search depth limit of [depth_limit], min 1, default 4
+    -d  : set player search depth limit of [depth_limit], min 1, default 4
+    -d  : set opponent search depth limit of [opp_depth_limit], min 1, default 2
     '''
 
-    def __init__(self, n, verbose, progress, suppress_output, depth_limit):
+    def __init__(self, n, verbose, progress, suppress_output, depth_limit, opp_depth_limit, results_filename):
         self.n = n
         self.verbose = verbose
         self.progress = progress
         self.suppress_output = suppress_output
         self.depth_limit = depth_limit
+        self.opp_depth_limit = opp_depth_limit
         self.run_success = 0
         self.player_wins = 0
+        self.filename = results_filename
 
 
     def start_batch(self):
-        if exists("batch_results.txt"):
-          remove("batch_results.txt")
-
         # begin batch run
         start_batch = time()
         run_times = []
@@ -71,9 +71,9 @@ class RunGames(object):
     def __run_process(self, it):
         start_run = time()
         try:
-            result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit)], capture_output=self.suppress_output)
+            result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
         except:
-            result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit)], capture_output=self.suppress_output)
+            result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
 
         end_run = time()
         run_time = end_run-start_run
@@ -81,7 +81,7 @@ class RunGames(object):
         returncode = result.returncode
         if returncode == 1:                     # encountered error, exit code = 1
             winning_player = -1
-            rounds = 0
+            rounds = 1
         else:
             # Game.py returns exit code of format [winningplayer][rounds], e.g. 119 = player 1 wins in 19 rounds
             code_str = str(returncode)
@@ -105,7 +105,7 @@ class RunGames(object):
             else:
                 print('> ...', end='\r')
 
-        with open('batch_results.txt', 'a') as f:
+        with open(self.filename, 'a') as f:
 
             # if winning_player == 0:         # normal exit code is 0
             if winning_player == 1:             # normal exit code is 0
@@ -133,7 +133,7 @@ class RunGames(object):
                 print(stderr_str) if self.verbose else None
                 f.write(stderr_str)
                 f.write('\n')
-
+        # sleep(1)
         return run_time, rounds
 
 
@@ -153,9 +153,15 @@ def main():
                 depth_limit = argv[dl_flag_index+1]
             except:
                 pass
-        num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n != dl_flag_index+1]
+        if '-a' in argv:
+            try:
+                opp_dl_flag_index = argv.index('-a')
+                opp_depth_limit = int(argv[opp_dl_flag_index+1])
+            except:
+                pass
+        num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_dl_flag_index+1]
         if num:
-            n = int(num[0])
+            n = int(num[0]) if n>0 else 1
         if '-v' in argv:
             verbose = True
         if '-c' in argv:
@@ -165,30 +171,73 @@ def main():
         if '-g' in argv:
             suppress_output = False
 
-    if depth_limit:
-        cprint(f'Running batch test on {argv[0]}, {n} times, enforcing search depth limit of {depth_limit}...\n', 'blue')
+    if depth_limit and opp_depth_limit:
+        cprint(f'Running batch test on {argv[0]}, {n} times...\nSetting Player search depth limit to {depth_limit}.\nSetting Opponent search depth limit to {opp_depth_limit}.\n', 'blue')
+    elif depth_limit:
+        cprint(f'Running batch test on {argv[0]}, {n} times...\nSetting Player search depth limit to {depth_limit}.\n', 'blue')
+    elif opp_depth_limit:
+        cprint(f'Running batch test on {argv[0]}, {n} times...\nSetting Opponent search depth limit to {opp_depth_limit}.\n', 'blue')
     else:
         cprint(f'Running batch test on {argv[0]}, {n} times...\n', 'blue')
 
-    run_games = RunGames(n, verbose, progress, suppress_output, depth_limit)
+    if depth_limit == 0:
+        depth_str = ''
+    else:
+        depth_str = f'_d_{depth_limit}'
+    results_filename = f"batch_results{depth_str}.txt"
+    if exists(results_filename):
+      remove(results_filename)
+
+    run_games = RunGames(n, verbose, progress, suppress_output, depth_limit, opp_depth_limit, results_filename)
     total_time, run_times, rounds_list, run_success, player_wins = run_games.start_batch()
     total_moves = sum(rounds_list)
     avg_rounds = total_moves/n
     avg_move_time = total_time/total_moves
+    try:
+        win_rate = 100*player_wins/run_success
+    except:
+        pass
 
     print('> ... Done.')
-    print(f'\n{run_success} scripts ran successfully out of {n}.')
-    if run_success != 0:
-        cprint(f'Of those, Player won {player_wins} times, for a win rate of {100*player_wins/run_success:.2f}%.', 'green')
-        error_str = 'complete'
-    else:
-        error_str = 'reach an error'
-    print(f'Each run took an average of {total_time/n:.2f} seconds to {error_str}.')
-    print(f'Max runtime: {max(run_times) :.2f} seconds; min runtime: {min(run_times):.2f} seconds.')
-    print(f'The average game length is {avg_rounds:.1f} rounds.')
-    print(f'Max game length: {max(rounds_list) :.2f} rounds; min game length: {min(rounds_list):.2f} rounds.')
-    cprint(f'The average player move time is {avg_move_time:.2f} seconds.', 'blue')
-    print(f'All processes took {total_time:.2f} seconds to {error_str}.\n')
+    with open(results_filename, 'a') as f:
+        f.write('------------------------------')
+
+        f.write(f'\n{run_success} games ran successfully out of {n}.\n')
+        if run_success != 0:
+            f.write(f'Of those, Player won {player_wins} times, for a win rate of {win_rate:.2f}%.\n') #, 'green')
+            error_str = 'complete'
+        else:
+            error_str = 'reach an error'
+
+        f.write(f'Each run took an average of {total_time/n:.2f} seconds to {error_str}.\n')
+        f.write(f'Max runtime: {max(run_times) :.2f} seconds; min runtime: {min(run_times):.2f} seconds.\n')
+        f.write(f'The average game length is {avg_rounds:.1f} rounds.\n')
+        f.write(f'Max game length: {max(rounds_list)} rounds; min game length: {min(rounds_list)} rounds.\n')
+        f.write(f'The average player move time is {avg_move_time:.2f} seconds.\n') if total_moves!=n else None
+        f.write(f'All processes took {total_time:.2f} seconds to {error_str}.\n')
+
+    with open(results_filename, 'r') as f:
+        batch_output = []
+        lines = f.read().splitlines()
+        started = False
+        for line in lines:
+            if '------------------------------' in line:
+                started = True
+            if started:
+                batch_output.append(line)
+
+    for line in batch_output:
+        if run_success == 0 and 'successfully' in line:
+            cprint(line, 'red')
+        elif 'win rate' in line:
+            if win_rate >= 75:
+                cprint(line, 'green')
+            else:
+                cprint(line, 'red')
+        elif 'move time' in line:
+            cprint(line, 'blue')
+        else:
+            print(line)
 
 if __name__ == "__main__":
     main()

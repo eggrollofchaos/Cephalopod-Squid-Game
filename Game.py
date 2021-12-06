@@ -4,6 +4,7 @@ from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
 from PlayerAI import PlayerAI
+from PlayerAIOpp import PlayerAIOpp
 from test_players.EasyAI import EasyAI
 from Utils import *
 import time
@@ -15,7 +16,7 @@ timeLimit = 0.5
 allowance = 0.05
 
 class Game():
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False, depth_limit=4):
+    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False):
         '''
         Description
         ----------
@@ -37,7 +38,6 @@ class Game():
         self.over       = False
         self.displayer  = displayer
         self.test_mode  = test_mode
-        self.depth_limit = depth_limit
 
     def initialize_game(self):
 
@@ -165,10 +165,13 @@ class Game():
             
             if turn == 1:
 
-                print("Player's Turn: ")
+                total_player_moves += 1
+
+                print(f"Player's Turn {total_player_moves}: ")
 
                 # find best move; should return two coordinates - new position and bombed tile.
-                move = self.playerAI.getMove(grid_copy, self.depth_limit)
+                move = self.playerAI.getMove(grid_copy)
+                # input()
 
                 # if move is valid, perform it
                 if self.is_valid_move(self.grid, self.playerAI, move):
@@ -180,25 +183,24 @@ class Game():
                     print(f"Tried to move to : {move}")
                     print("invalid Player AI move!")
                 
-                total_player_moves += 1
+                total_player_traps += 1
 
                 intended_trap = self.playerAI.getTrap(self.grid.clone())
-
+                # input()
                 if self.is_valid_trap(self.grid, intended_trap):
+                    print(f"Throwing a trap to: {intended_trap}...", end='')
                     trap = self.throw(self.playerAI, self.grid, intended_trap)
+                    print(f"Trap landed in {trap}")
                     self.grid.trap(trap)
-                    print(f"Throwing a trap to: {intended_trap}. Trap landed in {trap}")
 
                 else: 
                     self.over = True
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
 
-                total_player_traps += 1
-
             else:
 
-                print("Opponent's Turn : ")
+                print(f"Opponent's Turn {total_player_moves}: ")
                 
                 # make move
                 move = self.computerAI.getMove(grid_copy)
@@ -216,9 +218,10 @@ class Game():
                 intended_trap = self.computerAI.getTrap(self.grid.clone())
 
                 if self.is_valid_trap(self.grid, intended_trap):
+                    print(f"Throwing a trap to: {intended_trap}...", end='')
                     trap = self.throw(self.computerAI, self.grid, intended_trap)
                     self.grid.trap(trap)
-                    print(f"Throwing a trap to: {intended_trap}. Trap landed in {trap}")
+                    print(f"Trap landed in {trap}")
                 else: 
                     self.over = True
                     print(f"Tried to put trap in {intended_trap}")
@@ -235,25 +238,39 @@ class Game():
         return self.is_over(turn), total_player_moves, total_player_traps
 
 def main():
+    depth_limit = 0
+    opp_depth_limit = 0
+    test_mode = False
+    
+    if len(argv)>1:
+        if '-t' in argv:
+            test_mode = True
+        if '-d' in argv:
+            try:
+                dl_flag_index = argv.index('-d')
+                depth_limit = int(argv[dl_flag_index+1])
+            except:
+                pass
+        if '-a' in argv:
+            try:
+                opp_dl_flag_index = argv.index('-a')
+                opp_depth_limit = int(argv[opp_dl_flag_index+1])
+            except:
+                pass
     #### EDIT HERE ####
-    playerAI = PlayerAI() # change this to PlayerAI() to test your player!
+    playerAI = PlayerAI(depth_limit) # change this to PlayerAI() to test your player!
     # playerAI = None
     computerAI = EasyAI() # change this to a more sophisticated player you've coded
-    test_mode = False
-    depth_limit = 0
-    if len(argv)>1:
-        if argv[1] == '-t':
-            test_mode = True
-    if len(argv)>3:
-        if argv[2] == '-d':
-            depth_limit = int(argv[3])
+    # computerAI = PlayerAIOpp(opp_depth_limit) # change this to a more sophisticated player you've coded
+    # depth_limit = 0
     #### EDIT HERE ####
 
     displayer = Displayer()
-    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
+    # game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
+    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
     result, moves, traps = game.play()
-    exit_code = int(str(result) + str(moves))
 
+    exit_code = int(str(result) + str(moves))
     if result == 1: 
         print("Player 1 wins!")
         print(f"Total turns: {moves}")
