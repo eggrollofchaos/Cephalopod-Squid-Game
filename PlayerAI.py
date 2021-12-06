@@ -5,18 +5,27 @@ import numpy as np
 import random
 import time
 import sys
-import os 
+import os
+import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import connected_components
+
+DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAI(BaseAI):
-    def __init__(self) -> None:
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT) -> None:
         self.cape_color = 'blue'
         super().__init__()
         self.pos = None
         self.player_num = None
         self.optimal_trap_position = None
+        self.depth_limit = depth_limit
+        if self.depth_limit == 0:
+            self.depth_limit = DEFAULT_DEPTH_LIMIT
+        self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
 
     def getPosition(self):
         return self.pos

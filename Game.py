@@ -260,8 +260,8 @@ def main():
     #### EDIT HERE ####
     playerAI = PlayerAI(depth_limit) # change this to PlayerAI() to test your player!
     # playerAI = None
-    computerAI = EasyAI() # change this to a more sophisticated player you've coded
-    # computerAI = PlayerAIOpp(opp_depth_limit) # change this to a more sophisticated player you've coded
+    # computerAI = EasyAI(opp_depth_limit) # change this to a more sophisticated player you've coded
+    computerAI = PlayerAIOpp(opp_depth_limit) # change this to a more sophisticated player you've coded
     # depth_limit = 0
     #### EDIT HERE ####
 
