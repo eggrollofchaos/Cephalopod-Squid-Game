@@ -162,8 +162,8 @@ class PlayerAIOpp(BaseAI):
         available_traps = []
         threshold = 3
         for trap_pos in all_available_pos:
-            if manhattan_distance(position, trap_pos) < threshold:
-            # if grid_distance(position, trap_pos) < threshold:
+            # if manhattan_distance(position, trap_pos) < threshold:
+            if grid_distance(position, trap_pos) < threshold:
                 available_traps.append(trap_pos)
         return available_traps
 

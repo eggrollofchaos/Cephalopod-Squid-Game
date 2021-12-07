@@ -101,16 +101,18 @@ class PlayerAI(BaseAI):
         n_conn_sq_heur = 0
         edge_touch_heur = 0
         graph_cut_heur = 0
-        n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
-        if self.turns >= 3:
+        n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True)
+        if self.turns >= 2:
+            n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
+        if self.turns >= 4:
             edge_touch_heur = self.__edge_touch_heur(grid, is_me=True)
-        if self.turns >= 5:
+        if self.turns >= 6:
             edge_touch_heur = self.__edge_touch_heur(grid, is_me=True) - self.__edge_touch_heur(grid, is_me=False)
-        if self.turns >= 7:
+        if self.turns >= 8:
             n_conn_sq_heur = self.__connected_sq_heur(grid, is_me=True)
-        if self.turns >= 9:
+        if self.turns >= 10:
             n_conn_sq_heur = self.__connected_sq_heur(grid, is_me=True) - self.__connected_sq_heur(grid, is_me=False)
-        if self.turns >= 11:
+        if self.turns >= 12:
             # grid.print_grid()
             graph_cut_heur = self.__graph_cut_heur(grid)
         return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
@@ -290,7 +292,7 @@ class PlayerAI(BaseAI):
         """
         all_available_pos = grid.getAvailableCells()
         available_traps = []
-        threshold = 3
+        threshold = 2
         for trap_pos in all_available_pos:
             # if manhattan_distance(position, trap_pos) < threshold:
             if grid_distance(position, trap_pos) < threshold:
