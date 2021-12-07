@@ -204,7 +204,7 @@ class Game():
                 cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green')
                 if total_time >= 5.05:
                     # raise Exception('Exceeded time limit.')
-                    cprint('Exceeded 5 second time limit!', on_color='on_yellow')
+                    cprint('\nExceeded 5 second time limit!\n', on_color='on_yellow')
                     raise RuntimeError('Exceeded time limit.')
 
             else:
@@ -260,7 +260,9 @@ def main():
         if '-t' in argv:
             test_mode = True
         if '-h' in argv:
-            heur = True
+            heur = 'graphcut'
+        if '-h2' in argv:
+            heur = 'geodesics'
         if '-d' in argv:
             try:
                 dl_flag_index = argv.index('-d')
