@@ -9,7 +9,7 @@ import os
 import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
-from Utils import manhattan_distance, grid_distance
+from Utils import manhattan_distance, grid_distance, get_neighbors
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from termcolor import cprint
@@ -71,6 +71,7 @@ class PlayerAI(BaseAI):
         current_conn_sq = self.__connected_sq_heur(grid, pos=self.getPosition(), is_me=True) / 5
         print(f'Player\'s component has {int(current_conn_sq)} connected squares.')
         self.current_conn_sq = current_conn_sq
+        self.heur_time = 0
 
         alpha = -np.inf
         beta = np.inf
@@ -270,7 +271,11 @@ class PlayerAI(BaseAI):
         Returns a tuple of Grid object, heuristic
         """
         if self.use_advanced_heuristics == 'graphcut':
-            return self.__get_dof(grid, is_me)
+            start = time.time()
+            dof_heur = self.__get_dof(grid, is_me=is_me)
+            end = time.time()
+            self.heur_time += end-start
+            return dof_heur
         elif self.use_advanced_heuristics == 'geodesics':
             return grid, 0                     # for next set of heuristics Matthew/Gong
         else:
@@ -331,17 +336,61 @@ class PlayerAI(BaseAI):
         return children
 
 
-    def __get_all_available_traps(self, grid: Grid, position) -> list:
+    def __get_trap_candidates(self, grid: Grid, pos) -> list:
         """
         helper function to get a list of open spots on the board
         default is threshold of 3 squares away from position param
         returns a list of tuples (positions)
+        augmented to have a threshold of max traps, default to 10
         """
+        # all_available_pos = grid.getAvailableCells()
+        # neighbors = self.__connected_sq_heur(grid, return_pos=True, pos=position, get_traps=True, radius=2)
+        threshold = 3
+        radius = 1
+        
+        turn_adjust = int(np.floor((self.turns**2)/8))-1    # adjustment based on turn
+        if self.depth_limit >= 6:                           # set max_traps to return based on depth
+            max_search_traps = min(2 + turn_adjust, 47)
+        elif self.depth_limit >= 5:
+            max_search_traps = min(4 + turn_adjust, 47)
+        elif self.depth_limit >= 4:
+            max_search_traps = min(11 + turn_adjust, 47)
+        else:
+            max_search_traps = 47                           # effectively no limit
+        self.max_search_traps = max_search_traps
+
+        search_frontier = get_neighbors(grid, pos, radius, only_available=True)
+        explored = [pos]                                    # initialize with position
+        trap_candidates = []                                # initialize list of trap candidates to return
+        trap_count = 0
+
+        while radius <= threshold:
+            if not search_frontier:
+                new_neighbors = get_neighbors(grid, pos, radius, only_available=True)
+                search_frontier = list(set(new_neighbors))
+                radius += 1
+            for pos in search_frontier:                     # iterate over all search frontier
+                if pos not in explored and grid.getCellValue(pos) == 0:             # check square is empty
+                    trap_candidates.append(pos)             # add to trap candidates
+                    trap_count += 1
+                explored.append(pos)                        # add to explored
+                if trap_count >= max_search_traps:
+                    # print('Reached max # of trap positions to consider.')
+                    # print(trap_candidates)
+                    return trap_candidates
+                search_frontier.remove(pos)
+
+        # if grid_distance(position, trap_pos):
+        # print('Reached max search radius.')
+        # print(trap_candidates)
+        return trap_candidates
+
+
+    def __get_all_available_traps_old(self, grid, position):
         all_available_pos = grid.getAvailableCells()
         available_traps = []
         threshold = 2
         for trap_pos in all_available_pos:
-            # if manhattan_distance(position, trap_pos) < threshold:
             if grid_distance(position, trap_pos) < threshold:
                 available_traps.append(trap_pos)
         return available_traps
@@ -363,7 +412,7 @@ class PlayerAI(BaseAI):
             other_position = self.getPlayerPosition(grid)
 
         children = []
-        available_traps = self.__get_all_available_traps(grid, other_position)
+        available_traps = self.__get_trap_candidates(grid, other_position)
         for trap_position in available_traps:
             if trap_position != position:
                 trap_clone = grid.clone()
@@ -396,7 +445,7 @@ class PlayerAI(BaseAI):
     def __trap_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         opponent Min node for throwing Trap
-        returns a list of Grid objects
+        returns a tuple of Grid object, utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -437,7 +486,7 @@ class PlayerAI(BaseAI):
     def __move_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         opponent Min node for making Move
-        returns a list of Grid objects
+        returns a tuple of Grid object, utility
         """
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
@@ -467,7 +516,7 @@ class PlayerAI(BaseAI):
     def __trap_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         player Max node for throwing Trap
-        returns a list of Grid objects
+        returns a tuple of Grid object, utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -509,7 +558,7 @@ class PlayerAI(BaseAI):
     def __move_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         player Min node for making Move
-        returns a list of Grid objects
+        returns a tuple of Grid object, utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -603,6 +652,10 @@ class PlayerAI(BaseAI):
         start = time.time()
         child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         end = time.time()
+        print(f'Max traps to search = {self.max_search_traps}')
+        if self.use_advanced_heuristics:
+            print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
+        # if end-start >= 5.05:
         if self.use_graph_me:
             print('Used graph cut heuristic on player.')
         if self.use_graph_opp:
