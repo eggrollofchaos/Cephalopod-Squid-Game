@@ -216,8 +216,8 @@ class PlayerAI(BaseAI):
         """
             Calculates probability of a trap landing in an intended square.
         """
-        # alpha = manhattan_distance(position, trap_position)
-        alpha = grid_distance(position, trap_position)
+        alpha = manhattan_distance(position, trap_position)
+        # alpha = grid_distance(position, trap_position)
         p = 1 - 0.05 * (alpha - 1)
         return p
 
@@ -529,21 +529,4 @@ class PlayerAI(BaseAI):
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
             return grid.getAvailableCells()[0]
-        return self.__enhance_throw(grid, self.optimal_trap_position)
-
-    def __enhance_throw(self, grid: Grid, trap_pos) -> tuple:
-        """
-        Looks for a way to improve a throw. If an intended trap_pos has at least one available neighbor, there is a chance for failure.
-        If one of the neighbors of the trap_pos has only trap_pos as a neighbor, throw to that spot instead.
-        Returns a tuple
-        """
-        error_traps = grid.get_neighbors(trap_pos, only_available=True)
-        print('Aiming for', trap_pos)
-        if error_traps:
-            for trap_nb in grid.get_neighbors(trap_pos, only_available=False):
-                trap_nb_nb = len(grid.get_neighbors(trap_nb, only_available=True))
-                trap_nb_value = int(grid.getCellValue(trap_nb))
-                if trap_nb_value != 0 and trap_nb_nb == 1:
-                    print('Found a way to guarantee trap placement!')
-                    return trap_nb
-        return trap_pos
+        return self.optimal_trap_position
