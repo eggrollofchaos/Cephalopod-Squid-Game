@@ -327,7 +327,7 @@ class PlayerAIOpp(BaseAI):
         returns a Grid object
         """
         start = time.time()
-        child, _ = self.__move_maximize(grid, alpha, beta, depth=1, depth_limit=depth_limit)
+        child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         end = time.time()
         print(f'This move took {end-start:.5f} seconds.')
         return child
