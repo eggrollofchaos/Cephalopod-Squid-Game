@@ -1,5 +1,5 @@
-# mhr2145
 # gc2950
+# mhr2145
 # wax1
 import numpy as np
 import random
@@ -597,6 +597,4 @@ class PlayerAI(BaseAI):
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
             return grid.getAvailableCells()[0]
-        # if self.turns>5:
-        #     time.sleep(1)
         return self.optimal_trap_position
