@@ -98,24 +98,29 @@ class PlayerAI(BaseAI):
         Apply degrees of freedom calculation heuristic based on early, mid, late game.
         Returns a tuple of Grid object, heuristic
         """
-        n_conn_sq_heur = self.__n_conn_sq_heur(grid)
-        n_neighbors_heur = self.__n_neighbors_heur(grid)
-        edge_touch_heur = self.__edge_touch_heur(grid)
-        if self.turns <= 3:
-            return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur
-        elif self.turns <= 7:
-            return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur
-        else:            
+        n_conn_sq_heur = 0
+        edge_touch_heur = 0
+        graph_cut_heur = 0
+        n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
+        if self.turns >= 3:
+            edge_touch_heur = self.__edge_touch_heur(grid, is_me=True)
+        if self.turns >= 5:
+            edge_touch_heur = self.__edge_touch_heur(grid, is_me=True) - self.__edge_touch_heur(grid, is_me=False)
+        if self.turns >= 7:
+            n_conn_sq_heur = self.__connected_sq_heur(grid, is_me=True)
+        if self.turns >= 9:
+            n_conn_sq_heur = self.__connected_sq_heur(grid, is_me=True) - self.__connected_sq_heur(grid, is_me=False)
+        if self.turns >= 11:
             # grid.print_grid()
             graph_cut_heur = self.__graph_cut_heur(grid)
-            return grid, n_conn_sq_heur #+ n_neighbors_heur + edge_touch_heur + graph_cut_heur
+        return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
     def __edge_touch_heur(self, grid: Grid, is_me=True) -> int:
         """
         Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
         Returns a heuristic int
         """
-        if not is_me:
+        if is_me:
             pos = self.getPlayerPosition(grid)
         else:
             pos = self.getOpponentPosition(grid)
@@ -126,10 +131,10 @@ class PlayerAI(BaseAI):
             edges_touched -= 1
         return 5*edges_touched
 
-    def __n_conn_sq_heur(self, grid: Grid, is_me=True) -> int:
+    def __connected_sq_heur(self, grid: Grid, is_me=True, return_pos=False) -> tuple:
         """
         Get number of connected squares for player.
-        Returns a heuristic int
+        Returns a tuple of heuristic int, list of positions
         """
         if is_me:
             pos = self.getPlayerPosition(grid)
@@ -138,44 +143,74 @@ class PlayerAI(BaseAI):
         explored = [pos]                # track explored squares
         stack = Q.LifoQueue()           # initialize stack
         stack.put(pos)                  # push current position onto stack
+        if return_pos:
+            conn_squares_list = [pos]   # list of connected squares, initialize at player position
         conn_sq_heur = 1                # number of squares connected to position, initialize at 1
 
         while not stack.empty():
             current_sq = stack.get()
             has_children = False
-            for child in grid.get_neighbors(current_sq, only_available=True):
-                if child not in explored:
-                    explored.append(child)
-                    stack.put(child)
-                    conn_sq_heur += 1
+            for child_pos in grid.get_neighbors(current_sq, only_available=True):
+                if child_pos not in explored:
+                    explored.append(child_pos)
+                    stack.put(child_pos)
+                    if return_pos:
+                        conn_squares_list.append(child_pos)
+                    else:
+                        conn_sq_heur += 1
                     has_children = True
             if not has_children and not stack.empty():
                 stack.get_nowait()
-        # print(f'Current player has {connected_sq} connected squares.')
-        return 2*conn_sq_heur
+        if return_pos:
+            conn_sq_heur = len(conn_squares_list)
+            # print(f'Current player has {conn_sq_heur} connected squares.')
+            return 2*conn_sq_heur, conn_squares_list
+        else:
+            # print(f'Current player has {conn_sq_heur} connected squares.')
+            return 2*conn_sq_heur
 
-    def __graph_cut_heur(self, grid: Grid) -> int:
+    def __graph_cut_heur(self, grid: Grid, is_me=True) -> int:
         """
         Heuristic based on how easy it is to increase the number of connected components within the board,
         and how drastic the decrease in freedom resulting from the removal of one free space
         Returns a heuristic int
         """
-        conn_comps = self.__num_connected_components(grid)      # number of connected components
-        comp_size = self.__n_conn_sq_heur(grid)                 # size of the component that player is part of
-        all_available_pos = grid.getAvailableCells()
+        conn_comps = self.__num_connected_components(grid, is_me=is_me)         # number of connected components
+        comp_size, conn_pos = self.__connected_sq_heur(grid, return_pos=True)   # size of the component that player is part of
+        # all_available_pos = grid.getAvailableCells()
+
         graph_cut_heur = 0
-        for trap_pos in all_available_pos:
+        # for trap_pos in all_available_pos:
+        for trap_pos in conn_pos:
             trap_clone = grid.clone()
             trap_clone.trap(trap_pos)
-            new_conn_comps = self.__num_connected_components(grid)
-            new_comp_size = self.__n_conn_sq_heur(grid)
-            comp_delta = new_conn_comps - conn_comps            # this will be 0 or 1
+            new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
+            new_comp_size = self.__connected_sq_heur(grid, return_pos=False)
+            comp_delta = new_conn_comps - conn_comps                # this will be 0 or -1
             size_delta = new_comp_size - comp_size
-            utility = -10*comp_delta - size_delta
+            # if labels.tolist() != [0, 0, 0, 0, 0, 0, 0]:
+                # print(labels)
+            # if comp_delta < 0:
+            #     print(f'new_conn_comps = {new_conn_comps}')
+            #     print(f'comp_delta = {comp_delta}')
+            #     input()
+            # if size_delta < 0:
+            #     print(f'new_comp_size = {new_comp_size}')
+            #     print(f'size_delta = {size_delta}')
+            #     input()
+                # input()
+            utility = 10*comp_delta + size_delta - (47-new_comp_size)**2
+            # if utility < -2115:
+                # print(f'Utility is {utility}.')
+                # print(f'new_conn_comps = {new_conn_comps}')
+                # print(f'comp_delta = {comp_delta}')
+                # print(f'new_comp_size = {new_comp_size}')
+                # print(f'size_delta = {size_delta}')
+                # input()
             graph_cut_heur += utility
         return graph_cut_heur
 
-    def __num_connected_components(self, grid: Grid) -> int:
+    def __num_connected_components(self, grid: Grid, return_labels=False, is_me=True) -> int:
         """
         Convert board to graph; get number of connected components.
         """
@@ -184,7 +219,7 @@ class PlayerAI(BaseAI):
         graph = np.where(graph==2, 0, graph)
         graph = np.where(graph==-1, 0, graph)
         graph = csr_matrix(graph)
-        return connected_components(csgraph=graph, directed=False, return_labels=False)
+        return connected_components(csgraph=graph, directed=False, return_labels=return_labels)
 
     def __get_heuristics(self, grid: Grid, is_me) -> tuple:
         """
@@ -194,8 +229,8 @@ class PlayerAI(BaseAI):
         if self.use_advanced_heuristics:
             return self.__get_dof(grid, is_me)
         else:
-            return grid, self.__n_neighbors_heur(grid)
-        # return self.__n_conn_sq_heur(grid, is_me)
+            return grid, self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
+        # return self.__connected_sq_heur(grid, is_me)
 
     def __n_neighbors_heur(self, grid: Grid, is_me=True) -> int:
         """
@@ -203,21 +238,22 @@ class PlayerAI(BaseAI):
         """
         if True:
             pos = self.getPlayerPosition(grid)
-            other_pos = self.getOpponentPosition(grid)
+            # other_pos = self.getOpponentPosition(grid)
         else:
             pos = self.getOpponentPosition(grid)
-            other_pos = self.getPlayerPosition(grid)
+            # other_pos = self.getPlayerPosition(grid)
         # return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
         #     grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
-        return ( len(grid.get_neighbors(pos, only_available=True)) - len(
-            grid.get_neighbors(other_pos, only_available=True)) )
+        # return ( len(grid.get_neighbors(pos, only_available=True)) - len(
+        #     grid.get_neighbors(other_pos, only_available=True)) )
+        return len(grid.get_neighbors(pos, only_available=True))
 
     def __probability(self, position, trap_position) -> float:
         """
             Calculates probability of a trap landing in an intended square.
         """
-        # alpha = manhattan_distance(position, trap_position)
-        alpha = grid_distance(position, trap_position)
+        alpha = manhattan_distance(position, trap_position)
+        # alpha = grid_distance(position, trap_position)
         p = 1 - 0.05 * (alpha - 1)
         return p
 
@@ -257,6 +293,7 @@ class PlayerAI(BaseAI):
         threshold = 3
         for trap_pos in all_available_pos:
             if manhattan_distance(position, trap_pos) < threshold:
+            # if grid_distance(position, trap_pos) < threshold:
                 available_traps.append(trap_pos)
         return available_traps
 
@@ -459,7 +496,7 @@ class PlayerAI(BaseAI):
             elif marginal_utility_B < marginal_utility_A:
                 return Move_A, Trap_A
 
-        if not is_me:
+        if is_me:
             pos_A = self.getPlayerPosition(Move_A)
             pos_B = self.getPlayerPosition(Move_B)
         else:
@@ -468,7 +505,7 @@ class PlayerAI(BaseAI):
         marginal_utility_A = 0
         marginal_utility_B = 0
        
-        # maximize free spaces
+        # maximize free spaces delta
         num_free_spaces_A = self.__n_neighbors_heur(Move_A, is_me)
         marginal_utility_A += num_free_spaces_A
         num_free_spaces_B = self.__n_neighbors_heur(Move_B, is_me)
@@ -507,9 +544,9 @@ class PlayerAI(BaseAI):
         returns a Grid object
         """
         start = time.time()
-        child, _ = self.__move_maximize(grid, alpha, beta, depth=1, depth_limit=depth_limit)
+        child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         end = time.time()
-        print(f'This move took {end-start:.5f} seconds.')
+        # print(f'This move took {end-start:.5f} seconds.')
         return child
 
     def getTrap(self, grid: Grid) -> tuple:
@@ -529,21 +566,6 @@ class PlayerAI(BaseAI):
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
             return grid.getAvailableCells()[0]
-        return self.__enhance_throw(grid, self.optimal_trap_position)
-
-    def __enhance_throw(self, grid: Grid, trap_pos) -> tuple:
-        """
-        Looks for a way to improve a throw. If an intended trap_pos has at least one available neighbor, there is a chance for failure.
-        If one of the neighbors of the trap_pos has only trap_pos as a neighbor, throw to that spot instead.
-        Returns a tuple
-        """
-        error_traps = grid.get_neighbors(trap_pos, only_available=True)
-        print('Aiming for', trap_pos)
-        if error_traps:
-            for trap_nb in grid.get_neighbors(trap_pos, only_available=False):
-                trap_nb_nb = len(grid.get_neighbors(trap_nb, only_available=True))
-                trap_nb_value = int(grid.getCellValue(trap_nb))
-                if trap_nb_value != 0 and trap_nb_nb == 1:
-                    print('Found a way to guarantee trap placement!')
-                    return trap_nb
-        return trap_pos
+        # if self.turns>5:
+        #     time.sleep(1)
+        return self.optimal_trap_position

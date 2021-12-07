@@ -159,6 +159,7 @@ class Game():
         
         while not self.over:
             self.prevTime = time.process_time()
+            start = self.prevTime
             grid_copy = self.grid.clone()
 
             move = None
@@ -168,7 +169,6 @@ class Game():
                 total_player_moves += 1
 
                 print(f"Player's Turn {total_player_moves}: ")
-
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
                 # input()
@@ -197,6 +197,9 @@ class Game():
                     self.over = True
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
+
+                end = time.process_time()
+                print(f'Player\'s move + throw took {end-start:.3f} seconds.')
 
             else:
 
@@ -229,7 +232,7 @@ class Game():
 
             if self.is_over(turn):
                 self.over = True
-            
+
             if not self.test_mode:
                 self.updateAlarm(time.process_time())
             turn = 3 - turn
