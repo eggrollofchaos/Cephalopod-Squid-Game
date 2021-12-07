@@ -446,6 +446,7 @@ class PlayerAI(BaseAI):
         """
         opponent Min node for throwing Trap
         returns a tuple of Grid object, utility
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -487,6 +488,7 @@ class PlayerAI(BaseAI):
         """
         opponent Min node for making Move
         returns a tuple of Grid object, utility
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
@@ -517,6 +519,7 @@ class PlayerAI(BaseAI):
         """
         player Max node for throwing Trap
         returns a tuple of Grid object, utility
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
