@@ -396,7 +396,7 @@ class PlayerAI(BaseAI):
     def __trap_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         opponent Min node for throwing Trap
-        returns a list of Grid objects
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -437,7 +437,7 @@ class PlayerAI(BaseAI):
     def __move_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         opponent Min node for making Move
-        returns a list of Grid objects
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
@@ -467,7 +467,7 @@ class PlayerAI(BaseAI):
     def __trap_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         player Max node for throwing Trap
-        returns a list of Grid objects
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -509,7 +509,7 @@ class PlayerAI(BaseAI):
     def __move_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
         """
         player Min node for making Move
-        returns a list of Grid objects
+        returns a grid object and associated utility
         """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
