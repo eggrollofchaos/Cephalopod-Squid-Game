@@ -8,6 +8,7 @@ from PlayerAIOpp import PlayerAIOpp
 from test_players.EasyAI import EasyAI
 from Utils import *
 import time
+from termcolor import cprint
 
 PLAYER_TURN, COMPUTER_TURN = 1,2
 
@@ -168,7 +169,7 @@ class Game():
 
                 total_player_moves += 1
 
-                print(f"Player's Turn {total_player_moves}: ")
+                cprint(f"Player's Turn {total_player_moves}: ", 'green')
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
                 # input()
@@ -199,11 +200,16 @@ class Game():
                     print("Invalid trap!")
 
                 end = time.process_time()
-                print(f'Player\'s move + throw took {end-start:.3f} seconds.')
+                total_time = end-start
+                cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green')
+                if total_time >= 5.05:
+                    # raise Exception('Exceeded time limit.')
+                    cprint('Exceeded 5 second time limit!', on_color='on_yellow')
+                    raise RuntimeError('Exceeded time limit.')
 
             else:
 
-                print(f"Opponent's Turn {total_player_moves}: ")
+                cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta')
                 
                 # make move
                 move = self.computerAI.getMove(grid_copy)
@@ -229,6 +235,10 @@ class Game():
                     self.over = True
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
+
+                end = time.process_time()
+                total_time = end-start
+                cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta')
 
             if self.is_over(turn):
                 self.over = True

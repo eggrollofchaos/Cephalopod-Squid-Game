@@ -106,7 +106,7 @@ class PlayerAIOpp(BaseAI):
         """
         Returns the difference in available squares around player vs available squares around opponent.
         """
-        if True:
+        if is_me:
             pos = self.getPlayerPosition(grid)
             # other_pos = self.getOpponentPosition(grid)
         else:
@@ -160,7 +160,7 @@ class PlayerAIOpp(BaseAI):
         """
         all_available_pos = grid.getAvailableCells()
         available_traps = []
-        threshold = 3
+        threshold = 2
         for trap_pos in all_available_pos:
             # if manhattan_distance(position, trap_pos) < threshold:
             if grid_distance(position, trap_pos) < threshold:

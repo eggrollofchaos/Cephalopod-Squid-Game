@@ -12,6 +12,7 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
+from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 4
 
@@ -27,6 +28,8 @@ class PlayerAI(BaseAI):
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         self.use_advanced_heuristics = heur
+        self.use_graph_me = False
+        self.use_graph_opp = False
 
     def getPosition(self):
         return self.pos
@@ -99,22 +102,40 @@ class PlayerAI(BaseAI):
         Returns a tuple of Grid object, heuristic
         """
         n_conn_sq_heur = 0
+        n_conn_sq_heur_me = 48
+        n_conn_sq_heur_opp = 48
         edge_touch_heur = 0
         graph_cut_heur = 0
-        n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True)
+        graph_cut_heur_me = 0
+        graph_cut_heur_opp = 0
+
+        if self.turns >= 1:
+            n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True)
         if self.turns >= 2:
             n_neighbors_heur = self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
-        if self.turns >= 4:
+        if self.turns >= 3:
             edge_touch_heur = self.__edge_touch_heur(grid, is_me=True)
-        if self.turns >= 6:
+        if self.turns >= 4:
             edge_touch_heur = self.__edge_touch_heur(grid, is_me=True) - self.__edge_touch_heur(grid, is_me=False)
-        if self.turns >= 8:
-            n_conn_sq_heur = self.__connected_sq_heur(grid, is_me=True)
-        if self.turns >= 10:
-            n_conn_sq_heur = self.__connected_sq_heur(grid, is_me=True) - self.__connected_sq_heur(grid, is_me=False)
-        if self.turns >= 12:
+        if self.turns >= 5:
+            n_conn_sq_heur_me = self.__connected_sq_heur(grid, is_me=True)
+        if self.turns >= 6:
+            n_conn_sq_heur_me = self.__connected_sq_heur(grid, is_me=True)
+            n_conn_sq_heur_opp = self.__connected_sq_heur(grid, is_me=False)
             # grid.print_grid()
-            graph_cut_heur = self.__graph_cut_heur(grid)
+
+        if self.turns >= 12 or n_conn_sq_heur_me < 25:
+            self.use_graph_me = True
+            # cprint('Using graph cut heuristic on player.', 'blue')
+            graph_cut_heur = self.__graph_cut_heur(grid, is_me=True)
+
+        if self.turns >= 12 or n_conn_sq_heur_opp < 25:
+            self.use_graph_opp = True
+            # cprint('Using graph cut heuristic on opponent.', 'blue')
+            graph_cut_heur = self.__graph_cut_heur(grid, is_me=False)
+
+        n_conn_sq_heur = n_conn_sq_heur_me - n_conn_sq_heur_opp
+        graph_cut_heur = graph_cut_heur_me - graph_cut_heur_opp
         return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
     def __edge_touch_heur(self, grid: Grid, is_me=True) -> int:
@@ -177,8 +198,12 @@ class PlayerAI(BaseAI):
         and how drastic the decrease in freedom resulting from the removal of one free space
         Returns a heuristic int
         """
+        if is_me:
+            pos = self.getPlayerPosition(grid)
+        else:
+            pos = self.getOpponentPosition(grid)
         conn_comps = self.__num_connected_components(grid, is_me=is_me)         # number of connected components
-        comp_size, conn_pos = self.__connected_sq_heur(grid, return_pos=True)   # size of the component that player is part of
+        comp_size, conn_pos = self.__connected_sq_heur(grid, is_me=is_me, return_pos=True)   # size of the component that player is part of
         # all_available_pos = grid.getAvailableCells()
 
         graph_cut_heur = 0
@@ -187,7 +212,7 @@ class PlayerAI(BaseAI):
             trap_clone = grid.clone()
             trap_clone.trap(trap_pos)
             new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
-            new_comp_size = self.__connected_sq_heur(grid, return_pos=False)
+            new_comp_size = self.__connected_sq_heur(grid, is_me=is_me, return_pos=False)
             comp_delta = new_conn_comps - conn_comps                # this will be 0 or -1
             size_delta = new_comp_size - comp_size
             # if labels.tolist() != [0, 0, 0, 0, 0, 0, 0]:
@@ -238,7 +263,7 @@ class PlayerAI(BaseAI):
         """
         Returns the difference in available squares around player vs available squares around opponent.
         """
-        if True:
+        if is_me:
             pos = self.getPlayerPosition(grid)
             # other_pos = self.getOpponentPosition(grid)
         else:
@@ -548,6 +573,10 @@ class PlayerAI(BaseAI):
         start = time.time()
         child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         end = time.time()
+        if self.use_graph_me:
+            print('Used graph cut heuristic on player.')
+        if self.use_graph_opp:
+            print('Used graph cut heuristic on opponent.')
         # print(f'This move took {end-start:.5f} seconds.')
         return child
 
