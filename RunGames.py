@@ -72,9 +72,12 @@ class RunGames(object):
     def __run_process(self, it):
         run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)]
         run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)]
-        if self.heur:
+        if self.heur == 'graphcut':
             run_arg_list.append('-h')
             run_arg_list3.append('-h')
+        if self.heur == 'geodesics':
+            run_arg_list.append('-h2')
+            run_arg_list3.append('-h2')
 
         start_run = time()
         try:
@@ -181,7 +184,9 @@ def main():
         if '-g' in argv:
             suppress_output = False
         if '-h' in argv:
-            heur = True
+            heur = 'graphcut'
+        if '-h2' in argv:
+            heur = 'geodesics'
 
     cprint(f'Running batch test on {argv[0]}, {n} times...', 'blue')
     if depth_limit:

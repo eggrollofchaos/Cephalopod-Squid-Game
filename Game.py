@@ -8,6 +8,7 @@ from PlayerAIOpp import PlayerAIOpp
 from test_players.EasyAI import EasyAI
 from Utils import *
 import time
+from termcolor import cprint
 
 PLAYER_TURN, COMPUTER_TURN = 1,2
 
@@ -159,6 +160,7 @@ class Game():
         
         while not self.over:
             self.prevTime = time.process_time()
+            start = self.prevTime
             grid_copy = self.grid.clone()
 
             move = None
@@ -167,8 +169,7 @@ class Game():
 
                 total_player_moves += 1
 
-                print(f"Player's Turn {total_player_moves}: ")
-
+                cprint(f"Player's Turn {total_player_moves}: ", 'green')
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
                 # input()
@@ -198,9 +199,17 @@ class Game():
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
 
+                end = time.process_time()
+                total_time = end-start
+                cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green')
+                if total_time >= 5.05:
+                    # raise Exception('Exceeded time limit.')
+                    cprint('\nExceeded 5 second time limit!\n', on_color='on_yellow')
+                    raise RuntimeError('Exceeded time limit.')
+
             else:
 
-                print(f"Opponent's Turn {total_player_moves}: ")
+                cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta')
                 
                 # make move
                 move = self.computerAI.getMove(grid_copy)
@@ -227,9 +236,13 @@ class Game():
                     print(f"Tried to put trap in {intended_trap}")
                     print("Invalid trap!")
 
+                end = time.process_time()
+                total_time = end-start
+                cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta')
+
             if self.is_over(turn):
                 self.over = True
-            
+
             if not self.test_mode:
                 self.updateAlarm(time.process_time())
             turn = 3 - turn
@@ -247,7 +260,9 @@ def main():
         if '-t' in argv:
             test_mode = True
         if '-h' in argv:
-            heur = True
+            heur = 'graphcut'
+        if '-h2' in argv:
+            heur = 'geodesics'
         if '-d' in argv:
             try:
                 dl_flag_index = argv.index('-d')
