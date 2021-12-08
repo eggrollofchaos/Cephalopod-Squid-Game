@@ -9,7 +9,7 @@ import os
 import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
-from Utils import manhattan_distance, grid_distance, get_neighbors
+from Utils import manhattan_distance, grid_distance
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from termcolor import cprint
@@ -30,7 +30,8 @@ class PlayerAI(BaseAI):
         self.use_advanced_heuristics = heur
         self.use_graph_me = False
         self.use_graph_opp = False
-        self.current_conn_sq = 48
+        self.curr_conn_sq = 48
+        self.printed = False
 
     def getPosition(self):                      # used by Game to find current position
         return self.pos
@@ -68,14 +69,36 @@ class PlayerAI(BaseAI):
         
         """
         # get players's current connected sq 
-        current_conn_sq = self.__connected_sq_heur(grid, pos=self.getPosition(), is_me=True) / 5
-        print(f'Player\'s component has {int(current_conn_sq)} connected squares.')
-        self.current_conn_sq = current_conn_sq
+        curr_conn_sq_me = self.__connected_sq_heur(grid, is_me=True) / 5
+        curr_conn_sq_opp = self.__connected_sq_heur(grid, is_me=False) / 5
+        # get maximum traps to search per call to Expectiminimax
+        # turn_adjust = int((self.turns**2)/8)-2               # adjustment based on turn
+        turn_adjust = int(((self.turns+5)**2)/30 - (1/2)*(self.turns+5))     # adjustment based on turn
+        depth_adjust = 3*(self.depth_limit-3)               # adjustment based on depth
+        if self.depth_limit >= 6:                           # set max_traps to return based on depth
+            max_search_traps = max(min(3 + turn_adjust - depth_adjust, 47), 1)
+        elif self.depth_limit >= 5:
+            max_search_traps = max(min(5 + turn_adjust - depth_adjust, 47), 1)
+        elif self.depth_limit >= 4:
+            max_search_traps = max(min(10 + turn_adjust - depth_adjust, 47), 1)
+        else:
+            max_search_traps = 47                           # effectively no limit
+        self.max_search_traps = max_search_traps
+        self.max_trap_candidates = 0
+
+        # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
+        depth_delta = 0                                         # adjust based on turn
+        depth_limit = self.depth_limit + depth_delta
+        print(f'Depth limit is currently {depth_limit}.')
+        print(f'Player\'s component has {int(curr_conn_sq_me)} connected squares; opponent\'s component has {int(curr_conn_sq_opp)}.')
+        print(f'Max traps to search = {self.max_search_traps}; ', end='')
+        self.curr_conn_sq_me = curr_conn_sq_me
+        self.curr_conn_sq_opp = curr_conn_sq_opp
         self.heur_time = 0
 
         alpha = -np.inf
         beta = np.inf
-        max_grid = self.__decision(grid, alpha, beta, self.depth_limit)
+        max_grid = self.__decision(grid, alpha, beta, depth_limit)
         self.turns += 1
         return max_grid.move_position
 
@@ -129,19 +152,23 @@ class PlayerAI(BaseAI):
             edge_touch_heur = self.__edge_touch_heur(grid, is_me=True)
         if self.turns >= 4:
             edge_touch_heur = self.__edge_touch_heur(grid, is_me=True) - self.__edge_touch_heur(grid, is_me=False)
-        if self.turns >= 5:
-            n_conn_sq_heur_me, conn_sq_list = self.__connected_sq_heur(grid, return_pos=True, is_me=True)
         if self.turns >= 6:
+            n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, return_pos=True, is_me=True)
+        if self.turns >= 8:
             n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, return_pos=True, is_me=True)
             n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, return_pos=True, is_me=False)
             # grid.print_grid()
 
-        if self.turns >= 12 or self.current_conn_sq < 24:
+        turns_limit = (self.turns - 2*np.ceil(self.depth_limit/3) >= 9)
+        conn_sq_limit_me = (self.curr_conn_sq_me + 3*(self.depth_limit//4) <= 30)
+        conn_sq_limit_opp = (self.curr_conn_sq_opp + 3*(self.depth_limit//4) <= 30)
+        if turns_limit and conn_sq_limit_me:
             self.use_graph_me = True
             # cprint('Using graph cut heuristic on player.', 'blue')
             graph_cut_heur = self.__graph_cut_heur(grid, comp_size=n_conn_sq_heur_me, conn_sq=conn_sq_list_me, is_me=True)
 
-        if self.turns >= 12 or self.current_conn_sq < 21:
+        if turns_limit and conn_sq_limit_opp:
+        # if self.turns >= 12 or ( self.curr_conn_sq_opp * < 24:
             self.use_graph_opp = True
             # cprint('Using graph cut heuristic on opponent.', 'blue')
             graph_cut_heur = self.__graph_cut_heur(grid, comp_size=n_conn_sq_heur_opp, conn_sq=conn_sq_list_opp, is_me=False)
@@ -178,6 +205,58 @@ class PlayerAI(BaseAI):
                 pos = self.getPlayerPosition(grid)
             else:
                 pos = self.getOpponentPosition(grid)
+
+        explored = [pos]                # track explored squares
+        search_frontier = [pos]         # initialize with current position
+        conn_sq_list = [pos]            # list of connected squares, initialize at player position
+        conn_sq_heur = 1                # number of squares connected to position, initialize at 1
+
+
+        while search_frontier:
+            current_sq = search_frontier.pop()
+            has_children = False
+            for child_pos in grid.get_neighbors(current_sq, only_available=True):
+                if child_pos not in explored and child_pos not in conn_sq_list:
+                    explored.append(child_pos)
+                    search_frontier.append(child_pos)
+                    conn_sq_list.append(child_pos)
+                    conn_sq_heur += 1
+                    has_children = True
+            # if not has_children :
+            #     search_frontier.pop()
+
+        if return_pos:
+            # conn_sq_heur = len(conn_sq_list)      # redundant
+            # print(f'Current player has {conn_sq_heur} connected squares.')
+            return 5*conn_sq_heur, conn_sq_list
+        else:
+            # print(f'Current player has {conn_sq_heur} connected squares.')
+            return 5*conn_sq_heur
+
+
+    def __conn_sq_depth_lim_hear(self, grid: Grid, pos=None, max_depth=-1, is_me=True) -> int:
+        """
+        Get number of connected squares for current player in current Grid object.
+        Returns a heuristic int
+        """
+        if max_depth==-1:
+            max_depth = None
+
+
+
+        return 5*conn_sq_heur
+
+
+    def __connected_sq_heur_old(self, grid: Grid, return_pos=False, pos=None, is_me=True) -> tuple:
+        """
+        Get number of connected squares for current player in current Grid object.
+        Returns a tuple of heuristic int, list of positions
+        """
+        if not pos:
+            if is_me:
+                pos = self.getPlayerPosition(grid)
+            else:
+                pos = self.getOpponentPosition(grid)
         explored = [pos]                # track explored squares
         stack = Q.LifoQueue()           # initialize stack
         stack.put(pos)                  # push current position onto stack
@@ -194,8 +273,8 @@ class PlayerAI(BaseAI):
                     conn_sq_list.append(child_pos)
                     conn_sq_heur += 1
                     has_children = True
-            # if not has_children and not stack.empty():
-            #     stack.get_nowait()
+            if not has_children and not stack.empty():
+                stack.get_nowait()
 
         if return_pos:
             # conn_sq_heur = len(conn_sq_list)      # redundant
@@ -216,39 +295,18 @@ class PlayerAI(BaseAI):
             pos = self.getPlayerPosition(grid)
         else:
             pos = self.getOpponentPosition(grid)
-        conn_comps = self.__num_connected_components(grid, is_me=is_me)         # number of connected components
-        # comp_size, conn_sq = comp_size, conn_sq                                           # size of the component that player is part of
-        # comp_size, conn_sq = self.__connected_sq_heur(grid, is_me=is_me, return_pos=True)   # size of the component that player is part of
-
+        # conn_comps = self.__num_connected_components(grid, is_me=is_me)         # number of connected components
+        
         graph_cut_heur = 0
-        # all_available_pos = grid.getAvailableCells()                            # deprecated, no need to look at all open cells
-        # for trap_pos in all_available_pos:
         for trap_pos in conn_sq:                                                # iterate over connected squares
             trap_clone = grid.clone()
             trap_clone.trap(trap_pos)
-            new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
+            # new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
             new_comp_size = self.__connected_sq_heur(grid, is_me=is_me, return_pos=False)
-            comp_delta = new_conn_comps - conn_comps                # this will be 0 or -1
+            # comp_delta = new_conn_comps - conn_comps                # this will be 0 or -1
             size_delta = new_comp_size - comp_size
-            # if labels.tolist() != [0, 0, 0, 0, 0, 0, 0]:
-                # print(labels)
-            # if comp_delta < 0:
-            #     print(f'new_conn_comps = {new_conn_comps}')
-            #     print(f'comp_delta = {comp_delta}')
-            #     input()
-            # if size_delta < 0:
-            #     print(f'new_comp_size = {new_comp_size}')
-            #     print(f'size_delta = {size_delta}')
-            #     input()
-                # input()
-            utility = 10*comp_delta + size_delta - (47-new_comp_size)**3
-            # if utility < -2115:
-                # print(f'Utility is {utility}.')
-                # print(f'new_conn_comps = {new_conn_comps}')
-                # print(f'comp_delta = {comp_delta}')
-                # print(f'new_comp_size = {new_comp_size}')
-                # print(f'size_delta = {size_delta}')
-                # input()
+            # utility = 10*comp_delta + size_delta - (47-new_comp_size)**3
+            utility = 10*size_delta - (47-new_comp_size)**3
             graph_cut_heur += utility
         return graph_cut_heur
 
@@ -310,6 +368,40 @@ class PlayerAI(BaseAI):
         return p
 
 
+    def __get_neighbors(self, grid, pos, radius=1, avoid_edge=False, only_available = False) -> list:
+        """
+        Description
+        -----------
+        The function returns the neighboring cells of a certain cell in the board, given its x,y coordinates
+        Added additional logic for choosing moves
+
+        Parameters
+        -----------
+        pos : position (x,y) whose neighbors are desired
+        only_available (bool) : if True, the function will return only available neighboring cells. 
+                                default = False
+        radius (int) : search distance in grid_distance [0, 6]
+
+        Returns a list of positions
+        
+        """
+        x,y = pos
+        
+        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, grid.dim))
+
+        # find all neighbors
+        neighbors = list({(a,b) for a in valid_range(x) for b in valid_range(y)} - {(x,y)})
+        
+        # select only neighboring cells which aren't occupied by a player or trap
+        if only_available:
+            neighbors = [neighbor for neighbor in neighbors if grid.map[neighbor] == 0]
+        if avoid_edge:
+            neighbors = [neighbor for neighbor in neighbors if neighbor[0] not in (0,6) and neighbor[1] not in (0,6)]
+
+        return neighbors
+
+
+
     def __move_children(self, grid: Grid, is_me=True) -> list:
         """
         get neighbors of a player's intended Move
@@ -325,7 +417,12 @@ class PlayerAI(BaseAI):
             other_position = self.getPlayerPosition(grid)
 
         children = []
-        available_moves = grid.get_neighbors(position, only_available=True)
+        if self.turns <= 5:                  # strategy optimization
+            available_moves = self.__get_neighbors(grid, position, avoid_edge=True, only_available=True)
+            if not available_moves:
+                available_moves = self.__get_neighbors(grid, position, avoid_edge=False, only_available=True)
+        else:
+            available_moves = self.__get_neighbors(grid, position, only_available=True)
         for move_position in available_moves:
             move_clone = grid.clone()
             move_clone.move(move_position, player)
@@ -345,40 +442,49 @@ class PlayerAI(BaseAI):
         """
         # all_available_pos = grid.getAvailableCells()
         # neighbors = self.__connected_sq_heur(grid, return_pos=True, pos=position, get_traps=True, radius=2)
-        threshold = 3
+        threshold = 2
         radius = 1
-        
-        turn_adjust = int(np.floor((self.turns**2)/8))-1    # adjustment based on turn
-        if self.depth_limit >= 6:                           # set max_traps to return based on depth
-            max_search_traps = min(2 + turn_adjust, 47)
-        elif self.depth_limit >= 5:
-            max_search_traps = min(4 + turn_adjust, 47)
-        elif self.depth_limit >= 4:
-            max_search_traps = min(11 + turn_adjust, 47)
-        else:
-            max_search_traps = 47                           # effectively no limit
-        self.max_search_traps = max_search_traps
 
-        search_frontier = get_neighbors(grid, pos, radius, only_available=True)
+        search_frontier = self.__get_neighbors(grid, pos, radius, only_available=True)
         explored = [pos]                                    # initialize with position
         trap_candidates = []                                # initialize list of trap candidates to return
         trap_count = 0
+        self.printed = False
 
         while radius <= threshold:
             if not search_frontier:
-                new_neighbors = get_neighbors(grid, pos, radius, only_available=True)
+                new_neighbors = self.__get_neighbors(grid, pos, radius, only_available=True)
                 search_frontier = list(set(new_neighbors))
                 radius += 1
             for pos in search_frontier:                     # iterate over all search frontier
-                if pos not in explored and grid.getCellValue(pos) == 0:             # check square is empty
-                    trap_candidates.append(pos)             # add to trap candidates
-                    trap_count += 1
-                explored.append(pos)                        # add to explored
-                if trap_count >= max_search_traps:
+                if pos not in explored and grid.getCellValue(pos) == 0:   # check square is empty
+                    explored.append(pos)                    # add to explored
+                    if self.turns > 5 or ( pos[0] not in (0,6) and pos[1] not in (0,6) ):   # strategy optimization
+                        trap_candidates.append(pos)             # add to trap candidates
+                        trap_count += 1
+                if trap_count >= self.max_search_traps:
                     # print('Reached max # of trap positions to consider.')
                     # print(trap_candidates)
+                    self.max_trap_candidates = trap_count
+                    if trap_count == 0:
+                        raise Exception('Whoa')
+
+                    # if not self.printed:
+                        # print(f'Traps seen: {trap_count}')
+                        # self.printed = True
+
                     return trap_candidates
                 search_frontier.remove(pos)
+        if trap_count == 0:
+            print(pos)
+
+            raise Exception('trap_count is 0')
+        if trap_count > self.max_trap_candidates:
+            self.max_trap_candidates = trap_count
+
+        # if not self.printed:
+            # print(f'Traps seen: {trap_count}')
+            # self.printed = True
 
         # if grid_distance(position, trap_pos):
         # print('Reached max search radius.')
@@ -655,7 +761,7 @@ class PlayerAI(BaseAI):
         start = time.time()
         child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         end = time.time()
-        print(f'Max traps to search = {self.max_search_traps}')
+        print(f'max trap candidates seen from one child: {self.max_trap_candidates}')
         if self.use_advanced_heuristics:
             print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
         # if end-start >= 5.05:
