@@ -463,7 +463,7 @@ class PlayerAI(BaseAI):
         # trap_pos is a list of e.g. [(2,3), (3,4)]
         for trap_pos in self.__get_trap_candidates(grid, player_position):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
-            grid.trap(trap_pos)
+            grid.map[trap_pos] = -1
             key = tuple(map(tuple, grid.map))
             if key in cache:
                 utility = cache[key]
@@ -477,7 +477,7 @@ class PlayerAI(BaseAI):
 
             neighbors = grid.get_neighbors(trap_pos, only_available=True)
             for neighbor in neighbors:
-                grid.trap(neighbor)
+                grid.map[neighbor] = -1
                 key = tuple(map(tuple, grid.map))
                 if key in cache:
                     utility = cache[key]
@@ -548,7 +548,7 @@ class PlayerAI(BaseAI):
         opponent_position = self.getOpponentPosition(grid)
         for trap_pos in self.__get_trap_candidates(grid, opponent_position):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
-            grid.trap(trap_pos)
+            grid.map[trap_pos] = -1
             key = tuple(map(tuple, grid.map))
             if key in cache:
                 utility = cache[key]
@@ -561,7 +561,7 @@ class PlayerAI(BaseAI):
 
             neighbors = grid.get_neighbors(trap_pos, only_available=True)
             for neighbor in neighbors:
-                grid.trap(neighbor)
+                grid.map[neighbor] = -1
                 key = tuple(map(tuple, grid.map))
                 if key in cache:
                     utility = cache[key]
