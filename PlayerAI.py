@@ -488,7 +488,7 @@ class PlayerAI(BaseAI):
                 expected_utility += (1 - target_prob) / len(neighbors) * utility
 
             if expected_utility < minUtility:
-                minUtility = expected_utility
+                minTrap, minUtility = trap_pos, expected_utility
         return minTrap, minUtility
 
 
@@ -517,9 +517,6 @@ class PlayerAI(BaseAI):
             grid.map[neighbor_to_move] = 0
             if utility < minUtility:
                 minChild, minUtility = neighbor_to_move, utility
-
-            if utility < minUtility:
-                minChild, minUtility = child, utility
 
             if minUtility <= alpha:
                 break
