@@ -14,7 +14,7 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from termcolor import cprint
 
-DEFAULT_DEPTH_LIMIT = 5
+DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAI(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None) -> None:
