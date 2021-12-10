@@ -159,6 +159,7 @@ def main():
     depth_limit = 0
     depth_str = ''
     opp_depth_str = ''
+    heur_str = ''
 
     if len(argv)>1:
         dl_flag_index = 0
