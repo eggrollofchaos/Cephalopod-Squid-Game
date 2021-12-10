@@ -151,6 +151,15 @@ class PlayerAI(BaseAI):
         return grid, n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
 
+    def __clone(self, grid: Grid) -> object:
+        """
+        Makes a full copy of current grid
+        """
+        grid_copy = Grid(7)
+        grid_copy.map = grid.map.copy()
+        return grid_copy
+
+
     def __edge_touch_heur(self, grid: Grid, is_me=True) -> int:
         """
         Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
@@ -224,7 +233,7 @@ class PlayerAI(BaseAI):
         # all_available_pos = grid.getAvailableCells()                            # deprecated, no need to look at all open cells
         # for trap_pos in all_available_pos:
         for trap_pos in conn_sq:                                                # iterate over connected squares
-            trap_clone = grid.clone()
+            trap_clone = self.__clone(grid)
             trap_clone.trap(trap_pos)
             new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
             new_comp_size = self.__connected_sq_heur(grid, is_me=is_me, return_pos=False)
@@ -327,7 +336,7 @@ class PlayerAI(BaseAI):
         children = []
         available_moves = grid.get_neighbors(position, only_available=True)
         for move_position in available_moves:
-            move_clone = grid.clone()
+            move_clone = self.__clone(grid)
             move_clone.move(move_position, player)
             # dynamically creating class attributes at runtime for access in level above in recursive tree
             move_clone.move_position = move_position
@@ -415,7 +424,7 @@ class PlayerAI(BaseAI):
         available_traps = self.__get_trap_candidates(grid, other_position)
         for trap_position in available_traps:
             if trap_position != position:
-                trap_clone = grid.clone()
+                trap_clone = self.__clone(grid)
                 trap_clone.trap(trap_position)
                 # dynamically creating class attributes at runtime for access at the very top of the search tree
                 trap_clone.trap_position = trap_position
@@ -433,7 +442,7 @@ class PlayerAI(BaseAI):
         neighbors = []
 
         for trap_position in grid.get_neighbors(trap_position, only_available=True):
-            trap_clone = grid.clone()
+            trap_clone = self.__clone(grid)
             trap_clone.trap(trap_position)
             # dynamically creating class attributes at runtime
             trap_clone.trap_position = trap_position
@@ -608,7 +617,7 @@ class PlayerAI(BaseAI):
             if maxUtility > alpha:
                 alpha = maxUtility
 
-        self.optimal_trap_position = maxTrap
+        self.optimal_trap_position = maxTrap        # this is not just a position
 
         return maxMove, maxUtility
 
@@ -705,6 +714,8 @@ class PlayerAI(BaseAI):
         
         """
         # use cached optimal trap position that we computed in getMove()
-        if self.optimal_trap_position is None:
+        if not self.optimal_trap_position:
+            print('No trap positions')
+            input()
             return grid.getAvailableCells()[0]
         return self.optimal_trap_position
