@@ -78,6 +78,10 @@ class PlayerAI(BaseAI):
         self.utility = 0
         self.current_depth = 0
 
+        # dynamic variables
+        player_num = self.getPlayerNum()
+        opp_num = self.getOpponentNum()
+
         # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
         depth_delta = 0                                         # adjust based on turn
         depth_limit = self.depth_limit + depth_delta
@@ -115,33 +119,33 @@ class PlayerAI(BaseAI):
 
         alpha = -np.inf
         beta = np.inf
-        max_move = self.__decision(grid, alpha, beta, depth_limit)
+        max_move = self.__decision(grid, alpha, beta, player_num, opp_num, depth_limit)
         print(f'Total iterative search evals = {self.heur_evals}')
         self.turns += 1
         return max_move
 
 
-    def __is_over(self, grid: Grid, turn) -> int:
+    def __is_over(self, grid: Grid, turn, player_num, opp_num) -> int:
         """
         Check if game is over, i.e., Player or Opponent has no moves to make
         """
         # check if Player has won
         opponent_neighbors = self.__get_valid_neighbors(grid, self.getOpponentPosition(grid))
         if len(opponent_neighbors) == 0:
-            return self.getPlayerNum()
+            return player_num
 
         # check if Opponent has won
         player_neighbors = self.__get_valid_neighbors(grid, self.getPlayerPosition(grid))
         if len(player_neighbors) == 0:
-            return self.getOpponentNum()
+            return opp_num
 
 
-    def __evaluate(self, grid: Grid, gameover_result) -> int:
+    def __evaluate(self, grid: Grid, gameover_result, player_num) -> int:
         """
         Function for returning high or low utility based on gameover state.
         """
         if gameover_result:
-            if gameover_result == self.getPlayerNum():
+            if gameover_result == player_num:
                 return grid, 99999
             else:
                 return grid, -99999
@@ -226,11 +230,11 @@ class PlayerAI(BaseAI):
         return grid_copy
 
 
-    def __move(self, grid: Grid, move_pos, playerNum) -> object:
+    def __move(self, grid: Grid, move_pos, player_num) -> object:
         """
         Faster move method
         """
-        old_pos = np.where(grid.map == playerNum)
+        old_pos = np.where(grid.map == player_num)
         grid.map[old_pos], grid.map[move_pos] = grid.map[move_pos], grid.map[old_pos]
 
       
@@ -450,9 +454,6 @@ class PlayerAI(BaseAI):
             pos = self.getOpponentPosition(grid)
             other_pos = self.getPlayerPosition(grid)
 
-        # print('Strategy: move toward center.')
-
-
         children = []
         available_moves = []
         if self.turns <= 5:                  # strategy optimization
@@ -592,7 +593,7 @@ class PlayerAI(BaseAI):
             other_pos = self.getPlayerPosition(grid)
 
         children = []
-        available_traps = self.__get_trap_candidates(grid, other_position)
+        available_traps = self.__get_trap_candidates(grid, other_pos)
         for trap_pos in available_traps:
             if trap_pos != pos:
                 trap_clone = self.__clone(grid)
@@ -624,18 +625,18 @@ class PlayerAI(BaseAI):
         return neighbors
 
 
-    def __trap_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+    def __trap_minimize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
         opponent Min node for throwing Trap
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
         self.current_depth += 1
-        gameover_result = self.__is_over(grid, self.getPlayerNum())
+        gameover_result = self.__is_over(grid, player_num, player_num, opp_num)
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=False)[0]
-            return self.__evaluate(grid, gameover_result)
+            return self.__evaluate(grid, gameover_result, player_num)
         if depth >= depth_limit:
             return self.__get_heuristics(grid, is_me=True)
 
@@ -651,7 +652,7 @@ class PlayerAI(BaseAI):
             if key in cache:
                 utility = cache[key]
             else:
-                _, utility = self.__move_maximize(grid, alpha, beta, depth+1, depth_limit)
+                _, utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth+1, depth_limit)
                 cache[key] = utility
             target_prob = self.__probability(opponent_pos, trap_pos)
             expected_utility = target_prob * utility
@@ -665,7 +666,7 @@ class PlayerAI(BaseAI):
                 if key in cache:
                     utility = cache[key]
                 else:
-                    _, utility = self.__move_maximize(grid, alpha, beta, depth + 1, depth_limit)
+                    _, utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
                     cache[key] = utility
                 grid.map[neighbor] = 0
                 expected_utility += (1 - target_prob) / len(neighbors) * utility
@@ -675,16 +676,16 @@ class PlayerAI(BaseAI):
         return minTrap, minUtility
 
 
-    def __move_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+    def __move_minimize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
         opponent Min node for making Move
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
         self.current_depth += 1
-        gameover_result = self.__is_over(grid, self.getOpponentNum())
+        gameover_result = self.__is_over(grid, opp_num, player_num, opp_num)
         if gameover_result:
-            return self.__evaluate(grid, gameover_result)
+            return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
         if depth >= depth_limit:
@@ -696,7 +697,7 @@ class PlayerAI(BaseAI):
         for neighbor_to_move in grid.get_neighbors(opponent_pos, only_available=True):
             grid.map[opponent_pos] = 0
             grid.map[neighbor_to_move] = opponent_num
-            _, utility = self.__trap_minimize(grid, alpha, beta, depth + 1, depth_limit)
+            _, utility = self.__trap_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
             grid.map[opponent_pos] = opponent_num
             grid.map[neighbor_to_move] = 0
             if utility < minUtility:
@@ -711,18 +712,18 @@ class PlayerAI(BaseAI):
         return minChild, minUtility
 
 
-    def __trap_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+    def __trap_maximize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
         player Max node for throwing Trap
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
         self.current_depth += 1
-        gameover_result = self.__is_over(grid, self.getPlayerNum())
+        gameover_result = self.__is_over(grid, player_num, player_num, opp_num)
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=True)[0]
-            return self.__evaluate(grid, gameover_result)
+            return self.__evaluate(grid, gameover_result, player_num)
 
         if depth >= depth_limit:
             return self.__get_heuristics(grid, is_me=True)
@@ -739,7 +740,7 @@ class PlayerAI(BaseAI):
             if key in cache:
                 utility = cache[key]
             else:
-                _, utility = self.__move_minimize(grid, alpha, beta, depth + 1, depth_limit)
+                _, utility = self.__move_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
                 cache[key] = utility
             target_prob = self.__probability(player_pos, trap_pos)
             expected_utility = target_prob * utility
@@ -752,7 +753,7 @@ class PlayerAI(BaseAI):
                 if key in cache:
                     utility = cache[key]
                 else:
-                    _, utility = self.__move_minimize(grid, alpha, beta, depth + 1, depth_limit)
+                    _, utility = self.__move_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
                     cache[key] = utility
                 grid.map[neighbor] = 0
                 expected_utility += (1 - target_prob) / len(neighbors) * utility
@@ -763,15 +764,16 @@ class PlayerAI(BaseAI):
         return maxTrap, maxUtility
 
 
-    def __move_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
+    def __move_maximize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
         player Min node for making Move
         returns a tuple of Grid object, utility
         """
         self.current_depth += 1
-        gameover_result = self.__is_over(grid, self.getPlayerNum())
+        # gameover_result = self.__is_over(grid, self.getPlayerNum())
+        gameover_result = self.__is_over(grid, player_num, player_num, opp_num)
         if gameover_result:
-            return self.__evaluate(grid, gameover_result)
+            return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
         if depth >= depth_limit:
@@ -779,11 +781,12 @@ class PlayerAI(BaseAI):
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
         player_pos = self.getPlayerPosition(grid)
-        player_num = self.getPlayerNum()
+        # player_num = self.getPlayerNum()
+        player_num =  player_num
         for neighbor_to_move in grid.get_neighbors(player_pos, only_available=True):
             grid.map[player_pos] = 0
             grid.map[neighbor_to_move] = player_num
-            trap, utility = self.__trap_maximize(grid, alpha, beta, depth + 1, depth_limit)
+            trap, utility = self.__trap_maximize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
             grid.map[player_pos] = player_num
             grid.map[neighbor_to_move] = 0
 
@@ -800,14 +803,14 @@ class PlayerAI(BaseAI):
         return maxMove, maxUtility
 
 
-    def __decision(self, grid: Grid, alpha, beta, depth_limit=DEFAULT_DEPTH_LIMIT) -> object:
+    def __decision(self, grid: Grid, alpha, beta, player_num, opp_num, depth_limit=DEFAULT_DEPTH_LIMIT) -> object:
         """
         Helper function to start the Expectiminimax algo
         returns a Grid object
         """
         start = time.time()
-        # child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
-        child, self.utility = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
+        # child, _ = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth=0, depth_limit=depth_limit)
+        child, self.utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth=0, depth_limit=depth_limit)
         end = time.time()
         print(f'max trap candidates seen from one child: {self.max_trap_candidates}')
         if self.use_advanced_heuristics:
