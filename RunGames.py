@@ -157,6 +157,9 @@ def main():
     suppress_output = True
     heur = False
     depth_limit = 0
+    depth_str = ''
+    opp_depth_str = ''
+    heur_str = ''
 
     if len(argv)>1:
         dl_flag_index = 0
@@ -164,12 +167,14 @@ def main():
             try:
                 dl_flag_index = argv.index('-d')
                 depth_limit = argv[dl_flag_index+1]
+                depth_str = f'_d_{depth_limit}'
             except:
                 pass
         if '-a' in argv:
             try:
                 opp_dl_flag_index = argv.index('-a')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
+                opp_depth_str = f'_a_{opp_depth_limit}'
             except:
                 pass
         num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_dl_flag_index+1]
@@ -185,8 +190,10 @@ def main():
             suppress_output = False
         if '-h' in argv:
             heur = 'graphcut'
+            heur_str = '_h'
         if '-h2' in argv:
             heur = 'geodesics'
+            heur_str = '_h2'
 
     cprint(f'Running batch test on {argv[0]}, {n} times...', 'blue')
     if depth_limit:
@@ -196,11 +203,7 @@ def main():
     if heur:
         cprint(f'Applying advanced heuristics.\n', 'blue')
 
-    if depth_limit == 0:
-        depth_str = ''
-    else:
-        depth_str = f'_d_{depth_limit}'
-    results_filename = f"batch_results{depth_str}.txt"
+    results_filename = f"batch_results{depth_str}{opp_depth_str}{heur_str}.txt"
     if exists(results_filename):
       remove(results_filename)
 
