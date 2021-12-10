@@ -173,7 +173,7 @@ def main():
             try:
                 opp_dl_flag_index = argv.index('-a')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
-                opp_depth_str = f'_d_{depth_limit}'
+                opp_depth_str = f'_a_{opp_depth_limit}'
             except:
                 pass
         num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_dl_flag_index+1]
