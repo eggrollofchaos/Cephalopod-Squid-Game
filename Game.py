@@ -5,6 +5,7 @@ from ComputerAI import ComputerAI
 from Displayer import Displayer
 from PlayerAI import PlayerAI
 from PlayerAIOpp import PlayerAIOpp
+from PlayerAIOppV2 import PlayerAIOppV2
 from test_players.EasyAI import EasyAI
 from Utils import *
 import time
@@ -279,7 +280,7 @@ def main():
     playerAI = PlayerAI(depth_limit, heur) # change this to PlayerAI() to test your player!
     # playerAI = None
     # computerAI = EasyAI(opp_depth_limit) # change this to a more sophisticated player you've coded
-    computerAI = PlayerAIOpp(opp_depth_limit) # change this to a more sophisticated player you've coded
+    computerAI = PlayerAIOppV2(opp_depth_limit) # change this to a more sophisticated player you've coded
     # depth_limit = 0
     #### EDIT HERE ####
 

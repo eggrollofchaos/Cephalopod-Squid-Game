@@ -16,7 +16,7 @@ from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 4
 
-class PlayerAI(BaseAI):
+class PlayerAIOppV2(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None) -> None:
         self.cape_color = 'blue'
         super().__init__()
@@ -70,8 +70,6 @@ class PlayerAI(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-        # if self.turns > 1:
-        #     exit(1)
         self.heur_evals = 0
         self.heur_time = 0
         self.opp_pos = self.getOpponentPosition(grid)               # find opponent's current position
@@ -81,7 +79,6 @@ class PlayerAI(BaseAI):
         # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
         depth_delta = 0                                         # adjust based on turn
         depth_limit = self.depth_limit + depth_delta
-        print(f'Depth limit is currently {depth_limit}.')
 
         # get players's current connected sq 
         curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True, is_me=True)
@@ -91,11 +88,6 @@ class PlayerAI(BaseAI):
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
         self.search_start_pos = self.__get_search_start_pos(grid)       # get square to start trap searches on
-        if self.curr_conn_sq_me >= 27 or self.curr_conn_sq_opp >= 27:
-            print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
-        else:
-            print(f'Player\'s component has {int(self.curr_conn_sq_me)} connected squares; opponent\'s component has {int(self.curr_conn_sq_opp)}.')
-        print(f'Trap search will start at {self.search_start_pos}.')
         
         # get maximum traps to search per call to Expectiminimax
         turn_adjust = int(((self.turns+5)**2)/30 - (1/2)*(self.turns+5))     # adjustment based on turn
@@ -111,12 +103,9 @@ class PlayerAI(BaseAI):
         self.max_search_traps = max_search_traps
         self.max_trap_candidates = 0
 
-        print(f'Max traps to search = {self.max_search_traps}; ', end='')
-
         alpha = -np.inf
         beta = np.inf
         max_grid = self.__decision(grid, alpha, beta, depth_limit)
-        print(f'Total iterative search evals = {self.heur_evals}')
         self.turns += 1
         return max_grid.move_position
 
@@ -145,118 +134,6 @@ class PlayerAI(BaseAI):
                 return grid, 99999
             else:
                 return grid, -99999
-
-
-    def __get_dof(self, grid: Grid, pos, opp_pos) -> tuple:
-        """
-        Apply degrees of freedom calculation heuristic based on early, mid, late game.
-        Returns a tuple of Grid object, heuristic
-        """
-        center_heur = 0
-        toward_opp_heur = 0
-        n_neighbors_heur_me = 0
-        n_neighbors_heur_opp = 0
-        n_neighbors_heur = 0
-        edge_touch_heur = 0
-        n_conn_sq_heur_me = 48
-        conn_sq_list_me = []
-        n_conn_sq_heur_opp = 48
-        conn_sq_list_opp = []
-        n_conn_sq_heur = 0
-        conn_sq_depth_lim_me = 0
-        conn_sq_depth_lim_opp = 0
-        conn_sq_depth_lim_heur = 0
-        graph_cut_heur_me = 0
-        graph_cut_heur_opp = 0
-        graph_cut_heur = 0
-
-        center_heur = self.__center_heur(grid, pos) - self.__center_heur(grid, opp_pos)
-        toward_opp_heur = self.__toward_opp_heur(grid, pos, opp_pos)
-        if self.turns >= 1:
-            n_neighbors_heur_me = self.__n_neighbors_heur(grid, pos)
-        if self.turns >= 2:
-            n_neighbors_heur_opp = self.__n_neighbors_heur(grid, opp_pos)
-        if self.turns >= 3:
-            edge_touch_heur = self.__edge_touch_heur(grid, pos) - self.__edge_touch_heur(grid, opp_pos)
-        
-        if self.turns >= 4:
-            conn_sq_depth_lim_me = self.__connected_sq_heur(grid, pos, max_size=10)
-        elif self.turns >= 5:
-            conn_sq_depth_lim_me = self.__connected_sq_heur(grid, pos, max_size=10)
-            conn_sq_depth_lim_opp = self.__connected_sq_heur(grid, opp_pos, max_size=10)
-        elif self.turns >= 6:
-            n_conn_sq_heur_me = self.__connected_sq_heur(grid, pos, max_size=18)
-        elif self.turns >= 7:
-            n_conn_sq_heur_me = self.__connected_sq_heur(grid, pos, max_size=18)
-            n_conn_sq_heur_opp = self.__connected_sq_heur(grid, opp_pos, max_size=18)
-        elif self.turns >= 8:
-            n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, pos, max_size=35, return_pos=True)
-            n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=35, return_pos=True)
-            # grid.print_grid()
-        # if self.turns >= 9:
-
-        turns_limit = (self.turns - 2*np.ceil(self.depth_limit/3) >= 9)
-        conn_sq_limit_me = (n_conn_sq_heur_me + 3*(self.depth_limit//4) <= 30)
-        conn_sq_limit_opp = (n_conn_sq_heur_opp + 3*(self.depth_limit//4) <= 30)
-
-        if turns_limit and conn_sq_limit_me:
-            self.use_graph_me = True
-            # cprint('Using graph cut heuristic on player.', 'blue')
-            graph_cut_heur_me = self.__graph_cut_heur(grid, pos, comp_size=n_conn_sq_heur_me, conn_sq=conn_sq_list_me)
-
-        if turns_limit and conn_sq_limit_opp:
-        # if self.turns >= 12 or ( self.curr_conn_sq_opp * < 24:
-            self.use_graph_opp = True
-            # cprint('Using graph cut heuristic on opponent.', 'blue')
-            graph_cut_heur_opp = self.__graph_cut_heur(grid, pos, comp_size=n_conn_sq_heur_opp, conn_sq=conn_sq_list_opp)
-
-        n_neighbors_heur = n_neighbors_heur_me - n_neighbors_heur_opp
-        conn_sq_depth_lim_heur = conn_sq_depth_lim_me - conn_sq_depth_lim_opp
-        n_conn_sq_heur = n_conn_sq_heur_me - n_conn_sq_heur_opp
-        graph_cut_heur = graph_cut_heur_me - graph_cut_heur_opp
-
-        return grid, center_heur + toward_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
-
-
-    def __edge_touch_heur(self, grid: Grid, pos) -> int:
-        """
-        Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
-        Returns a heuristic int
-        """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
-        edges_touched = 0
-        if pos[0] in (0,6):
-            edges_touched -= 1
-        if pos[1] in (0,6):
-            edges_touched -= 1
-        return 10*edges_touched
-
-
-    def __center_heur(self, grid: Grid, pos) -> int:
-        """
-        Heuristic that priotizes being closer to center
-        Returns a heuristic int
-        """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
-        dist = 6 - grid_distance(pos, (3,3))
-        return 1*dist
-
-
-    def __toward_opp_heur(self, grid: Grid, pos, opp_pos) -> int:
-        """
-        Heuristic that prioritizes being closer to opponent
-        Returns a heuristic int
-        """
-        # pos = self.getPlayerPosition(grid)
-        # opp_pos = self.getOpponentPosition(grid)
-        dist = 6-grid_distance(pos, opp_pos)
-        return 2*dist
 
 
     def __connected_sq_heur(self, grid: Grid, pos, max_size=27, return_pos=False, is_me=True) -> tuple:
@@ -301,44 +178,6 @@ class PlayerAI(BaseAI):
             return 5*conn_sq_heur
 
 
-    def __graph_cut_heur(self, grid: Grid, pos, comp_size, conn_sq) -> int:
-        """
-        Heuristic based on how easy it is to increase the number of connected components within the board,
-        and how drastic the decrease in freedom resulting from the removal of one free space
-        Returns a heuristic int
-        """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
-        # conn_comps = self.__num_connected_components(grid, is_me=is_me)         # number of connected components
-        
-        graph_cut_heur = 0
-        for trap_pos in conn_sq:                                                # iterate over connected squares
-            trap_clone = grid.clone()
-            trap_clone.trap(trap_pos)
-            # new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
-            new_comp_size = self.__connected_sq_heur(grid, pos, pos, return_pos=False)
-            # comp_delta = new_conn_comps - conn_comps                          # this will be 0 or -1
-            size_delta = new_comp_size - comp_size
-            # utility = 10*comp_delta + size_delta - (47-new_comp_size)**3
-            utility = 10*size_delta - (47-new_comp_size)**3
-            graph_cut_heur += utility
-        return graph_cut_heur
-
-
-    def __num_connected_components(self, grid: Grid, return_labels=False, is_me=True) -> int:
-        """
-        Convert board to graph; get number of connected components.
-        """
-        graph = grid.map
-        graph = np.where(graph==0, 1, graph)
-        graph = np.where(graph==2, 0, graph)
-        graph = np.where(graph==-1, 0, graph)
-        graph = csr_matrix(graph)
-        return connected_components(csgraph=graph, directed=False, return_labels=return_labels)
-
-
     def __get_heuristics(self, grid: Grid, is_me) -> tuple:
         """
         Apply heuristics
@@ -346,24 +185,7 @@ class PlayerAI(BaseAI):
         """
         pos = self.getPlayerPosition(grid)
         opp_pos = self.getOpponentPosition(grid)
-        if self.use_advanced_heuristics == 'graphcut':
-            start = time.time()
-            dof_heur = self.__get_dof(grid, pos=pos, opp_pos=opp_pos)
-            end = time.time()
-            self.heur_time += end-start
-            return dof_heur
-        elif self.use_advanced_heuristics == 'geodesics':
-            start = time.time()
-            # conn_sq_dl_me = self.__conn_sq_depth_lim_heur(grid, pos)
-            # conn_sq_dl_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos)
-            conn_sq_dl_me = self.__connected_sq_heur(grid, pos, max_size=25)
-            conn_sq_dl_opp = self.__connected_sq_heur(grid, opp_pos, max_size=25)
-            dl_heur = conn_sq_dl_me-conn_sq_dl_opp
-            end = time.time()
-            self.heur_time += end-start
-            return grid, dl_heur                   # for next set of heuristics Matthew/Gong
-        else:
-            return grid, self.__n_neighbors_heur(grid, pos) - self.__n_neighbors_heur(grid, opp_pos)
+        return grid, self.__n_neighbors_heur(grid, pos) - self.__n_neighbors_heur(grid, opp_pos)
         # return self.__connected_sq_heur(grid, is_me)
 
 
@@ -794,15 +616,6 @@ class PlayerAI(BaseAI):
         # child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         child, self.utility = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
         end = time.time()
-        print(f'max trap candidates seen from one child: {self.max_trap_candidates}')
-        if self.use_advanced_heuristics:
-            print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
-        # if end-start >= 5.05:
-        if self.use_graph_me:
-            print('Used graph cut heuristic on player.')
-        if self.use_graph_opp:
-            print('Used graph cut heuristic on opponent.')
-        print(f'Best move found has utility of {self.utility:.2f}. Hey, doing what we can.')
         # print(f'This move took {end-start:.5f} seconds.')
         return child
 
