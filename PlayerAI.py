@@ -23,7 +23,7 @@ class PlayerAI(BaseAI):
         self.pos = None
         self.opp_pos = None
         self.player_num = None
-        self.optimal_trap_position = None
+        self.optimal_trap_pos = None
         self.depth_limit = depth_limit
         if self.depth_limit == 0:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
@@ -231,10 +231,6 @@ class PlayerAI(BaseAI):
         Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
         Returns a heuristic int
         """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
         edges_touched = 0
         if pos[0] in (0,6):
             edges_touched -= 1
@@ -248,10 +244,6 @@ class PlayerAI(BaseAI):
         Heuristic that priotizes being closer to center
         Returns a heuristic int
         """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
         dist = 6 - grid_distance(pos, (3,3))
         return 1*dist
 
@@ -261,8 +253,6 @@ class PlayerAI(BaseAI):
         Heuristic that prioritizes being closer to opponent
         Returns a heuristic int
         """
-        # pos = self.getPlayerPosition(grid)
-        # opp_pos = self.getOpponentPosition(grid)
         dist = 6-grid_distance(pos, opp_pos)
         return 2*dist
 
@@ -275,11 +265,6 @@ class PlayerAI(BaseAI):
         v4
         """
         self.heur_evals += 1
-        # if not pos:
-        #     if is_me:
-        #         pos = self.getPlayerPosition(grid)
-        #     else:
-        #         pos = self.getOpponentPosition(grid)
 
         if max_size == -1:
             max_size = 49
@@ -315,16 +300,13 @@ class PlayerAI(BaseAI):
         and how drastic the decrease in freedom resulting from the removal of one free space
         Returns a heuristic int
         """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
         # conn_comps = self.__num_connected_components(grid, is_me=is_me)         # number of connected components
         
         graph_cut_heur = 0
         for trap_pos in conn_sq:                                                # iterate over connected squares
             trap_clone = self.__clone(grid)
-            trap_clone.trap(trap_pos)
+            # trap_clone.trap(trap_pos)
+            trap_clone.map[trap_pos] = -1
             # new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
             new_comp_size = self.__connected_sq_heur(grid, pos, pos, return_pos=False)
             # comp_delta = new_conn_comps - conn_comps                          # this will be 0 or -1
@@ -378,27 +360,17 @@ class PlayerAI(BaseAI):
     def __n_neighbors_heur(self, grid: Grid, pos) -> int:
         """
         Returns the difference in available squares around player vs available squares around opponent.
+        Now this just returns the same as __get_valid_neighbors - will be deprecated soon.
         """
-        # if is_me:
-        #     pos = self.getPlayerPosition(grid)
-        #     # other_pos = self.getOpponentPosition(grid)
-        # else:
-        #     pos = self.getOpponentPosition(grid)
-        #     # other_pos = self.getPlayerPosition(grid)
-
-        # return grid, len(self.__get_valid_neighbors(grid, self.getPlayerPosition(grid))) - len(
-        #     self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)))
-        # return ( len(self.__get_valid_neighbors(grid, pos)) - len(
-        #     self.__get_valid_neighbors(grid, other_pos)) )
         return len(self.__get_valid_neighbors(grid, pos))
 
 
-    def __probability(self, position, trap_position) -> float:
+    def __probability(self, pos, trap_pos) -> float:
         """
             Calculates probability of a trap landing in an intended square.
         """
-        alpha = manhattan_distance(position, trap_position)
-        # alpha = grid_distance(position, trap_position)
+        alpha = manhattan_distance(pos, trap_pos)
+        # alpha = grid_distance(pos, trap_pos)
         p = 1 - 0.05 * (alpha - 1)
         return p
 
@@ -463,12 +435,12 @@ class PlayerAI(BaseAI):
         """
         if is_me:
             player = self.getPlayerNum()
-            position = self.getPlayerPosition(grid)
-            other_position = self.getOpponentPosition(grid)
+            pos = self.getPlayerPosition(grid)
+            other_pos = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
-            position = self.getOpponentPosition(grid)
-            other_position = self.getPlayerPosition(grid)
+            pos = self.getOpponentPosition(grid)
+            other_pos = self.getPlayerPosition(grid)
 
         # print('Strategy: move toward center.')
 
@@ -476,14 +448,14 @@ class PlayerAI(BaseAI):
         children = []
         available_moves = []
         if self.turns <= 5:                  # strategy optimization
-            available_moves = self.__get_valid_neighbors_avoid_edge(grid, position)
+            available_moves = self.__get_valid_neighbors_avoid_edge(grid, pos)
         if not available_moves:
-            available_moves = self.__get_valid_neighbors(grid, position)
-        for move_position in available_moves:
+            available_moves = self.__get_valid_neighbors(grid, pos)
+        for move_pos in available_moves:
             move_clone = self.__clone(grid)
-            move_clone.move(move_position, player)
+            move_clone.move(move_pos, player)
             # dynamically creating class attributes at runtime for access in level above in recursive tree
-            move_clone.move_position = move_position
+            move_clone.move_pos = move_pos
             children.append(move_clone)
 
         return children
@@ -602,39 +574,41 @@ class PlayerAI(BaseAI):
         """
         if is_me:
             player = self.getPlayerNum()
-            position = grid.move_position # hypothetical move
-            other_position = self.getOpponentPosition(grid)
+            pos = grid.move_position # hypothetical move
+            other_pos = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
-            position = grid.move_position # hypothetical move
-            other_position = self.getPlayerPosition(grid)
+            pos = grid.move_position # hypothetical move
+            other_pos = self.getPlayerPosition(grid)
 
         children = []
         available_traps = self.__get_trap_candidates(grid, other_position)
-        for trap_position in available_traps:
-            if trap_position != position:
+        for trap_pos in available_traps:
+            if trap_pos != pos:
                 trap_clone = self.__clone(grid)
-                trap_clone.trap(trap_position)
+                # trap_clone.trap(trap_pos)
+                trap_clone.map[trap_pos] = -1
                 # dynamically creating class attributes at runtime for access at the very top of the search tree
-                trap_clone.trap_position = trap_position
-                trap_clone.probability = self.__probability(position, trap_position)
+                trap_clone.trap_pos = trap_pos
+                trap_clone.probability = self.__probability(pos, trap_pos)
                 children.append(trap_clone)
 
         return children
 
 
-    def __trap_neighbors(self, grid: Grid, trap_position) -> list:
+    def __trap_neighbors(self, grid: Grid, trap_pos) -> list:
         """
         get neighbors of intended trap_pos
         returns a list of Grid objects
         """
         neighbors = []
 
-        for trap_position in self.__get_valid_neighbors(grid, trap_position):
+        for trap_pos in self.__get_valid_neighbors(grid, trap_pos):
             trap_clone = self.__clone(grid)
-            trap_clone.trap(trap_position)
+            # trap_clone.trap(trap_pos)
+            trap_clone.map[trap_pos] = -1
             # dynamically creating class attributes at runtime
-            trap_clone.trap_position = trap_position
+            trap_clone.trap_pos = trap_pos
             neighbors.append(trap_clone)
 
         return neighbors
@@ -657,10 +631,10 @@ class PlayerAI(BaseAI):
 
         minTrap, minUtility = None, np.inf
         cache = {}
-        player_position = self.getPlayerPosition(grid)
-        opponent_position = self.getOpponentPosition(grid)
+        player_pos = self.getPlayerPosition(grid)
+        opponent_pos = self.getOpponentPosition(grid)
         # trap_pos is a list of e.g. [(2,3), (3,4)]
-        for trap_pos in self.__get_trap_candidates(grid, player_position):
+        for trap_pos in self.__get_trap_candidates(grid, player_pos):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
             grid.map[trap_pos] = -1
             key = tuple(map(tuple, grid.map))
@@ -669,7 +643,7 @@ class PlayerAI(BaseAI):
             else:
                 _, utility = self.__move_maximize(grid, alpha, beta, depth+1, depth_limit)
                 cache[key] = utility
-            target_prob = self.__probability(opponent_position, trap_pos)
+            target_prob = self.__probability(opponent_pos, trap_pos)
             expected_utility = target_prob * utility
             # backtrack
             grid.map[trap_pos] = 0
@@ -707,13 +681,13 @@ class PlayerAI(BaseAI):
             return self.__get_heuristics(grid, is_me=True)
 
         minChild, minUtility = None, np.inf
-        opponent_position = self.getOpponentPosition(grid)
+        opponent_pos = self.getOpponentPosition(grid)
         opponent_num = self.getOpponentNum()
-        for neighbor_to_move in grid.get_neighbors(opponent_position, only_available=True):
-            grid.map[opponent_position] = 0
+        for neighbor_to_move in grid.get_neighbors(opponent_pos, only_available=True):
+            grid.map[opponent_pos] = 0
             grid.map[neighbor_to_move] = opponent_num
             _, utility = self.__trap_minimize(grid, alpha, beta, depth + 1, depth_limit)
-            grid.map[opponent_position] = opponent_num
+            grid.map[opponent_pos] = opponent_num
             grid.map[neighbor_to_move] = 0
             if utility < minUtility:
                 minChild, minUtility = neighbor_to_move, utility
@@ -746,9 +720,9 @@ class PlayerAI(BaseAI):
         maxTrap, maxUtility = None, -np.inf
         cache = {}
 
-        player_position = self.getPlayerPosition(grid)
-        opponent_position = self.getOpponentPosition(grid)
-        for trap_pos in self.__get_trap_candidates(grid, opponent_position):
+        player_pos = self.getPlayerPosition(grid)
+        opponent_pos = self.getOpponentPosition(grid)
+        for trap_pos in self.__get_trap_candidates(grid, opponent_pos):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
             grid.map[trap_pos] = -1
             key = tuple(map(tuple, grid.map))
@@ -757,7 +731,7 @@ class PlayerAI(BaseAI):
             else:
                 _, utility = self.__move_minimize(grid, alpha, beta, depth + 1, depth_limit)
                 cache[key] = utility
-            target_prob = self.__probability(player_position, trap_pos)
+            target_prob = self.__probability(player_pos, trap_pos)
             expected_utility = target_prob * utility
             grid.map[trap_pos] = 0
 
@@ -794,13 +768,13 @@ class PlayerAI(BaseAI):
             return self.__get_heuristics(grid, is_me=True)
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
-        player_position = self.getPlayerPosition(grid)
+        player_pos = self.getPlayerPosition(grid)
         player_num = self.getPlayerNum()
-        for neighbor_to_move in grid.get_neighbors(player_position, only_available=True):
-            grid.map[player_position] = 0
+        for neighbor_to_move in grid.get_neighbors(player_pos, only_available=True):
+            grid.map[player_pos] = 0
             grid.map[neighbor_to_move] = player_num
             trap, utility = self.__trap_maximize(grid, alpha, beta, depth + 1, depth_limit)
-            grid.map[player_position] = player_num
+            grid.map[player_pos] = player_num
             grid.map[neighbor_to_move] = 0
 
             if utility > maxUtility:
@@ -811,7 +785,7 @@ class PlayerAI(BaseAI):
             if maxUtility > alpha:
                 alpha = maxUtility
 
-        self.optimal_trap_position = maxTrap        # this is not just a position
+        self.optimal_trap_pos = maxTrap        # maxTrap is now just a position, not a Grid object
 
         return maxMove, maxUtility
 
@@ -853,8 +827,8 @@ class PlayerAI(BaseAI):
         
         """
         # use cached optimal trap position that we computed in getMove()
-        if not self.optimal_trap_position:
+        if not self.optimal_trap_pos:
             print('No trap positions')
             input()
             return grid.getAvailableCells()[0]
-        return self.optimal_trap_position
+        return self.optimal_trap_pos
