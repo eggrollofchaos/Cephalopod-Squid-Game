@@ -72,29 +72,31 @@ class PlayerAI(BaseAI):
         """
         # if self.turns > 1:
         #     exit(1)
+        self.opp_pos = self.getOpponentPosition(grid)               # find opponent's current position
+        # print(self.pos)
+        # print(self.opp_pos)
         self.heur_evals = 0
         self.heur_time = 0
-        self.opp_pos = self.getOpponentPosition(grid)               # find opponent's current position
         self.utility = 0
         self.current_depth = 0
 
-        # dynamic variables
+        # get player numbers variables
         player_num = self.getPlayerNum()
         opp_num = self.getOpponentNum()
 
         # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
-        depth_delta = 0                                         # adjust based on turn
+        depth_delta = 0                                             # adjust based on turn
         depth_limit = self.depth_limit + depth_delta
         print(f'Depth limit is currently {depth_limit}.')
 
         # get players's current connected sq 
-        curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True, is_me=True)
-        curr_conn_sq_opp, curr_conn_sq_list_opp = self.__connected_sq_heur(grid, pos=self.opp_pos, max_size=27, return_pos=True, is_me=False)
+        curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=30, return_pos=True, is_me=True)
+        curr_conn_sq_opp, curr_conn_sq_list_opp = self.__connected_sq_heur(grid, pos=self.opp_pos, max_size=30, return_pos=True, is_me=False)
         self.curr_conn_sq_me = curr_conn_sq_me/5
         self.curr_conn_sq_opp = curr_conn_sq_opp/5
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
-        self.search_start_pos = self.__get_search_start_pos(grid)       # get square to start trap searches on
+        self.search_start_pos = self.__get_search_start_pos(grid, self.pos, self.opp_pos)       # get square to start trap searches on
         if self.curr_conn_sq_me >= 27 or self.curr_conn_sq_opp >= 27:
             print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
         else:
@@ -177,9 +179,11 @@ class PlayerAI(BaseAI):
         center_heur = self.__center_heur(grid, pos) - self.__center_heur(grid, opp_pos)
         toward_opp_heur = self.__toward_opp_heur(grid, pos, opp_pos)
         if self.turns >= 1:
-            n_neighbors_heur_me = self.__n_neighbors_heur(grid, pos)
+            # n_neighbors_heur_me = self.__n_neighbors_heur(grid, pos)
+            n_neighbors_heur_me = len(self.__get_valid_neighbors(grid, pos))
         if self.turns >= 2:
-            n_neighbors_heur_opp = self.__n_neighbors_heur(grid, opp_pos)
+            # n_neighbors_heur_opp = self.__n_neighbors_heur(grid, opp_pos)
+            n_neighbors_heur_opp = len(self.__get_valid_neighbors(grid, opp_pos))
         if self.turns >= 3:
             edge_touch_heur = self.__edge_touch_heur(grid, pos) - self.__edge_touch_heur(grid, opp_pos)
         
@@ -341,13 +345,15 @@ class PlayerAI(BaseAI):
         return connected_components(csgraph=graph, directed=False, return_labels=return_labels)
 
 
-    def __get_heuristics(self, grid: Grid, is_me) -> tuple:
+    def __get_heuristics(self, grid: Grid, player_num, opp_num) -> tuple:
         """
         Apply heuristics
         Returns a tuple of Grid object, heuristic
         """
-        pos = self.getPlayerPosition(grid)
-        opp_pos = self.getOpponentPosition(grid)
+        # pos = self.getPlayerPosition(grid)
+        # opp_pos = self.getOpponentPosition(grid)
+        pos = tuple(np.argwhere(grid.map == player_num)[0])
+        opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
         if self.use_advanced_heuristics == 'graphcut':
             start = time.time()
             dof_heur = self.__get_dof(grid, pos=pos, opp_pos=opp_pos)
@@ -472,7 +478,7 @@ class PlayerAI(BaseAI):
         return children
 
 
-    def __get_search_start_pos(self, grid: Grid) -> tuple:
+    def __get_search_start_pos(self, grid: Grid, pos, opp_pos) -> tuple:
         '''
         Start search midway between players, but not on a trap
         Iteratively get closer to the opponent, can be opponent
@@ -496,8 +502,8 @@ class PlayerAI(BaseAI):
             # print('Here')
             return x, y
         
-        pos = self.getPlayerPosition(grid)
-        opp_pos = self.getOpponentPosition(grid)
+        # pos = self.getPlayerPosition(grid)
+        # opp_pos = self.getOpponentPosition(grid)
         pos = __find_center(pos, opp_pos)
         while grid.map[pos] == -1 or pos not in self.curr_conn_sq_list_opp:
             pos = __find_center(pos, opp_pos)
@@ -638,7 +644,7 @@ class PlayerAI(BaseAI):
             # grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result, player_num)
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            return self.__get_heuristics(grid, player_num, opp_num)
 
         minTrap, minUtility = None, np.inf
         cache = {}
@@ -689,11 +695,11 @@ class PlayerAI(BaseAI):
 
         # break if hit depth limit
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            return self.__get_heuristics(grid, player_num, opp_num)
 
         minChild, minUtility = None, np.inf
         opponent_pos = self.getOpponentPosition(grid)
-        opponent_num = self.getOpponentNum()
+        opponent_num = opp_num
         for neighbor_to_move in grid.get_neighbors(opponent_pos, only_available=True):
             grid.map[opponent_pos] = 0
             grid.map[neighbor_to_move] = opponent_num
@@ -726,7 +732,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            return self.__get_heuristics(grid, player_num, opp_num)
 
         maxTrap, maxUtility = None, -np.inf
         cache = {}
@@ -777,7 +783,7 @@ class PlayerAI(BaseAI):
 
         # break if hit depth limit
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            return self.__get_heuristics(grid, player_num, opp_num)
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
         player_pos = self.getPlayerPosition(grid)
