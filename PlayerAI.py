@@ -115,7 +115,7 @@ class PlayerAI(BaseAI):
 
         alpha = -np.inf
         beta = np.inf
-        max_grid = self.__decision(grid, alpha, beta, depth_limit)
+        max_move = self.__decision(grid, alpha, beta, depth_limit)
         print(f'Total iterative search evals = {self.heur_evals}')
         self.turns += 1
         return max_move
