@@ -665,7 +665,7 @@ class PlayerAI(BaseAI):
             # backtrack
             grid.map[trap_pos] = 0
 
-            neighbors = grid.get_neighbors(trap_pos, only_available=True)
+            neighbors = self.__get_valid_neighbors(grid, trap_pos)
             for neighbor in neighbors:
                 grid.map[neighbor] = -1
                 key = tuple(map(tuple, grid.map))
@@ -700,7 +700,7 @@ class PlayerAI(BaseAI):
         minChild, minUtility = None, np.inf
         opponent_pos = self.getOpponentPosition(grid)
         opponent_num = opp_num
-        for neighbor_to_move in grid.get_neighbors(opponent_pos, only_available=True):
+        for neighbor_to_move in self.__get_valid_neighbors(grid, opponent_pos):
             grid.map[opponent_pos] = 0
             grid.map[neighbor_to_move] = opponent_num
             _, utility = self.__trap_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
@@ -752,7 +752,7 @@ class PlayerAI(BaseAI):
             expected_utility = target_prob * utility
             grid.map[trap_pos] = 0
 
-            neighbors = grid.get_neighbors(trap_pos, only_available=True)
+            neighbors = self.__get_valid_neighbors(grid, trap_pos)
             for neighbor in neighbors:
                 grid.map[neighbor] = -1
                 key = tuple(map(tuple, grid.map))
@@ -789,7 +789,7 @@ class PlayerAI(BaseAI):
         player_pos = self.getPlayerPosition(grid)
         # player_num = self.getPlayerNum()
         player_num =  player_num
-        for neighbor_to_move in grid.get_neighbors(player_pos, only_available=True):
+        for neighbor_to_move in self.__get_valid_neighbors(grid, player_pos):
             grid.map[player_pos] = 0
             grid.map[neighbor_to_move] = player_num
             trap, utility = self.__trap_maximize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
