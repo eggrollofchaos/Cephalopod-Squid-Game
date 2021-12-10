@@ -225,6 +225,14 @@ class PlayerAI(BaseAI):
         grid_copy.map = grid.map.copy()
         return grid_copy
 
+
+    def __move(self, grid: Grid, move_pos, playerNum) -> object:
+        """
+        Faster move method
+        """
+        old_pos = np.where(grid.map == playerNum)
+        grid.map[old_pos], grid.map[move_pos] = grid.map[move_pos], grid.map[old_pos]
+
       
     def __edge_touch_heur(self, grid: Grid, pos) -> int:
         """
@@ -453,7 +461,9 @@ class PlayerAI(BaseAI):
             available_moves = self.__get_valid_neighbors(grid, pos)
         for move_pos in available_moves:
             move_clone = self.__clone(grid)
-            move_clone.move(move_pos, player)
+            # gridmove_clone.move(move_pos, player)
+            self.__move(move_clone, move_pos, player)
+            trap_clone.map[trap_position] = -1
             # dynamically creating class attributes at runtime for access in level above in recursive tree
             move_clone.move_pos = move_pos
             children.append(move_clone)
