@@ -78,9 +78,12 @@ class PlayerAI(BaseAI):
         self.opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])              # find opponent's current position
         # print(self.pos)
         # print(self.opp_pos)
+        # self.eval_evals = 0
         self.heur_evals = 0
         self.heur_time = 0
         self.utility = 0
+        self.tree_searches = 0
+        self.max_tree_searches = 10000
         self.current_depth = 0
 
         # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
@@ -121,7 +124,9 @@ class PlayerAI(BaseAI):
         alpha = -np.inf
         beta = np.inf
         max_move = self.__decision(grid, alpha, beta, player_num, opp_num, depth_limit)
+        # print(f'Total times game result eval called = {self.heur_evals}')
         print(f'Total iterative search evals = {self.heur_evals}')
+        print(f'Tree searches = {self.tree_searches}')
         self.turns += 1
         return max_move
 
@@ -145,6 +150,7 @@ class PlayerAI(BaseAI):
         """
         Function for returning high or low utility based on gameover state.
         """
+        # self.eval_evals += 1
         if gameover_result:
             if gameover_result == player_num:
                 return grid, 99999
@@ -519,7 +525,7 @@ class PlayerAI(BaseAI):
         if trap_count == 0:
             # print(pos)
             # return [grid.getAvailableCells()[0]]
-            print(f'Error at depth = {self.current_depth}.')
+            print(f'Error at depth = {self.tree_searches}.')
             catch_trap = self.__get_valid_neighbors_avoid_edge(grid, start_pos, radius)
             if not catch_trap:
                 catch_trap = self.__get_valid_neighbors(grid, start_pos, radius)
@@ -544,9 +550,12 @@ class PlayerAI(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        self.current_depth += 1
+        self.tree_searches += 1
+        if depth > self.current_depth:
+            print(f'Depth is now {depth}.')
+            self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
-        opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
+        opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])            # this is the position in question
         # gameover_result = self.__is_over(grid, player_num, player_num, opp_num)
         # gameover_result = self.__is_over(grid, opp_num, player_num, opp_num)
         gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
@@ -554,8 +563,11 @@ class PlayerAI(BaseAI):
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result, player_num)
-        if depth >= depth_limit:
-            return self.__get_heuristics(grid, player_num, opp_num)
+        if depth >= depth_limit or self.tree_searches >= self.max_tree_searches:
+        # if self.tree_searches >= depth_limit:
+            # print(f'{depth} >= {depth_limit}')
+            _, utility = self.__get_heuristics(grid, player_num, opp_num)
+            return _, utility
 
         minTrap, minUtility = None, np.inf
         cache = {}
@@ -599,7 +611,10 @@ class PlayerAI(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        self.current_depth += 1
+        self.tree_searches += 1
+        if depth > self.current_depth:
+            print(f'Depth is now {depth}.')
+            self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
         gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
@@ -607,8 +622,10 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
-        if depth >= depth_limit:
-            return self.__get_heuristics(grid, player_num, opp_num)
+        if depth >= depth_limit or self.tree_searches >= self.max_tree_searches:
+            # print(f'{depth} >= {depth_limit}')
+            _, utility = self.__get_heuristics(grid, player_num, opp_num)
+            return _, utility
 
         minChild, minUtility = None, np.inf
         # opp_pos = self.getOpponentPosition(grid)
@@ -637,8 +654,11 @@ class PlayerAI(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        self.current_depth += 1
-        player_pos = tuple(np.argwhere(grid.map == player_num)[0])
+        self.tree_searches += 1
+        if depth > self.current_depth:
+            print(f'Depth is now {depth}.')
+            self.current_depth = depth
+        player_pos = tuple(np.argwhere(grid.map == player_num)[0])              # this is the position in question
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
         gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
         if gameover_result:
@@ -646,8 +666,12 @@ class PlayerAI(BaseAI):
             # grid = self.__trap_children(grid, is_me=True)[0]
             return self.__evaluate(grid, gameover_result, player_num)
 
-        if depth >= depth_limit:
-            return self.__get_heuristics(grid, player_num, opp_num)
+        if depth >= depth_limit or self.tree_searches >= self.max_tree_searches:
+        # if self.tree_searches >= depth_limit:
+            # print(f'{depth} >= {depth_limit}')
+            _, utility = self.__get_heuristics(grid, player_num, opp_num)
+            # pos = tuple(np.argwhere(grid.map == player_num)[0])
+            return _, utility
 
         maxTrap, maxUtility = None, -np.inf
         cache = {}
@@ -690,17 +714,24 @@ class PlayerAI(BaseAI):
         player Min node for making Move
         returns a tuple of Grid object, utility
         """
-        self.current_depth += 1
+        self.tree_searches += 1
+        if depth > self.current_depth:
+            print(f'Depth is now {depth}.')
+            self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
         # gameover_result = self.__is_over(grid, self.getPlayerNum())
         gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
         if gameover_result:
+            # print(f'{depth} >= {depth_limit}')
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
-        if depth >= depth_limit:
-            return self.__get_heuristics(grid, player_num, opp_num)
+        if depth >= depth_limit or self.tree_searches >= self.max_tree_searches:
+        # if self.tree_searches >= depth_limit:
+            _, utility = self.__get_heuristics(grid, player_num, opp_num)
+            # pos = tuple(np.argwhere(grid.map == player_num)[0])
+            return _, utility
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
         # player_pos = self.getPlayerPosition(grid)
