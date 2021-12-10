@@ -232,7 +232,7 @@ def main():
         f.write(f'Max runtime: {max(run_times) :.2f} seconds; min runtime: {min(run_times):.2f} seconds.\n')
         f.write(f'The average game length is {avg_rounds:.1f} rounds.\n')
         f.write(f'Max game length: {max(rounds_list)} rounds; min game length: {min(rounds_list)} rounds.\n')
-        f.write(f'The average player move time is {avg_move_time:.2f} seconds.\n') if total_moves!=n else None
+        f.write(f'The average player move time is {avg_move_time:.4f} seconds.\n') if total_moves!=n else None
         f.write(f'All processes took {total_time:.2f} seconds to {error_str}.\n')
 
     with open(results_filename, 'r') as f:
