@@ -108,7 +108,7 @@ class PlayerAI(BaseAI):
         if self.depth_limit >= 6:                           # set max_traps to return based on depth
             max_search_traps = max(min(3 + turn_adjust - depth_adjust, 47), 1)
         elif self.depth_limit >= 5:
-            max_search_traps = max(min(7 + turn_adjust - depth_adjust, 47), 1)
+            max_search_traps = max(min(9 + turn_adjust - depth_adjust, 47), 1)
         elif self.depth_limit >= 4:
             max_search_traps = max(min(12 + turn_adjust - depth_adjust, 47), 1)
         else:
@@ -160,15 +160,15 @@ class PlayerAI(BaseAI):
         Returns a tuple of Grid object, heuristic
         """
         center_heur = 0
-        toward_opp_heur = 0
+        near_opp_heur = 0
         avoid_traps_heur = 0
         edge_touch_heur = 0
         n_neighbors_heur_me = 0
         n_neighbors_heur_opp = 0
         n_neighbors_heur = 0
-        n_conn_sq_heur_me = 48
+        n_conn_sq_heur_me = 48*5
         conn_sq_list_me = []
-        n_conn_sq_heur_opp = 48
+        n_conn_sq_heur_opp = 48*5
         conn_sq_list_opp = []
         n_conn_sq_heur = 0
         conn_sq_depth_lim_me = 0
@@ -179,9 +179,9 @@ class PlayerAI(BaseAI):
         graph_cut_heur = 0
 
         center_heur = self.__center_heur(grid, player_pos) - self.__center_heur(grid, opp_pos)
-        # toward_opp_heur = self.__toward_opp_heur(grid, player_pos, opp_pos)
-        # edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
-        # avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
+        near_opp_heur = self.__near_opp_heur(grid, player_pos, opp_pos)
+        edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
+        avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
         if self.turns <= 2:
             # n_neighbors_heur_me = self.__n_neighbors_heur(grid, player_pos)
             n_neighbors_heur_me = len(self.__get_valid_neighbors(grid, player_pos))
@@ -205,9 +205,11 @@ class PlayerAI(BaseAI):
 
         # if self.turns >= 9:
         turns_limit = (self.turns - 2*np.ceil(self.depth_limit/3) >= 0)
-        conn_sq_limit_me = (n_conn_sq_heur_me + 3*(self.depth_limit//4) <= 37)
-        conn_sq_limit_opp = (n_conn_sq_heur_opp + 3*(self.depth_limit//4) <= 37)
-
+        conn_sq_limit_me = (n_conn_sq_heur_me + 3*(self.depth_limit//4) <= 35)
+        conn_sq_limit_opp = (n_conn_sq_heur_opp + 3*(self.depth_limit//4) <= 35)
+        if self.printed == False:
+            print(n_conn_sq_heur_me/5, n_conn_sq_heur_opp/5)
+            self.printed = True
         if turns_limit and conn_sq_limit_me:
             self.use_graph_me = True
             # cprint('Using graph cut heuristic on player.', 'blue')
@@ -224,7 +226,7 @@ class PlayerAI(BaseAI):
         n_conn_sq_heur = n_conn_sq_heur_me - n_conn_sq_heur_opp
         graph_cut_heur = graph_cut_heur_me - graph_cut_heur_opp
 
-        return grid, avoid_traps_heur + center_heur + toward_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
+        return grid, avoid_traps_heur + center_heur + near_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
     def __clone(self, grid: Grid) -> object:
         """
@@ -265,13 +267,13 @@ class PlayerAI(BaseAI):
         return 1*dist
 
 
-    def __toward_opp_heur(self, grid: Grid, player_pos, opp_pos) -> int:
+    def __near_opp_heur(self, grid: Grid, player_pos, opp_pos) -> int:
         """
-        Heuristic that prioritizes being farther from opponent
+        Heuristic that prioritizes being about 2 or 3 grid_distances away from opponent
         Returns a heuristic int
         """
-        dist = grid_distance(player_pos, opp_pos)
-        return 2*dist
+        dist = 2.5 - grid_distance(player_pos, opp_pos)
+        return -5*dist
 
 
     def __avoid_traps_heur(self, grid: Grid, pos) -> int:
@@ -281,7 +283,7 @@ class PlayerAI(BaseAI):
         """
         neighbors = self.__get_all_neighbors(grid, pos)
         num_traps = len([neighbor for neighbor in neighbors if grid.map[neighbor] == -1])
-        return 3*num_traps
+        return -3*num_traps
 
 
     def __connected_sq_heur(self, grid: Grid, pos, max_size=27, return_pos=False, is_me=True) -> tuple:
@@ -337,7 +339,7 @@ class PlayerAI(BaseAI):
             # trap_clone.trap(trap_pos)
             trap_clone.map[trap_pos] = -1
             # new_conn_comps = self.__num_connected_components(grid, is_me=is_me)
-            new_comp_size = self.__connected_sq_heur(grid, pos, max_size=16, return_pos=False)
+            new_comp_size = self.__connected_sq_heur(grid, pos, max_size=10, return_pos=False)
             # comp_delta = new_conn_comps - conn_comps                          # this will be 0 or -1
             size_delta = new_comp_size - comp_size
             # utility = 10*comp_delta + size_delta - (47-new_comp_size)**3
