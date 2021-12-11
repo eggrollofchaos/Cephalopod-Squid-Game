@@ -615,17 +615,18 @@ class PlayerAI(BaseAI):
             # backtrack
             grid.map[trap_pos] = 0
 
-            neighbors = self.__get_all_neighbors(grid, trap_pos)
+            neighbors = self.__get_valid_neighbors(grid, trap_pos)
             for neighbor in neighbors:
-                grid.map[neighbor] = -1
-                key = tuple(map(tuple, grid.map))
-                if key in cache:
-                    utility = cache[key]
-                else:
-                    _, utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
-                    cache[key] = utility
-                grid.map[neighbor] = 0
-                expected_utility += (1 - target_prob) / len(neighbors) * utility
+                if grid.map[neighbor] == 0:         # blank square
+                    grid.map[neighbor] = -1
+                    key = tuple(map(tuple, grid.map))
+                    if key in cache:
+                        utility = cache[key]
+                    else:
+                        _, utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
+                        cache[key] = utility
+                    grid.map[neighbor] = 0
+                    expected_utility += (1 - target_prob) / len(neighbors) * utility
 
             if expected_utility < minUtility:
                 minTrap, minUtility = trap_pos, expected_utility
@@ -735,15 +736,16 @@ class PlayerAI(BaseAI):
 
             neighbors = self.__get_all_neighbors(grid, trap_pos)
             for neighbor in neighbors:
-                grid.map[neighbor] = -1
-                key = tuple(map(tuple, grid.map))
-                if key in cache:
-                    utility = cache[key]
-                else:
-                    _, utility = self.__move_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
-                    cache[key] = utility
-                grid.map[neighbor] = 0
-                expected_utility += (1 - target_prob) / len(neighbors) * utility
+                if grid.map[neighbor] == 0:         # blank square
+                    grid.map[neighbor] = -1
+                    key = tuple(map(tuple, grid.map))
+                    if key in cache:
+                        utility = cache[key]
+                    else:
+                        _, utility = self.__move_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
+                        cache[key] = utility
+                    grid.map[neighbor] = 0
+                    expected_utility += (1 - target_prob) / len(neighbors) * utility
 
             if expected_utility > maxUtility:
                 maxTrap, maxUtility = trap_pos, expected_utility
@@ -761,7 +763,6 @@ class PlayerAI(BaseAI):
             # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
-        grid.print_grid()
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
         # gameover_result = self.__is_over(grid, self.getPlayerNum())
         gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
