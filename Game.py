@@ -256,11 +256,14 @@ def main():
     depth_limit = 0
     opp_depth_limit = 0
     test_mode = False
+    verbose = False
     heur = False
     
     if len(argv)>1:
         if '-t' in argv:
             test_mode = True
+        if '-v' in argv:
+            verbose = True
         if '-h' in argv:
             heur = 'graphcut'
         if '-h2' in argv:
@@ -278,7 +281,7 @@ def main():
             except:
                 pass
     #### EDIT HERE ####
-    playerAI = PlayerAI(depth_limit, heur) # change this to PlayerAI() to test your player!
+    playerAI = PlayerAI(depth_limit, heur, verbose) # change this to PlayerAI() to test your player!
     # playerAI = None
     # computerAI = EasyAI() # change this to a more sophisticated player you've coded
     computerAI = MediumAI() # change this to a more sophisticated player you've coded

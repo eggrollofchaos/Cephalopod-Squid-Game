@@ -78,6 +78,9 @@ class RunGames(object):
         if self.heur == 'geodesics':
             run_arg_list.append('-h2')
             run_arg_list3.append('-h2')
+        if self.verbose:
+            run_arg_list.append('-v')
+            run_arg_list3.append('-v')
 
         start_run = time()
         try:
