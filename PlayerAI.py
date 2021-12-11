@@ -32,6 +32,7 @@ class PlayerAI(BaseAI):
         self.curr_conn_sq = 48
         self.printed = False
         self.search_start_pos = (3, 3)
+        self.max_tree_searches = 5000
 
     def getPosition(self):                      # used by Game to find CURRENT player position
         return self.pos
@@ -83,7 +84,6 @@ class PlayerAI(BaseAI):
         self.heur_time = 0
         self.utility = 0
         self.tree_searches = 0
-        self.max_tree_searches = 10000
         self.current_depth = 0
 
         # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
@@ -124,6 +124,7 @@ class PlayerAI(BaseAI):
         alpha = -np.inf
         beta = np.inf
         max_move = self.__decision(grid, alpha, beta, player_num, opp_num, depth_limit)
+        self.current_move = max_move
         # print(f'Total times game result eval called = {self.heur_evals}')
         print(f'Total iterative search evals = {self.heur_evals}')
         print(f'Tree searches = {self.tree_searches}')
@@ -552,7 +553,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])            # this is the position in question
@@ -613,7 +614,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
@@ -656,7 +657,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])              # this is the position in question
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
@@ -716,7 +717,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
@@ -798,4 +799,8 @@ class PlayerAI(BaseAI):
             print('No trap positions')
             input()
             return grid.getAvailableCells()[0]
+        if self.optimal_trap_pos == self.current_move:
+            print('We\'ve taken up the last spot. Throwing trap randomly because we\'ll win anyway.')
+            return grid.getAvailableCells()[0]
         return self.optimal_trap_pos
+
