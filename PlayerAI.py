@@ -553,7 +553,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])            # this is the position in question
@@ -614,7 +614,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
@@ -657,7 +657,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])              # this is the position in question
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
@@ -717,7 +717,7 @@ class PlayerAI(BaseAI):
         """
         self.tree_searches += 1
         if depth > self.current_depth:
-            print(f'Depth is now {depth}.')
+            # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
