@@ -717,8 +717,7 @@ class PlayerAI(BaseAI):
             else:
                 _, utility = self.__move_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
                 # strategy for prioritizing certrain trap locations
-                trap_pos_a = np.array(trap_pos) 
-                
+                trap_pos_a = np.array(trap_pos)
                 dist_me = abs(player_pos_a - trap_pos_a)
                 dist_opp = 2.1*abs(opp_pos_a - trap_pos_a)
                 dist_mid = abs(player_pos_a - opp_pos_a) - 2*abs(center_a - trap_pos_a)    # heuristic tested on paper
@@ -762,6 +761,7 @@ class PlayerAI(BaseAI):
             # print(f'Depth is now {depth}.')
             self.current_depth = depth
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
+        grid.print_grid()
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
         # gameover_result = self.__is_over(grid, self.getPlayerNum())
         gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
