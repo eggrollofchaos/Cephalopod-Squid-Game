@@ -7,6 +7,7 @@ from PlayerAI import PlayerAI
 from PlayerAIOpp import PlayerAIOpp
 from PlayerAIOppV2 import PlayerAIOppV2
 from test_players.EasyAI import EasyAI
+from test_players.MediumAI import MediumAI
 from Utils import *
 import time
 from termcolor import cprint
@@ -279,8 +280,9 @@ def main():
     #### EDIT HERE ####
     playerAI = PlayerAI(depth_limit, heur) # change this to PlayerAI() to test your player!
     # playerAI = None
-    # computerAI = EasyAI(opp_depth_limit) # change this to a more sophisticated player you've coded
-    computerAI = PlayerAIOppV2(opp_depth_limit) # change this to a more sophisticated player you've coded
+    # computerAI = EasyAI() # change this to a more sophisticated player you've coded
+    computerAI = MediumAI() # change this to a more sophisticated player you've coded
+    # computerAI = PlayerAIOppV2(opp_depth_limit) # change this to a more sophisticated player you've coded
     # depth_limit = 0
     #### EDIT HERE ####
 

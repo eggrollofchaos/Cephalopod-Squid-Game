@@ -161,10 +161,11 @@ class PlayerAI(BaseAI):
         """
         center_heur = 0
         toward_opp_heur = 0
+        avoid_traps_heur = 0
+        edge_touch_heur = 0
         n_neighbors_heur_me = 0
         n_neighbors_heur_opp = 0
         n_neighbors_heur = 0
-        edge_touch_heur = 0
         n_conn_sq_heur_me = 48
         conn_sq_list_me = []
         n_conn_sq_heur_opp = 48
@@ -178,9 +179,9 @@ class PlayerAI(BaseAI):
         graph_cut_heur = 0
 
         center_heur = self.__center_heur(grid, player_pos) - self.__center_heur(grid, opp_pos)
-        toward_opp_heur = self.__toward_opp_heur(grid, player_pos, opp_pos)
-        edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
-        avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
+        # toward_opp_heur = self.__toward_opp_heur(grid, player_pos, opp_pos)
+        # edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
+        # avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
         if self.turns <= 2:
             # n_neighbors_heur_me = self.__n_neighbors_heur(grid, player_pos)
             n_neighbors_heur_me = len(self.__get_valid_neighbors(grid, player_pos))
@@ -605,11 +606,11 @@ class PlayerAI(BaseAI):
                     trap_heur = dist_me + dist_opp + 2*dist_mid[0] + 4*dist_mid[1]
                 else:
                     trap_heur = dist_me + dist_opp + 2*dist_mid[0] + 2*dist_mid[1]
-                cache[key] = utility
+                # cache[key] = utility
                 # print('trap_heur =', sum(trap_heur))
                 # if trap_pos == (3,3):
                 #     print('                   (3, 3) has extra utility = ', sum(trap_heur))
-                # cache[key] = utility + sum(trap_heur)
+                cache[key] = utility + sum(trap_heur)
             target_prob = self.__probability(opp_pos, trap_pos)
             expected_utility = target_prob * utility
             # backtrack
@@ -719,8 +720,8 @@ class PlayerAI(BaseAI):
                 _, utility = self.__move_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
                 # strategy for prioritizing certrain trap locations
                 trap_pos_a = np.array(trap_pos)
-                dist_me = abs(player_pos_a - trap_pos_a)
-                dist_opp = 2.1*abs(opp_pos_a - trap_pos_a)
+                dist_me = 2.1*abs(player_pos_a - trap_pos_a)
+                dist_opp = abs(opp_pos_a - trap_pos_a)
                 dist_mid = abs(player_pos_a - opp_pos_a) - 2*abs(center_a - trap_pos_a)    # heuristic tested on paper
                 if x_0 > x_1:
                     trap_heur = dist_me + dist_opp + 4*dist_mid[0] + 2*dist_mid[1]
@@ -728,8 +729,8 @@ class PlayerAI(BaseAI):
                     trap_heur = dist_me + dist_opp + 2*dist_mid[0] + 4*dist_mid[1]
                 else:
                     trap_heur = dist_me + dist_opp + 2*dist_mid[0] + 2*dist_mid[1]
-                cache[key] = utility
-                # cache[key] = utility + sum(trap_heur)
+                # cache[key] = utility
+                cache[key] = utility + sum(trap_heur)
             target_prob = self.__probability(player_pos, trap_pos)
             expected_utility = target_prob * utility
             grid.map[trap_pos] = 0
