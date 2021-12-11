@@ -125,20 +125,22 @@ class RunGames(object):
             # if winning_player == 0:         # normal exit code is 0
             if winning_player == 1:             # normal exit code is 0
                 win = f'Run {it}: Player Wins! Process completed in {run_time:.3f} seconds.\n'
-                cprint(win, 'green') if self.verbose else None
+                cprint('\n\n' + win, on_color='on_green') if self.verbose else None
                 f.write(win)
                 self.run_success += 1           # increment number of successful runs
                 self.player_wins += 1           # increment number of player wins
+                print()
 
             elif winning_player == 2:       # player has lost
                 loss = f'Run {it}: Player Loses! Process completed in {run_time:.3f} seconds.\n'
-                cprint(loss, 'red') if self.verbose else None
+                cprint('\n\n' + loss, on_color='on_red') if self.verbose else None
                 f.write(loss)
                 self.run_success += 1           # increment number of successful runs
+                print()
 
             else:                               # encountered runtime error, exit code was 1
                 error = f'Run {it}: Runtime error...\n'
-                cprint(error, 'yellow') if self.verbose else None
+                cprint('\n\n' + error, 'yellow') if self.verbose else None
                 f.write(error)
                 stderr = str(result.stderr)
                 # search_from = len(stderr) - 200
@@ -160,9 +162,12 @@ def main():
     suppress_output = True
     heur = False
     depth_limit = 0
+    opp_depth_limit = 0
     depth_str = ''
     opp_depth_str = ''
     heur_str = ''
+    dl_flag_index = -1
+    opp_dl_flag_index = -1
 
     if len(argv)>1:
         dl_flag_index = 0

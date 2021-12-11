@@ -29,6 +29,7 @@ class PlayerAI(BaseAI):
         self.use_advanced_heuristics = heur
         self.curr_conn_sq = 48
         self.search_start_pos = (3, 3)
+        self.graph_cut_size_cap = 9
 
     def getPosition(self):                      # used by Game to find CURRENT player position
         return self.pos
@@ -81,10 +82,12 @@ class PlayerAI(BaseAI):
             self.utility = 0
             self.current_depth = 0
             self.use_graph_me = False
+            self.use_graph_d2_me = False
             self.use_graph_opp = False
+            self.use_graph_d2_opp = False
             self.max_child_nodes = 50000
 
-        print(f'Depth limit is currently {self.depth_limit}.') if self.verbose else None
+        print(f'Depth limit is {self.depth_limit}.') if self.verbose else None
 
         # get players's current connected sq 
         curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True, is_me=True)
@@ -110,7 +113,7 @@ class PlayerAI(BaseAI):
             # max_search_traps = max(min(9 + turn_adjust - depth_adjust, 47), 1)
             max_search_traps = max(min(9 + turn_adjust - depth_adjust, 47), 1)
         elif self.depth_limit >= 4:
-            max_search_traps = max(min(14 + turn_adjust - depth_adjust, 47), 1)
+            max_search_traps = max(min(10 + turn_adjust - depth_adjust, 47), 1)
         else:
             max_search_traps = 47                           # effectively no limit
         self.max_search_traps = max_search_traps
@@ -126,8 +129,8 @@ class PlayerAI(BaseAI):
         self.current_move = max_move
         
         if self.verbose:
-            print(f'Total iterative search evals = {self.heur_evals}')
-            print(f'Child nodes visited = {self.child_nodes_seen}')
+            print(f'Total iterative search evals = {self.heur_evals}, ', end='')
+            print(f'child nodes visited = {self.child_nodes_seen}.')
 
         return max_move
 
@@ -182,65 +185,78 @@ class PlayerAI(BaseAI):
         graph_cut_heur_opp = 0
         graph_cut_heur = 0
 
-        if self.turns >= 1:
-            center_heur = self.__center_heur(grid, player_pos) - self.__center_heur(grid, opp_pos)
+        center_heur = self.__center_heur(grid, player_pos) - self.__center_heur(grid, opp_pos)
+        near_opp_heur = self.__near_opp_heur(grid, player_pos, opp_pos)
+        edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
+        avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
 
-        if self.turns >= 1:
-            near_opp_heur = self.__near_opp_heur(grid, player_pos, opp_pos)
-
-        if self.turns >= 1:
-            edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
-
-        if self.turns >= 1:
-            avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
-
-        # if self.turns <= 2:
-        #     # n_neighbors_heur_me = self.__n_neighbors_heur(grid, player_pos)
-        #     n_neighbors_heur_me = len(self.__get_valid_neighbors(grid, player_pos))
-        # elif self.turns <= 3:
-        #     # n_neighbors_heur_opp = self.__n_neighbors_heur(grid, opp_pos)
-        #     n_neighbors_heur_me = len(self.__get_valid_neighbors(grid, player_pos))
-        #     n_neighbors_heur_opp = len(self.__get_valid_neighbors(grid, opp_pos))
-        # elif self.turns <= 4:
-        #     conn_sq_depth_lim_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=10, return_pos=True)
-        # elif self.turns <= 5:
-        #     conn_sq_depth_lim_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=10, return_pos=True)
-        #     conn_sq_depth_lim_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=10, return_pos=True)
-        # elif self.turns <= 6:
-        #     n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=15, return_pos=True)
-        # elif self.turns <= 7:
-        #     n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=15, return_pos=True)
-        #     n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=15, return_pos=True)
-        # else: # if self.turns >= 8:
         n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=27, return_pos=True)
         n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=27, return_pos=True)
 
         # if self.turns >= 9:
-        turns_limit = (self.turns - 2*np.ceil(self.depth_limit/3) >= 0)
+        # turns_limit = (self.turns - 2*np.ceil(self.depth_limit/3) >= 0) # starts at 4 if dl=4, 5
+        turns_limit = (self.turns - 2*np.ceil(self.depth_limit/3) >= 2) # starts at 7 if dl=4, 5
         conn_sq_limit_me = (n_conn_sq_heur_me/5 + 3*(self.depth_limit//4) <= 35)
         conn_sq_limit_opp = (n_conn_sq_heur_opp/5 + 3*(self.depth_limit//4) <= 35)
-        if self.verbose and not self.printed:
-            print(n_conn_sq_heur_me/5, n_conn_sq_heur_opp/5, end = ', ')
-            print(n_conn_sq_heur_me/5 + 3*(self.depth_limit//4), n_conn_sq_heur_opp/5 + 3*(self.depth_limit//4), end = ', ')
-            self.printed = True
 
-        size_cap = 16
-        max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
-        max_comp_size_opp = min(int(n_conn_sq_heur_opp/5), size_cap)
-        if turns_limit and conn_sq_limit_me and conn_sq_list_me:
-            self.use_graph_me = True
-            graph_cut_heur_me = self.__graph_cut_heur(grid, player_pos, \
-                comp_size=max_comp_size_me, conn_sq=conn_sq_list_me[:max_comp_size_me])
+        if self.turns <= 8:
+            self.max_search_traps += 1
+            size_cap = 12
+            max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
+            max_comp_size_opp = min(int(n_conn_sq_heur_opp/5), size_cap)
 
-        if turns_limit and conn_sq_limit_opp and conn_sq_list_opp:
-            self.use_graph_opp = True
-            graph_cut_heur_opp = self.__graph_cut_heur(grid, player_pos, \
-                comp_size=max_comp_size_opp, conn_sq=conn_sq_list_opp[:max_comp_size_opp])
+            if turns_limit and conn_sq_limit_me and conn_sq_list_me:
+                self.use_graph_me = True
+                graph_cut_heur_me = self.__graph_cut_heur(grid, player_pos, \
+                    comp_size=max_comp_size_me, conn_sq=conn_sq_list_me[:max_comp_size_me])
+
+            if turns_limit and conn_sq_limit_opp and conn_sq_list_opp:
+                self.use_graph_opp = True
+                graph_cut_heur_opp = self.__graph_cut_heur(grid, player_pos, \
+                    comp_size=max_comp_size_opp, conn_sq=conn_sq_list_opp[:max_comp_size_opp])
+
+        elif self.turns <= 10:
+            self.max_search_traps += 1
+            size_cap = 9
+            max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
+            max_comp_size_opp = min(int(n_conn_sq_heur_opp/5), size_cap)
+
+            if turns_limit and conn_sq_limit_me and conn_sq_list_me:
+                self.use_graph_me = False
+                self.use_graph_d2_me = True
+                graph_cut_heur_me = self.__graph_cut_2_ply_heur(grid, player_pos, \
+                    comp_size=max_comp_size_me, conn_sq_list=conn_sq_list_me[:max_comp_size_me])
+
+            if turns_limit and conn_sq_limit_opp and conn_sq_list_opp:
+                self.use_graph_opp = False
+                self.use_graph_d2_opp = True
+                graph_cut_heur_opp = self.__graph_cut_2_ply_heur(grid, player_pos, \
+                    comp_size=max_comp_size_opp, conn_sq_list=conn_sq_list_opp[:max_comp_size_opp])
+
+        else:
+            self.max_search_traps += 1
+            size_cap = 12
+            max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
+            max_comp_size_opp = min(int(n_conn_sq_heur_opp/5), size_cap)
+
+            if turns_limit and conn_sq_limit_me and conn_sq_list_me:
+                self.use_graph_me = False
+                self.use_graph_d2_me = True
+                graph_cut_heur_me = self.__graph_cut_2_ply_heur(grid, player_pos, \
+                    comp_size=max_comp_size_me, conn_sq_list=conn_sq_list_me[:max_comp_size_me])
+
+            if turns_limit and conn_sq_limit_opp and conn_sq_list_opp:
+                self.use_graph_opp = False
+                self.use_graph_d2_opp = True
+                graph_cut_heur_opp = self.__graph_cut_2_ply_heur(grid, player_pos, \
+                    comp_size=max_comp_size_opp, conn_sq_list=conn_sq_list_opp[:max_comp_size_opp])
 
         n_neighbors_heur = n_neighbors_heur_me - n_neighbors_heur_opp
         conn_sq_depth_lim_heur = conn_sq_depth_lim_me - conn_sq_depth_lim_opp
         n_conn_sq_heur = n_conn_sq_heur_me - n_conn_sq_heur_opp
         graph_cut_heur = graph_cut_heur_me - graph_cut_heur_opp
+
+        self.graph_cut_size_cap = size_cap
 
         return grid, avoid_traps_heur + center_heur + near_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
@@ -271,7 +287,7 @@ class PlayerAI(BaseAI):
             edges_touched += 1
         if pos[1] in (0,6):
             edges_touched += 1
-        return -10*edges_touched
+        return -2*edges_touched # was -10*edges_touched
 
 
     def __center_heur(self, grid: Grid, pos) -> int:
@@ -280,7 +296,7 @@ class PlayerAI(BaseAI):
         Returns a heuristic int
         """
         dist = 6 - grid_distance(pos, (3,3))
-        return 1*dist
+        return 0.5*dist # was 1*dist
 
 
     def __near_opp_heur(self, grid: Grid, player_pos, opp_pos) -> int:
@@ -289,7 +305,7 @@ class PlayerAI(BaseAI):
         Returns a heuristic int
         """
         dist = abs(3 - grid_distance(player_pos, opp_pos))
-        return -5*dist
+        return -1*dist # was -5*dist
 
 
     def __avoid_traps_heur(self, grid: Grid, pos) -> int:
@@ -299,7 +315,7 @@ class PlayerAI(BaseAI):
         """
         neighbors = self.__get_all_neighbors(grid, pos)
         num_traps = len([neighbor for neighbor in neighbors if grid.map[neighbor] == -1])
-        return -3*num_traps
+        return -2*num_traps # was -3*num_traps
 
 
     def __connected_sq_heur(self, grid: Grid, pos, max_size=27, return_pos=False, is_me=True) -> tuple:
@@ -338,6 +354,7 @@ class PlayerAI(BaseAI):
             return 5*conn_sq_heur
 
 
+
     def __graph_cut_heur_old(self, grid: Grid, pos, comp_size, conn_sq) -> int:
         """
         Heuristic based on how drastic is the decrease in degrees of freedom resulting from the removal of one free space.
@@ -348,7 +365,7 @@ class PlayerAI(BaseAI):
         graph_cut_heur = 0
         for trap_pos in conn_sq:                                                # iterate over connected squares
             grid_clone.map[trap_pos] = -1
-            new_comp_size = self.__connected_sq_heur(grid_clone, pos, max_size=8, return_pos=False)
+            new_comp_size = self.__connected_sq_heur(grid_clone, pos, max_size=comp_size, return_pos=False)
             grid_clone.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
             utility = 10*size_delta - (47-new_comp_size)**3
@@ -362,8 +379,8 @@ class PlayerAI(BaseAI):
         Originally also computed number of connected components, but removed for performance.
         Returns a heuristic int
         """
-        grid_clone = self.__clone(grid)
         graph_cut_heur = 0
+        grid_clone = self.__clone(grid)
         distances = [grid_distance(pos, trap_pos) for trap_pos in conn_sq]
         conn_sq_ord_list = list(zip(distances, conn_sq))
         conn_sq_ord_list.sort()
@@ -377,26 +394,35 @@ class PlayerAI(BaseAI):
         return graph_cut_heur
 
 
-    def __graph_cut_heur_v2(self, grid: Grid, pos, comp_size, conn_sq) -> int:
+    def __graph_cut_2_ply_heur(self, grid: Grid, pos, comp_size, conn_sq_list) -> int:
         """
         Heuristic based on how easy it is to increase the number of connected components within the board,
         and how drastic the decrease in freedom resulting from the removal of one free space
         Originally also computed number of connected components, but removed for performance
         Returns a heuristic int
         """
-        grid_clone = self.__clone(grid)
-        graph_cut_heur = 0
-        distances = [grid_distance(pos, trap_pos) for trap_pos in conn_sq]
-        conn_sq_ord_list = list(zip(distances, conn_sq))
-        conn_sq_ord_list.sort()
-        for trap_pos_tup in conn_sq_ord_list:                                                # iterate over connected squares
-            conn_sq_2 = conn_sq.remove(trap_pos)
-            grid_clone.map[trap_pos] = -1
-            new_comp_size = self.__connected_sq_heur(grid, pos, max_size=8, return_pos=False)
-            grid_clone.map[trap_pos] = -1
+        def __gch_d2(grid: Grid, trap_pos_tup, comp_size) -> int:
+            grid.map[trap_pos_tup[1]] = -1
+            new_comp_size = self.__connected_sq_heur(grid, pos, max_size=comp_size, return_pos=False)
+            grid.map[trap_pos_tup[1]] = 0
             size_delta = new_comp_size - comp_size
-            utility = 10*size_delta - (47-new_comp_size)**3
-            graph_cut_heur += utility
+            utility = 10*size_delta - (47-new_comp_size)**3 -5*j
+
+            return utility
+
+        graph_cut_heur = 0
+        grid_clone = self.__clone(grid)
+        distances = [grid_distance(pos, trap_pos) for trap_pos in conn_sq_list]
+        conn_sq_ord_list = list(zip(distances, conn_sq_list))
+        conn_sq_ord_list.sort()
+        for i, trap_pos_tup in enumerate(conn_sq_ord_list):                                   # iterate over connected squares
+            conn_sq_ord_list_2 = conn_sq_list.copy()
+            conn_sq_ord_list_2.remove(trap_pos_tup[1])
+            grid_clone.map[trap_pos_tup[1]] = -1
+            for j, trap_pos_tup_2 in enumerate(conn_sq_ord_list_2):
+                graph_cut_heur += __gch_d2(grid_clone, trap_pos_tup_2, comp_size) -5*i
+            grid_clone.map[trap_pos_tup[1]] = 0
+
         return graph_cut_heur
 
 
@@ -816,9 +842,13 @@ class PlayerAI(BaseAI):
                 print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
             # if end-start >= 5.05:
             if self.use_graph_me:
-                cprint('Used graph cut heuristic on player.', 'blue')
+                cprint(f'Used graph cut heuristic on player, size_cap = {self.graph_cut_size_cap}.', 'blue')
+            if self.use_graph_d2_me:
+                cprint(f'Used 2-ply graph cut heuristic on player, size_cap = {self.graph_cut_size_cap}.', 'blue')
             if self.use_graph_opp:
-                cprint('Used graph cut heuristic on opponent.', 'red')
+                cprint(f'Used graph cut heuristic on opponent, size_cap = {self.graph_cut_size_cap}.', 'red')
+            if self.use_graph_d2_opp:
+                cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap = {self.graph_cut_size_cap}.', 'red')
             print(f'Best move found has utility of {self.utility:.2f}. Hey, doing what we can.')
             # end = time.time()
             # print(f'This move took {end-start:.5f} seconds.')

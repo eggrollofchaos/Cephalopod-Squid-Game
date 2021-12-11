@@ -206,8 +206,10 @@ class Game():
                 cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green')
                 if total_time >= 5.05:
                     # raise Exception('Exceeded time limit.')
-                    cprint('\nExceeded 5 second time limit!\n', on_color='on_yellow')
-                    raise RuntimeError('Exceeded time limit.')
+                    # cprint('\nExceeded 5 second time limit!', on_color='on_yellow')
+                    # print()
+                    raise RuntimeError('Exceeded 5 second time limit.')
+                    # self.over = True
 
             else:
 
