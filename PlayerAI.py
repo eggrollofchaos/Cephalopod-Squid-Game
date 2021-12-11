@@ -285,7 +285,7 @@ class PlayerAI(BaseAI):
 
     def __near_opp_heur(self, grid: Grid, player_pos, opp_pos) -> int:
         """
-        Heuristic that prioritizes being about 2 or 3 grid_distances away from opponent
+        Heuristic that prioritizes being about 3 grid_distances away from opponent
         Returns a heuristic int
         """
         dist = abs(3 - grid_distance(player_pos, opp_pos))
