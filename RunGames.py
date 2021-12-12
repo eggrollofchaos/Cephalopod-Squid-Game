@@ -140,7 +140,7 @@ class RunGames(object):
 
             else:                               # encountered runtime error, exit code was 1
                 error = f'Run {it}: Runtime error...\n'
-                cprint('\n\n' + error, 'yellow') if self.verbose else None
+                cprint('\n\n' + error, on_color='on_yellow') if self.verbose else None
                 f.write(error)
                 stderr = str(result.stderr)
                 # search_from = len(stderr) - 200
