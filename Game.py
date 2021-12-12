@@ -15,7 +15,7 @@ from termcolor import cprint
 PLAYER_TURN, COMPUTER_TURN = 1,2
 
 # Time Limit Before Losing
-timeLimit = 0.5
+timeLimit = 5
 allowance = 0.05
 
 class Game():
@@ -258,8 +258,9 @@ def main():
     depth_limit = 0
     opp_depth_limit = 0
     test_mode = False
-    verbose = False
-    heur = False
+    verbose = True
+    # heur = False
+    heur = 'graphcut'
     
     if len(argv)>1:
         if '-t' in argv:

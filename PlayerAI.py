@@ -12,10 +12,10 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 from termcolor import cprint
 
-DEFAULT_DEPTH_LIMIT = 4
+DEFAULT_DEPTH_LIMIT = 5
 
 class PlayerAI(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=False) -> None:
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=True) -> None:
         self.verbose = verbose
         super().__init__()
         self.pos = None
