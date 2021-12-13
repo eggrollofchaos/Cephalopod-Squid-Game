@@ -126,7 +126,7 @@ class PlayerAI(BaseAI):
             # self.max_search_traps += 1
             self.graph_cut_size_cap += 1
         if self.turns == 8:
-            # self.max_search_traps += 1
+            self.max_search_traps += 1
             # self.graph_cut_size_cap += 1
             pass
         if self.turns == 9:
@@ -241,8 +241,6 @@ class PlayerAI(BaseAI):
             conn_sq_depth_lim_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=3, return_pos=True)
         else:
             size_cap = self.graph_cut_size_cap
-            # n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=connected_max_size, return_pos=True)
-            # n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=connected_max_size, return_pos=True)
             n_conn_sq_heur_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=4, return_pos=True)
             n_conn_sq_heur_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=4, return_pos=True)
             max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
