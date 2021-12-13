@@ -14,8 +14,8 @@ from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 5
 
-class PlayerAI(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=False) -> None:
+class PlayerAIOppV3(BaseAI):
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=True) -> None:
         self.verbose = verbose
         super().__init__()
         self.pos = None
@@ -87,6 +87,7 @@ class PlayerAI(BaseAI):
             self.printed = False
             self.utility = 0
             self.current_depth = 0
+            self.max_child_nodes = 50000
 
         print(f'Depth limit is {self.depth_limit}.') if self.verbose else None
 
@@ -100,12 +101,6 @@ class PlayerAI(BaseAI):
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
         self.search_start_pos = self.__get_search_start_pos(grid, self.pos, self.opp_pos)       # get square to start trap searches on
-        if self.verbose:
-            if self.curr_conn_sq_me >= 28 or self.curr_conn_sq_opp >= 28:
-                print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
-            else:
-                print(f'Player\'s component has {int(self.curr_conn_sq_me)} connected squares, opponent\'s component has {int(self.curr_conn_sq_opp)}; max_radius=3.')
-            print(f'Trap search will start at {self.search_start_pos}.')
         
         # get maximum trap candidates to search per call to Expectiminimax
         # get maximum graph_cut candidates
@@ -126,7 +121,7 @@ class PlayerAI(BaseAI):
             # self.max_search_traps += 1
             self.graph_cut_size_cap += 1
         if self.turns == 8:
-            self.max_search_traps += 1
+            # self.max_search_traps += 1
             # self.graph_cut_size_cap += 1
             pass
         if self.turns == 9:
@@ -148,17 +143,6 @@ class PlayerAI(BaseAI):
         if self.turns == 14:
             self.graph_cut_size_cap += 1
             self.max_radius += 1                # pretty overkill at this point
-
-        # graph_cut params
-        self.use_graph_me = True
-        self.use_graph_opp = True
-
-        # start using 2-py graph cut
-        if self.turns >= 6:
-            self.use_graph_me = False
-            self.use_graph_d2_me = True
-            self.use_graph_opp = False
-            self.use_graph_d2_opp = True
 
         self.max_trap_candidates = 0                        # initialize count
         if self.verbose:
@@ -237,12 +221,14 @@ class PlayerAI(BaseAI):
 
         max_radius = self.max_radius
         if self.turns <= 3:
-            conn_sq_depth_lim_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=3, return_pos=True)
-            conn_sq_depth_lim_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=3, return_pos=True)
+            conn_sq_depth_lim_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=2, return_pos=True)
+            conn_sq_depth_lim_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=2, return_pos=True)
         else:
             size_cap = self.graph_cut_size_cap
-            n_conn_sq_heur_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=4, return_pos=True)
-            n_conn_sq_heur_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=4, return_pos=True)
+            # n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=connected_max_size, return_pos=True)
+            # n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=connected_max_size, return_pos=True)
+            n_conn_sq_heur_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=3, return_pos=True)
+            n_conn_sq_heur_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=3, return_pos=True)
             max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
             max_comp_size_opp = min(int(n_conn_sq_heur_opp/5), size_cap)
 
@@ -280,7 +266,7 @@ class PlayerAI(BaseAI):
         n_conn_sq_heur = n_conn_sq_heur_me - n_conn_sq_heur_opp
         graph_cut_heur = graph_cut_heur_me - graph_cut_heur_opp
 
-        return grid, avoid_traps_heur + center_heur + near_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
+        return grid, avoid_traps_heur + center_heur + near_opp_heur + 10*conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
     def __clone(self, grid: Grid) -> object:
         """
@@ -399,7 +385,7 @@ class PlayerAI(BaseAI):
             new_comp_size = self.__conn_sq_depth_lim_heur(grid_clone, pos, max_radius=max_radius, max_size=comp_size, return_pos=False)
             grid_clone.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
-            utility = 10*size_delta - (49-new_comp_size)**2 - 5*i
+            utility = 10*size_delta - (comp_size-new_comp_size)**2 - 5*i
             graph_cut_heur += utility
         return graph_cut_heur
 
@@ -415,7 +401,7 @@ class PlayerAI(BaseAI):
             new_comp_size = self.__conn_sq_depth_lim_heur(grid, pos, max_radius=max_radius, max_size=comp_size, return_pos=False)
             grid.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
-            utility = 10*size_delta - (49-new_comp_size)**2 - 5*j
+            utility = 10*size_delta - (comp_size-new_comp_size)**2 -5*j
 
             return utility
 
@@ -623,6 +609,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
+        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
         if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
@@ -698,6 +685,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
+        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
         if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
@@ -736,6 +724,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
+        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
         if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
@@ -774,7 +763,6 @@ class PlayerAI(BaseAI):
                 cache[key] = utility + sum(trap_heur)
             target_prob = self.__probability(player_pos, trap_pos)
             expected_utility = target_prob * utility
-            # backtrack
             grid.map[trap_pos] = 0
 
             neighbors = self.__get_all_neighbors(grid, trap_pos)
@@ -812,6 +800,7 @@ class PlayerAI(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
+        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
         if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
@@ -845,19 +834,6 @@ class PlayerAI(BaseAI):
         if self.verbose:
             # start = time.time()
             child, self.utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth=0, depth_limit=depth_limit)
-            print(f'max trap candidates seen from one child: {self.max_trap_candidates}')
-            if self.use_advanced_heuristics:
-                print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
-            # if end-start >= 5.05:
-            if self.use_graph_me:
-                cprint(f'Used graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
-            if self.use_graph_d2_me:
-                cprint(f'Used 2-ply graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
-            if self.use_graph_opp:
-                cprint(f'Used graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
-            if self.use_graph_d2_opp:
-                cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
-            
             if self.utility >= 90000:
                 print(f'Best move found has utility of {self.utility:.2f}. Win imminent? 😱')
             elif self.utility >= 1000:

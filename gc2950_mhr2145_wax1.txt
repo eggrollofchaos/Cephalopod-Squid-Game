@@ -1,0 +1,7 @@
+The Cephalopods
+---------------
+Expectiminimax - mostly Matthew and Gong, help from Alex
+Expectiminimax optimization and backtracking - Gong
+Heuristics/strategy - mostly Alex, Matthew implemented a heuristic that exceeded time limit and was removed
+Batch test script - Alex
+Bug fixes/testing - all

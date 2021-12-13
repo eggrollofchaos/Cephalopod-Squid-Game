@@ -18,12 +18,16 @@ class RunGames(object):
     Usage:
     $ python RunGames.py [n] -v -c -p -g -d [depth_limit] -a [opponent_depth_limit]
     [N] : number of processes to run
-    -v  : verbose output to terminal
     -c  : clear terminal screen prior to running
+    -v  : verbose output to terminal
     -p  : show progress bars
     -g  : show game output (note: very verbose)
+    -h  : enable advanced heuristics
     -d  : set player search depth limit of [depth_limit], min 1, default 4
-    -d  : set opponent search depth limit of [opp_depth_limit], min 1, default 2
+    -a  : set opponent search depth limit of [opp_depth_limit], min 1, default 2 (if applicable)
+    
+    Example:
+    $ python RunGames.py 100 -c -v -p -g -h -d [depth_limit] -a [opponent_depth_limit]
     '''
 
     def __init__(self, n, verbose, progress, suppress_output, heur, depth_limit, opp_depth_limit, results_filename):
@@ -43,10 +47,7 @@ class RunGames(object):
         # begin batch run
         start_batch = time()
         run_times = []
-        rounds_list = []
-
-        if not self.suppress_output:                    # to help find game beginning/end
-            cprint('\n\n', on_color='on_white')
+        rounds_list = []    
 
         if self.progress:
             for it in tqdm(range(1, self.n+1)):         # show progress bars
@@ -59,10 +60,6 @@ class RunGames(object):
                 run_time, rounds = self.__run_process(it)
                 run_times.append(run_time)
                 rounds_list.append(rounds)
-
-        if not self.suppress_output:                    # to help find game beginning/end
-            cprint('\n\n', on_color='on_white')
-
 
         end_batch = time()
         total_time = end_batch - start_batch

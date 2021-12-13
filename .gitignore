@@ -3,6 +3,7 @@
 batch_results*.txt
 oldAI.py
 new.py
+Submission/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
