@@ -1,3 +1,24 @@
+# AI Squid Game 
+
+This AI project began as the final coding project for the COMS W4701 Artificial Intelligence class at Columbia University, in 2021.
+
+Algorithms employed:
+
+1. Breadth First Search (BFS)
+2. ExpectiMinimax optimization
+3. Iterative Deepening Search (IDS)
+4. Graph cut optimization
+
+In 2025, I am taking another look to see if I can improve on the AI algorithms. Will update when I have something!
+
+The 'Submission' directory has the code as it was submitted in 2021 by myself and my two teammates Matthew Retchin and Gong Chen.
+
+-Alex
+
+Original project README by course TAs and professor below.
+
+---
+
 # AI Squid Game: Trap! (Fall 2021)
 
 The final coding challenge for COMS W4701 - Artificial Intelligence, Columbia University.

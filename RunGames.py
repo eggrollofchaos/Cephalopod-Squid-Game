@@ -16,7 +16,7 @@ class RunGames(object):
     Outputs results to batch_results.txt
 
     Usage:
-    $ python RunGames.py [n] -v -c -p -g -d [depth_limit] -a [opponent_depth_limit]
+    $ python3 RunGames.py [n] -c -v -p -g -h -h2 -d [depth_limit] -oa [opponent AI level] -od [opponent_depth_limit] 
     [N] : number of processes to run
     -c  : clear terminal screen prior to running
     -v  : verbose output to terminal
@@ -24,19 +24,21 @@ class RunGames(object):
     -g  : show game output (note: very verbose)
     -h  : enable advanced heuristics
     -d  : set player search depth limit of [depth_limit], min 1, default 4
-    -a  : set opponent search depth limit of [opp_depth_limit], min 1, default 2 (if applicable)
+    -oa : set opponent AI level [0-4]
+    -od : set opponent search depth limit of [opp_depth_limit], min 1, default 2 (only applicable if opponent AI level is 2 or above)
     
     Example:
-    $ python RunGames.py 100 -c -v -p -g -h -d [depth_limit] -a [opponent_depth_limit]
+    $ python3 RunGames.py 100 -c -v -p -g -h -d 4 -oa 0 -od 1
     '''
 
-    def __init__(self, n, verbose, progress, suppress_output, heur, depth_limit, opp_depth_limit, results_filename):
+    def __init__(self, n, verbose, progress, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, results_filename):
         self.n = n
         self.verbose = verbose
         self.progress = progress
         self.suppress_output = suppress_output
         self.heur = heur
         self.depth_limit = depth_limit
+        self.opp_ai_int = opp_ai_int
         self.opp_depth_limit = opp_depth_limit
         self.run_success = 0
         self.player_wins = 0
@@ -67,8 +69,8 @@ class RunGames(object):
         return total_time, run_times, rounds_list, self.run_success, self.player_wins
 
     def __run_process(self, it):
-        run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)]
-        run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)]
+        run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+        run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
         if self.heur == 'graphcut':
             run_arg_list.append('-h')
             run_arg_list3.append('-h')
@@ -82,10 +84,11 @@ class RunGames(object):
         start_run = time()
         try:
             # result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
-            result = run(run_arg_list, capture_output=self.suppress_output)
+            # print(run_arg_list3)
+            result = run(run_arg_list3, capture_output=self.suppress_output)
         except:
             # result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
-            result = run(run_arg_list3, capture_output=self.suppress_output)
+            result = run(run_arg_list, capture_output=self.suppress_output)
 
         end_run = time()
         run_time = end_run-start_run
@@ -152,19 +155,22 @@ class RunGames(object):
 
 
 def main():
-    clear = lambda: system('clear')
+    clear = lambda: system('clear')   # pretty cool way to clear the output
     n = 100
     verbose = False
     progress = False
     suppress_output = True
     heur = False
-    depth_limit = 0
-    opp_depth_limit = 0
+    depth_limit = 4
+    opp_ai_int = 0        # if 0 or 1, depth limit won't apply
+    opp_ai_level = 'Easy AI'
+    opp_depth_limit = 2
     depth_str = ''
     opp_depth_str = ''
     heur_str = ''
     dl_flag_index = -1
     opp_dl_flag_index = -1
+    opp_ai_int_flag_index = -1
 
     if len(argv)>1:
         dl_flag_index = 0
@@ -175,20 +181,27 @@ def main():
                 depth_str = f'_d_{depth_limit}'
             except:
                 pass
-        if '-a' in argv:
+        if '-oa' in argv:
             try:
-                opp_dl_flag_index = argv.index('-a')
-                opp_depth_limit = int(argv[opp_dl_flag_index+1])
-                opp_depth_str = f'_a_{opp_depth_limit}'
+                opp_ai_int_flag_index = argv.index('-oa')
+                opp_ai_int = int(argv[opp_ai_int_flag_index+1])
+                opp_ai_level_str = f'_oa_{opp_ai_int}'
             except:
                 pass
-        num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_dl_flag_index+1]
+        if opp_ai_int > 1 and '-od' in argv:
+            try:
+                opp_dl_flag_index = argv.index('-od')
+                opp_depth_limit = int(argv[opp_dl_flag_index+1])
+                opp_depth_str = f'_od_{opp_depth_limit}'
+            except:
+                pass
+        num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_ai_int_flag_index+1 and n!=opp_dl_flag_index+1 ]
         if num:
             n = int(num[0]) if n>0 else 1
-        if '-v' in argv:
-            verbose = True
         if '-c' in argv:
             clear()
+        if '-v' in argv:
+            verbose = True
         if '-p' in argv:
             progress = True
         if '-g' in argv:
@@ -200,19 +213,33 @@ def main():
             heur = 'geodesics'
             heur_str = '_h2'
 
-    cprint(f'Running batch test on {argv[0]}, {n} times...', 'blue')
-    if depth_limit:
-        cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')
-    if opp_depth_limit:
+    cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
+    # if depth_limit:
+    cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')
+    match opp_ai_int:
+        case 0:
+            opp_ai_level = 'Easy AI'
+        case 1:
+            opp_ai_level = 'Medium AI'
+        case 2:
+            opp_ai_level = 'custom AI version 1'
+        case 3:
+            opp_ai_level = 'custom AI version 2'
+        case 4:
+            opp_ai_level = 'custom AI version 3'
+        case _:
+            opp_ai_level = 'Easy AI'
+    cprint(f'Setting Opponent AI to {opp_ai_level}.', 'blue')
+    if opp_ai_int >1 and opp_depth_limit:
         cprint(f'Setting Opponent search depth limit to {opp_depth_limit}.', 'blue')
     if heur:
         cprint(f'Applying advanced heuristics.\n', 'blue')
 
-    results_filename = f"batch_results{depth_str}{opp_depth_str}{heur_str}.txt"
+    results_filename = f"batch_results{depth_str}{opp_ai_level_str}{opp_depth_str}{heur_str}.txt"
     if exists(results_filename):
       remove(results_filename)
-
-    run_games = RunGames(n, verbose, progress, suppress_output, heur, depth_limit, opp_depth_limit, results_filename)
+        
+    run_games = RunGames(n, verbose, progress, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, results_filename)
     total_time, run_times, rounds_list, run_success, player_wins = run_games.start_batch()
     total_moves = sum(rounds_list)
     avg_rounds = total_moves/n

@@ -12,7 +12,7 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 from termcolor import cprint
 
-DEFAULT_DEPTH_LIMIT = 5
+DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAIOppV3(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=True) -> None:
@@ -723,9 +723,9 @@ class PlayerAIOppV3(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result, player_num)
 
-        # break if hit depth limit
+        # break if (exceed) hit depth limit
         # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
-        if depth >= depth_limit:
+        if depth > depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
 
@@ -799,9 +799,9 @@ class PlayerAIOppV3(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result, player_num)
 
-        # break if hit depth limit
+        # break if (exceed) hit depth limit
         # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
-        if depth >= depth_limit:
+        if depth > depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
 

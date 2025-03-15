@@ -466,6 +466,8 @@ class PlayerAIOppV2(BaseAI):
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result)
+
+        # break if hit depth limit
         if depth >= depth_limit:
             return self.__get_heuristics(grid, is_me=True)
 
@@ -542,7 +544,8 @@ class PlayerAIOppV2(BaseAI):
             # grid = self.__trap_children(grid, is_me=True)[0]
             return self.__evaluate(grid, gameover_result)
 
-        if depth >= depth_limit:
+        # break if (exceed) hit depth limit
+        if depth > depth_limit:
             return self.__get_heuristics(grid, is_me=True)
 
         maxTrap, maxUtility = None, -np.inf
@@ -584,8 +587,8 @@ class PlayerAIOppV2(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
-        # break if hit depth limit
-        if depth >= depth_limit:
+        # break if (exceed) hit depth limit
+        if depth > depth_limit:
             return self.__get_heuristics(grid, is_me=True)
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf

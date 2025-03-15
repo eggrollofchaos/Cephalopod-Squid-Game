@@ -20,7 +20,7 @@ timeLimit = 5
 allowance = 0.05
 
 class Game():
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode=False):
+    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode = False, verbose = False):
         '''
         Description
         ----------
@@ -41,8 +41,17 @@ class Game():
         self.dim        = N
         self.over       = False
         self.displayer  = displayer
-        self.test_mode  = test_mode
+        self.test_mode  = test_mode   # don't wait 5 seconds between moves
+        self.verbose    = verbose
 
+        if self.verbose:
+            if playerAI == None:
+                print("Note: Player is using no AI, all moves/throws are random.")
+            if computerAI == None:
+                print("Note: Opponent is using no AI, all moves/throws are random.")
+
+        # exit('Testing')
+        
     def initialize_game(self):
 
         p1_index, p2_index = (0, self.dim // 2), (self.dim - 1, self.dim // 2)
@@ -154,7 +163,9 @@ class Game():
         total_player_moves = 0
         total_player_traps = 0
 
-        print("AI SQUID GAME")
+        print("")
+        cprint("AI SQUID GAME", 'blue')
+        
         self.initialize_game()
 
         self.displayer.display(self.grid)
@@ -192,9 +203,12 @@ class Game():
                 intended_trap = self.playerAI.getTrap(self.grid.clone())
                 # input()
                 if self.is_valid_trap(self.grid, intended_trap):
-                    print(f"Throwing a trap to: {intended_trap}...", end='')
+                    print(f"Throwing a trap to: {intended_trap}... ", end='')
                     trap = self.throw(self.playerAI, self.grid, intended_trap)
-                    print(f"Trap landed in {trap}")
+                    print(f"Trap landed in {trap}", end='')
+                    if self.grid.getCellValue(trap) == -1:
+                        print(', which already had a trap, no effect.')
+                    print('.')
                     self.grid.trap(trap)
 
                 else: 
@@ -260,8 +274,10 @@ def main():
     opp_depth_limit = 0
     test_mode = False
     verbose = False
-    # heur = False
-    heur = 'graphcut'
+    heur = False
+    # heur = 'graphcut'
+    opp_ai_int = -1
+    opp_ai_level = 'EasyAI()'
     
     if len(argv)>1:
         if '-t' in argv:
@@ -272,28 +288,54 @@ def main():
             heur = 'graphcut'
         if '-h2' in argv:
             heur = 'geodesics'
-        if '-d' in argv:
+        if '-d' in argv:                        # search depth limit
             try:
                 dl_flag_index = argv.index('-d')
                 depth_limit = int(argv[dl_flag_index+1])
             except:
                 pass
-        if '-a' in argv:
+        if '-oa' in argv:                       # opponent AI difficulty
             try:
-                opp_dl_flag_index = argv.index('-a')
+                od_flag_index = argv.index('-oa')
+                opp_ai_int = int(argv[od_flag_index+1])
+            except:
+                pass
+        if opp_ai_int > 1 and '-od' in argv:    # opponent AI depth limit (if applicable)
+            try:
+                opp_dl_flag_index = argv.index('-od')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
             except:
                 pass
+            
     #### EDIT HERE ####
-    playerAI = PlayerAI(depth_limit, heur, verbose) # change this to PlayerAI() to test your player!
-    # playerAI = None
-    # computerAI = EasyAI() # change this to a more sophisticated player you've coded
-    # computerAI = MediumAI() # change this to a more sophisticated player you've coded
-    # computerAI = PlayerAIOppV2(opp_depth_limit) # change this to a more sophisticated player you've coded
-    computerAI = PlayerAIOppV3(opp_depth_limit) # change this to a more sophisticated player you've coded
-    # depth_limit = 0
+    playerAI = PlayerAI(depth_limit, heur, verbose)    # change this to PlayerAI() to test your player!
+    # playerAI = None                                    # will use random moves / throws in ComputerAI.py, for testing only
+    # computerAI = None                                  # will use random moves / throws in ComputerAI.py, for testing only
+
+    match opp_ai_int:
+        case 0:
+            opp_ai_level = 'EasyAI()'
+            print("Opponent is using Easy AI.") if verbose else None
+        case 1:
+            opp_ai_level = 'MediumAI()'
+            print("Opponent is using Medium AI.") if verbose else None
+        case 2:
+            opp_ai_level = 'PlayerAIOpp(opp_depth_limit)'
+            print("Opponent is using custom AI version 2.") if verbose else None
+        case 3:
+            opp_ai_level = 'PlayerAIOppV2(opp_depth_limit)'
+            print("Opponent is using custom AI version 2.") if verbose else None
+        case 4:
+            opp_ai_level = 'PlayerAIOppV3(opp_depth_limit)'
+            print("Opponent is using custom AI version 3.") if verbose else None
+        case _:
+            opp_ai_level = 'EasyAI()'
+            print("Opponent is defaulting to Easy AI.") if verbose else None
+    computerAI = eval(opp_ai_level)
+    # depth_limit = 0, for testing
     #### EDIT HERE ####
 
+    
     displayer = Displayer()
     # game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)

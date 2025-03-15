@@ -12,10 +12,11 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 from termcolor import cprint
 
-DEFAULT_DEPTH_LIMIT = 5
+DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAI(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=False) -> None:
+    # def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=False) -> None:
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=False, verbose=False) -> None:
         self.verbose = verbose
         super().__init__()
         self.pos = None
@@ -114,25 +115,25 @@ class PlayerAI(BaseAI):
             self.max_search_traps += 1
         if self.turns == 3:
             self.max_search_traps += 1
-        if self.turns == 4:                     # graph_cut starts here
-            self.max_search_traps = 9           # reset to 9
+        if self.turns == 4:                     # graph_cut starts here - but why?
+            self.max_search_traps = 11          # reset to 11, changed from 9
         if self.turns == 5:
             self.max_search_traps += 1
         if self.turns == 6:                     # 2-ply graph_cut starts here
-            self.max_search_traps = 7           # reset to 7
-            self.graph_cut_size_cap = 6         # starting lower for graph cut 2-ply
-            self.max_radius = 2                 # starting lower for graph cut 2-ply
+            self.max_search_traps = 9           # reset to 9, changed from 7
+            self.graph_cut_size_cap = 8         # starting lower for graph cut 2-ply, changed from 6
+            self.max_radius = 3                 # starting lower for graph cut 2-ply, changed from 2
         if self.turns == 7:
             # self.max_search_traps += 1
             self.graph_cut_size_cap += 1
         if self.turns == 8:
             self.max_search_traps += 1
             # self.graph_cut_size_cap += 1
-            pass
+            # pass
         if self.turns == 9:
             self.max_search_traps += 1
             self.graph_cut_size_cap += 1
-            self.max_radius += 1                # back up to 3
+            self.max_radius += 1                # now to 4, changed from 3
         if self.turns == 10:
             self.max_search_traps += 1
             self.graph_cut_size_cap += 1
@@ -735,8 +736,8 @@ class PlayerAI(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result, player_num)
 
-        # break if hit depth limit
-        if depth >= depth_limit:
+        # break if (exceed) hit depth limit
+        if depth > depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
 
@@ -811,8 +812,8 @@ class PlayerAI(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result, player_num)
 
-        # break if hit depth limit
-        if depth >= depth_limit:
+        # break if (exceed) hit depth limit
+        if depth > depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
 
@@ -849,14 +850,14 @@ class PlayerAI(BaseAI):
             if self.use_advanced_heuristics:
                 print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
             # if end-start >= 5.05:
-            if self.use_graph_me:
-                cprint(f'Used graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
-            if self.use_graph_d2_me:
-                cprint(f'Used 2-ply graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
-            if self.use_graph_opp:
-                cprint(f'Used graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
-            if self.use_graph_d2_opp:
-                cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
+                if self.use_graph_me:
+                    cprint(f'Used graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
+                if self.use_graph_d2_me:
+                    cprint(f'Used 2-ply graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
+                if self.use_graph_opp:
+                    cprint(f'Used graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
+                if self.use_graph_d2_opp:
+                    cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
             
             if self.utility >= 90000:
                 print(f'Best move found has utility of {self.utility:.2f}. Win imminent? 😱')
