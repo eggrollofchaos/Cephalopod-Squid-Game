@@ -890,6 +890,12 @@ class PlayerAI(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
+
+        # TO DO
+        # need to code this up separately from getMove
+        # essentially need two Expetiminimax algos
+        # March 15
+
         if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
             return grid.getAvailableCells()[0]
 
