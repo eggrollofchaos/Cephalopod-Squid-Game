@@ -894,7 +894,7 @@ class PlayerAI(BaseAI):
         # TO DO
         # need to code this up separately from getMove
         # essentially need two Expetiminimax algos
-        # March 15
+        # March 15 WAX
 
         if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
             return grid.getAvailableCells()[0]

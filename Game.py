@@ -262,7 +262,7 @@ class Game():
             if self.is_over(turn):
                 self.over = True
 
-            if not self.test_mode:
+            if not self.test_mode:              # wait time in between
                 self.updateAlarm(time.process_time())
             turn = 3 - turn
             self.displayer.display(self.grid)

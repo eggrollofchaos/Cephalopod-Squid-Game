@@ -155,7 +155,7 @@ class RunGames(object):
 
 
 def main():
-    clear = lambda: system('clear')   # pretty cool way to clear the output
+    clear = lambda: system('clear')   # pretty cool way to clear the output, should look into more
     n = 100
     verbose = False
     progress = False
