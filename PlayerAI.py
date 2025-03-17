@@ -315,7 +315,7 @@ class PlayerAI(BaseAI):
 
     def __center_heur(self, grid: Grid, pos) -> int:
         """
-        Heuristic that slightly priotizes being closer to center
+        Heuristic that slightly prioritizes being closer to center
         Returns a heuristic int
         """
         dist = 6 - grid_distance(pos, (3,3))
