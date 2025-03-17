@@ -89,6 +89,12 @@ class PlayerAI(BaseAI):
             self.utility = 0
             self.current_depth = 0
 
+        print(f'Player is at {self.pos}, Opponent is at {self.opp_pos}, they are currently {grid_distance(self.pos, self.opp_pos)} units apart.')
+        print(f'This is a heuritic of {self.__near_opp_heur(grid, self.pos, self.opp_pos)}.')
+
+        print(f'There are {self.__avoid_traps_heur(grid, self.pos)} traps next to Player, and {self.__avoid_traps_heur(grid, self.opp_pos)} traps next to Opponent')
+
+
         print(f'Looking for best move. Depth limit is {self.depth_limit}.') if self.verbose else None
 
         # get players's current connected sq 
