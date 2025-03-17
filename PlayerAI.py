@@ -89,7 +89,7 @@ class PlayerAI(BaseAI):
             self.utility = 0
             self.current_depth = 0
 
-        print(f'Depth limit is {self.depth_limit}.') if self.verbose else None
+        print(f'Looking for best move. Depth limit is {self.depth_limit}.') if self.verbose else None
 
         # get players's current connected sq 
         # curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True)
@@ -895,6 +895,21 @@ class PlayerAI(BaseAI):
         # need to code this up separately from getMove
         # essentially need two Expetiminimax algos
         # March 15 WAX
+
+        # get player numbers variables
+        player_num = self.getPlayerNum()
+        opp_num = self.getOpponentNum()
+        self.opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])              # find opponent's current position
+
+        if self.verbose:
+            self.heur_evals = 0
+            self.heur_time = 0
+            self.child_nodes_seen = 0
+            self.printed = False
+            self.utility = 0
+            self.current_depth = 0
+
+        print(f'Looking for best trap. Depth limit is {self.depth_limit}.') if self.verbose else None
 
         if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
             return grid.getAvailableCells()[0]
