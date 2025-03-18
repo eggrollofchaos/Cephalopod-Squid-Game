@@ -47,6 +47,15 @@ class RunGames(object):
 
     def start_batch(self):
         # begin batch run
+
+        run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+        delimiter = ' '
+        run_arg_list3_str = delimiter.join(run_arg_list3)
+        with open(self.filename, 'a') as f:
+            # print(run_arg_list3)
+            f.write(run_arg_list3_str)
+            f.write('\n\n')
+
         start_batch = time()
         run_times = []
         rounds_list = []    

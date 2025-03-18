@@ -1,6 +1,8 @@
 # gc2950
 # mhr2145
 # wax1
+# hard-coded to a 7x7 grid size
+
 import numpy as np
 import random
 import time
@@ -16,7 +18,12 @@ DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAI(BaseAI):
     # def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=False) -> None:
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=False, verbose=False) -> None:
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=False) -> None:
+        '''
+        Player AI.
+        Usses Expectiminimax.
+        Applies various heuristics.
+        '''
         self.verbose = verbose
         super().__init__()
         self.pos = None
@@ -27,8 +34,8 @@ class PlayerAI(BaseAI):
         if self.depth_limit == 0:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
-        self.use_advanced_heuristics = heur
-        self.curr_conn_sq = 48
+        self.use_advanced_heuristics = heur     # graphcut, geodesics, None
+        # self.curr_conn_sq = 48                  # essentially dim^2 - 1
         self.search_start_pos = (3, 3)
         self.graph_cut_size_cap = 8
         self.max_search_traps = 12
@@ -47,16 +54,16 @@ class PlayerAI(BaseAI):
     def setPlayerNum(self, num):                # used by Game to set player num
         self.player_num = num
 
-    def getPlayerNum(self):
+    def getPlayerNum(self):                     # using this to be rigorous
         return self.player_num
 
-    def getPlayerPosition(self, grid):          # of current Grid object
+    def getPlayerPosition(self, grid):          # of current Grid object - CHECK when using?
         return grid.find(self.getPlayerNum())
 
-    def getOpponentNum(self):
+    def getOpponentNum(self):                   # using this to be rigorous
         return 3 - self.getPlayerNum()
 
-    def getOpponentPosition(self, grid: Grid):  # of current Grid object
+    def getOpponentPosition(self, grid: Grid):  # of current Grid object - CHECK when using?
         return grid.find(self.getOpponentNum())
 
     def getMove(self, grid: Grid) -> tuple:
@@ -90,16 +97,16 @@ class PlayerAI(BaseAI):
             self.current_depth = 0
 
         print(f'Player is at {self.pos}, Opponent is at {self.opp_pos}, they are currently {grid_distance(self.pos, self.opp_pos)} units apart.')
-        print(f'This is a heuritic of {self.__near_opp_heur(grid, self.pos, self.opp_pos)}.')
+        print(f'This is a heuritic of {PlayerAI.__near_opp_heur(grid, self.pos, self.opp_pos)}.')
 
-        print(f'There are {self.__avoid_traps_heur(grid, self.pos)} traps next to Player, and {self.__avoid_traps_heur(grid, self.opp_pos)} traps next to Opponent')
+        print(f'There are {PlayerAI.__avoid_traps_heur(grid, self.pos)} traps next to Player, and {PlayerAI.__avoid_traps_heur(grid, self.opp_pos)} traps next to Opponent')
 
 
         print(f'Looking for best move. Depth limit is {self.depth_limit}.') if self.verbose else None
 
         # get players's current connected sq 
-        # curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True)
-        # curr_conn_sq_opp, curr_conn_sq_list_opp = self.__connected_sq_heur(grid, pos=self.opp_pos, max_size=27, return_pos=True)
+        # curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True)        # previous DFS iteration of this function
+        # curr_conn_sq_opp, curr_conn_sq_list_opp = self.__connected_sq_heur(grid, pos=self.opp_pos, max_size=27, return_pos=True)  # previous DFS iteration of this function
         curr_conn_sq_me, curr_conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, pos=self.pos, max_radius=3, return_pos=True)
         curr_conn_sq_opp, curr_conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, pos=self.opp_pos, max_radius=3, return_pos=True)
         self.curr_conn_sq_me = curr_conn_sq_me/5
@@ -116,7 +123,10 @@ class PlayerAI(BaseAI):
         
         # get maximum trap candidates to search per call to Expectiminimax
         # get maximum graph_cut candidates
-        self.max_search_traps += min(2*(5 - self.depth_limit), 1) # adjust based on depth_level
+
+        # max_search_traps starts at 12, but needs to be adjusted down at early game if depth_level is higher than 5
+        self.max_search_traps += min(2*(5 - self.depth_limit), 1)
+        self.max_search_traps = min(8, abs(self.max_search_traps))      # no less than 5 to begin with
         if self.turns == 2:
             self.max_search_traps += 1
         if self.turns == 3:
@@ -184,22 +194,19 @@ class PlayerAI(BaseAI):
         return max_move
 
 
-    def __is_over(self, grid: Grid, player_num, player_pos, opp_num, opp_pos) -> int:
+
+    @staticmethod
+    def __clone(grid: Grid) -> object:
         """
-        Check if game is over, i.e., Player or Opponent has no moves to make
+        Makes a full copy of current grid
         """
-        # check if Player has won
-        opp_neighbors = self.__get_valid_neighbors(grid, opp_pos)
-        if len(opp_neighbors) == 0:
-            return player_num
-
-        # check if Opponent has won
-        player_neighbors = self.__get_valid_neighbors(grid, player_pos)
-        if len(player_neighbors) == 0:
-            return opp_num
+        grid_copy = Grid(7)
+        grid_copy.map = grid.map.copy()
+        return grid_copy
 
 
-    def __evaluate(self, grid: Grid, gameover_result, player_num) -> int:
+    @staticmethod
+    def __evaluate(grid: Grid, gameover_result, player_num) -> tuple:
         """
         Function for returning high or low utility based on gameover state.
         """
@@ -210,10 +217,149 @@ class PlayerAI(BaseAI):
                 return grid, -99999
 
 
+    @staticmethod
+    def __get_all_neighbors(grid: Grid, pos, radius=1) -> list:
+        """
+        Same as __get_valid_neighbors, but includes trap positions
+        Returns a list of positions as tuples
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
+
+
+    @staticmethod
+    def __get_all_neighbors_avoid_edge(grid: Grid, pos, radius=1) -> list:
+        """
+        Same as __get_all_valid_neighbors, but avoiding edges
+        Returns a list of positions as tuples
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
+
+
+    @staticmethod
+    def __get_valid_neighbors(grid: Grid, pos, radius=1) -> list:
+        """
+        Modification of original function for returning neighboring cells.
+        Returns a list of positions as tuples
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y) if grid.map[(a,b)] == 0]
+
+
+    @staticmethod
+    def __get_valid_neighbors_avoid_edge(grid: Grid, pos, radius=1) -> list:
+        """
+        Same as __get_valid_neighbors, but avoiding edges
+        Returns a list of positions as tuples, including current position
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y) if grid.map[(a,b)] == 0]
+
+
+    @staticmethod
+    def __is_over(grid: Grid, player_num, player_pos, opp_num, opp_pos) -> int:
+        """
+        Check if game is over, i.e., Player or Opponent has no moves to make
+        """
+        # check if Player has won
+        opp_neighbors = PlayerAI.__get_valid_neighbors(grid, opp_pos)
+        if len(opp_neighbors) == 0:
+            return player_num
+
+        # check if Opponent has won
+        player_neighbors = PlayerAI.__get_valid_neighbors(grid, player_pos)
+        if len(player_neighbors) == 0:
+            return opp_num
+
+
+    @staticmethod
+    def __probability(pos, trap_pos) -> float:
+        """
+        Calculates probability of a trap landing in an intended square.
+        """
+        alpha = manhattan_distance(pos, trap_pos)
+        # alpha = grid_distance(pos, trap_pos)
+        p = 1 - 0.05 * (alpha - 1)
+        return p
+
+
+######################################################
+################# STATIC HEURISTICS ##################
+######################################################
+
+
+    @staticmethod
+    def __avoid_traps_heur(grid: Grid, pos) -> int:
+        """
+        Heuristic that penalizes being next to a trap
+        Returns a heuristic int
+        """
+        neighbors = PlayerAI.__get_all_neighbors(grid, pos)
+        num_traps = len([neighbor for neighbor in neighbors if grid.map[neighbor] == -1])
+        return -3*num_traps # was -3*num_traps
+
+
+    @staticmethod
+    def __center_heur(grid: Grid, pos) -> int:
+        """
+        Heuristic that slightly prioritizes being closer to center
+        Returns a heuristic int
+        """
+        dist = 6 - grid_distance(pos, (3,3))
+        return 0.25*dist # was 1*dist
+
+
+    @staticmethod
+    def __edge_touch_heur(grid: Grid, pos) -> int:
+        """
+        Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
+        Returns a heuristic int
+        """
+        edges_touched = 0
+        if pos[0] in (0,6):
+            edges_touched += 1
+        if pos[1] in (0,6):
+            edges_touched += 1
+        return -5*edges_touched # was -10*edges_touched
+
+
+    @staticmethod
+    def __near_opp_heur(grid: Grid, player_pos, opp_pos) -> int:
+        """
+        Heuristic that prioritizes being about 3 grid_distances away from opponent
+        Returns a heuristic int
+        """
+        dist = abs(3 - grid_distance(player_pos, opp_pos))
+        return -0.5*dist # was -5*dist
+
+
+    @staticmethod
+    def __n_neighbors_heur(grid: Grid, pos) -> int:
+        """
+        Returns the difference in available squares around player vs available squares around opponent.
+        Now this just returns the same as __get_valid_neighbors; deprecated.
+        """
+        return len(PlayerAI.__get_valid_neighbors(grid, pos))
+
+
+######################################################
+################ INSTANCE HEURISTICS #################
+######################################################
+
+
     def __get_dof(self, grid: Grid, player_pos, opp_pos) -> tuple:
         """
         Apply degrees of freedom calculation heuristic based on early, mid, late game.
-        Returns a tuple of Grid object, heuristic
+        Returns a tuple of Grid object, heuristic.
         """
         center_heur = 0
         near_opp_heur = 0
@@ -235,12 +381,12 @@ class PlayerAI(BaseAI):
         graph_cut_heur = 0
 
         if self.turns <= 3:
-            center_heur = self.__center_heur(grid, player_pos) - self.__center_heur(grid, opp_pos)
-            near_opp_heur = self.__near_opp_heur(grid, player_pos, opp_pos)
-            edge_touch_heur = self.__edge_touch_heur(grid, player_pos) - self.__edge_touch_heur(grid, opp_pos)
-            avoid_traps_heur = self.__avoid_traps_heur(grid, player_pos) - self.__avoid_traps_heur(grid, opp_pos)
-        n_neighbors_heur_me = self.__n_neighbors_heur(grid, player_pos)
-        n_neighbors_heur_opp = self.__n_neighbors_heur(grid, opp_pos)
+            center_heur = PlayerAI.__center_heur(grid, player_pos) - PlayerAI.__center_heur(grid, opp_pos)
+            near_opp_heur = PlayerAI.__near_opp_heur(grid, player_pos, opp_pos)
+            edge_touch_heur = PlayerAI.__edge_touch_heur(grid, player_pos) - PlayerAI.__edge_touch_heur(grid, opp_pos)
+            avoid_traps_heur = PlayerAI.__avoid_traps_heur(grid, player_pos) - PlayerAI.__avoid_traps_heur(grid, opp_pos)
+        n_neighbors_heur_me = PlayerAI.__n_neighbors_heur(grid, player_pos)
+        n_neighbors_heur_opp = PlayerAI.__n_neighbors_heur(grid, opp_pos)
 
         max_radius = self.max_radius
         if self.turns <= 3:
@@ -289,69 +435,24 @@ class PlayerAI(BaseAI):
 
         return grid, avoid_traps_heur + center_heur + near_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
-    def __clone(self, grid: Grid) -> object:
-        """
-        Makes a full copy of current grid
-        """
-        grid_copy = Grid(7)
-        grid_copy.map = grid.map.copy()
-        return grid_copy
 
 
-    def __move(self, grid: Grid, move_pos, player_num) -> object:
-        """
-        Faster move method
-        """
-        old_pos = np.where(grid.map == player_num)
-        grid.map[old_pos], grid.map[move_pos] = grid.map[move_pos], grid.map[old_pos]
-
-      
-    def __edge_touch_heur(self, grid: Grid, pos) -> int:
-        """
-        Heuristic that penalizes being on an edge (more if on two edges, i.e. a corner)
-        Returns a heuristic int
-        """
-        edges_touched = 0
-        if pos[0] in (0,6):
-            edges_touched += 1
-        if pos[1] in (0,6):
-            edges_touched += 1
-        return -5*edges_touched # was -10*edges_touched
-
-
-    def __center_heur(self, grid: Grid, pos) -> int:
-        """
-        Heuristic that slightly prioritizes being closer to center
-        Returns a heuristic int
-        """
-        dist = 6 - grid_distance(pos, (3,3))
-        return 0.25*dist # was 1*dist
-
-
-    def __near_opp_heur(self, grid: Grid, player_pos, opp_pos) -> int:
-        """
-        Heuristic that prioritizes being about 3 grid_distances away from opponent
-        Returns a heuristic int
-        """
-        dist = abs(3 - grid_distance(player_pos, opp_pos))
-        return -0.5*dist # was -5*dist
-
-
-    def __avoid_traps_heur(self, grid: Grid, pos) -> int:
-        """
-        Heuristic that penalizes being next to a trap
-        Returns a heuristic int
-        """
-        neighbors = self.__get_all_neighbors(grid, pos)
-        num_traps = len([neighbor for neighbor in neighbors if grid.map[neighbor] == -1])
-        return -3*num_traps # was -3*num_traps
+    # not used
+    # def __move(self, grid: Grid, move_pos, player_num) -> object:
+    #     """
+    #     Faster move method
+    #     """
+    #     old_pos = np.where(grid.map == player_num)
+    #     # grid.map[old_pos], grid.map[move_pos] = grid.map[move_pos], grid.map[old_pos]
+    #     grid.map[old_pos], grid.map[move_pos] = (0,0), grid.map[old_pos]       # just use 0?
 
 
     def __conn_sq_depth_lim_heur(self, grid: Grid, pos, max_radius=2, max_size=0, return_pos=False) -> int:
         """
         Get number of connected squares for current player in current Grid object.
-        This is a depth-limited BFS algo, sort of an IDS
-        Returns a heuristic int
+        Primary heuristic.
+        This is a depth-limited BFS algo, sort of an IDS.
+        Returns a heuristic int.
         """
         if self.verbose:
             self.heur_evals += 1
@@ -360,20 +461,20 @@ class PlayerAI(BaseAI):
             max_radius = None
         radius = 1
 
-        explored = [pos]                                    # initialize explored list with position # don't need
-        search_frontier = self.__get_valid_neighbors(grid, pos, radius=1)
-        conn_sq_list = [pos]                                # initialize connected squares list
-        conn_sq_heur = 1                                    # initialize count
+        explored = [pos]                                    # initialize explored list with current player's position
+        search_frontier = PlayerAI.__get_valid_neighbors(grid, pos, radius=1)   # a list of positions
+        conn_sq_list = [pos]                                # initialize connected squares list to include current player's square
+        conn_sq_heur = 1                                    # initialize count at 1, the current player's square
         current_layer = search_frontier.copy()              # initialize current layer
         next_layer = []                                     # initialize next layer
         new_neighbors = []                                  # initialize new neighbors
 
         while search_frontier and radius <= max_radius:
-            for pos in current_layer:
-                if pos not in conn_sq_list:
-                    conn_sq_list.append(pos)                # add to connected square
+            for this_pos in current_layer:
+                if this_pos not in conn_sq_list:
+                    conn_sq_list.append(this_pos)                # add to connected square
                     conn_sq_heur += 1
-                new_neighbors = self.__get_valid_neighbors(grid, pos, radius=1)
+                new_neighbors = PlayerAI.__get_valid_neighbors(grid, this_pos, radius=1)
                 next_layer = list(set(next_layer + new_neighbors))
 
             explored = list(set(explored + current_layer))
@@ -398,11 +499,11 @@ class PlayerAI(BaseAI):
         Originally also computed number of connected components, but removed for performance.
         Returns a heuristic int
         """
-        grid_clone = self.__clone(grid)
+        grid_clone = PlayerAI.__clone(grid)
         graph_cut_heur = 0
         for i, trap_pos in enumerate(conn_sq_list):                                  # iterate over connected squares
             grid_clone.map[trap_pos] = -1
-            # new_comp_size = self.__connected_sq_heur(grid_clone, pos, max_size=comp_size, return_pos=False)
+            # new_comp_size = self.__connected_sq_heur(grid_clone, pos, max_size=comp_size, return_pos=False)   # previous DFS iteration of this function
             new_comp_size = self.__conn_sq_depth_lim_heur(grid_clone, pos, max_radius=max_radius, max_size=comp_size, return_pos=False)
             grid_clone.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
@@ -418,7 +519,7 @@ class PlayerAI(BaseAI):
         """
         def __gch_d2(grid: Grid, trap_pos, comp_size) -> int:
             grid.map[trap_pos] = -1
-            # new_comp_size = self.__connected_sq_heur(grid, pos, max_size=comp_size, return_pos=False)
+            # new_comp_size = self.__connected_sq_heur(grid, pos, max_size=comp_size, return_pos=False)         # previous DFS iteration of this function
             new_comp_size = self.__conn_sq_depth_lim_heur(grid, pos, max_radius=max_radius, max_size=comp_size, return_pos=False)
             grid.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
@@ -427,7 +528,7 @@ class PlayerAI(BaseAI):
             return utility
 
         graph_cut_heur = 0
-        grid_clone = self.__clone(grid)
+        grid_clone = PlayerAI.__clone(grid)
         for i, trap_pos in enumerate(conn_sq_list):                                   # iterate over connected squares
             conn_sq_list_2 = conn_sq_list.copy()
             conn_sq_list_2.remove(trap_pos)
@@ -441,8 +542,9 @@ class PlayerAI(BaseAI):
 
     def __get_heuristics(self, grid: Grid, player_num, opp_num) -> tuple:
         """
-        Apply heuristics
-        Returns a tuple of Grid object, heuristic
+        Apply heuristics.
+        Starting point of function call, will apply 'graphcut' or simply get valid neighbors.
+        Returns a tuple of Grid object, heuristic.
         """
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
@@ -455,86 +557,30 @@ class PlayerAI(BaseAI):
             else:
                 dof_heur = self.__get_dof(grid, player_pos=player_pos, opp_pos=opp_pos)
             return dof_heur
-        elif self.use_advanced_heuristics == 'geodesics':
-            if self.verbose:
-                start = time.time()
-                conn_sq_dl_me = self.__connected_sq_heur(grid, player_pos, max_size=25)
-                conn_sq_dl_opp = self.__connected_sq_heur(grid, opp_pos, max_size=25)
-                dl_heur = conn_sq_dl_me-conn_sq_dl_opp
-                end = time.time()
-                self.heur_time += end-start
-            else:
-                conn_sq_dl_me = self.__connected_sq_heur(grid, player_pos, max_size=25)
-                conn_sq_dl_opp = self.__connected_sq_heur(grid, opp_pos, max_size=25)
-                dl_heur = conn_sq_dl_me-conn_sq_dl_opp
-            return grid, dl_heur                    # for next set of heuristics Matthew/Gong
+        elif self.use_advanced_heuristics == 'geodesics':        # not implemented
+            pass
+            # if self.verbose:
+            #     start = time.time()
+            #     conn_sq_dl_me = self.__connected_sq_heur(grid, player_pos, max_size=25)
+            #     conn_sq_dl_opp = self.__connected_sq_heur(grid, opp_pos, max_size=25)
+            #     dl_heur = conn_sq_dl_me-conn_sq_dl_opp
+            #     end = time.time()
+            #     self.heur_time += end-start
+            # else:
+            #     conn_sq_dl_me = self.__connected_sq_heur(grid, player_pos, max_size=25)
+            #     conn_sq_dl_opp = self.__connected_sq_heur(grid, opp_pos, max_size=25)
+            #     dl_heur = conn_sq_dl_me-conn_sq_dl_opp
+            # return grid, dl_heur                    # for next set of heuristics Matthew/Gong
         else:
-            return grid, self.__n_neighbors_heur(grid, player_pos) - self.__n_neighbors_heur(grid, opp_pos)
+            return grid, PlayerAI.__n_neighbors_heur(grid, player_pos) - PlayerAI.__n_neighbors_heur(grid, opp_pos)
 
 
-    def __n_neighbors_heur(self, grid: Grid, pos) -> int:
+    @staticmethod
+    def __find_center(player_pos, opp_pos):
         """
-        Returns the difference in available squares around player vs available squares around opponent.
-        Now this just returns the same as __get_valid_neighbors; deprecated.
-        """
-        return len(self.__get_valid_neighbors(grid, pos))
-
-
-    def __probability(self, pos, trap_pos) -> float:
-        """
-        Calculates probability of a trap landing in an intended square.
-        """
-        alpha = manhattan_distance(pos, trap_pos)
-        # alpha = grid_distance(pos, trap_pos)
-        p = 1 - 0.05 * (alpha - 1)
-        return p
-
-
-    def __get_valid_neighbors(self, grid, pos, radius=1) -> list:
-        """
-        Modification of original function for returning neighboring cells.
-        Returns a list of positions
+        Helper function for finding a square roughly midway between Player and Opponent.
         
         """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y) if grid.map[(a,b)] == 0]
-
-
-    def __get_valid_neighbors_avoid_edge(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_valid_neighbors, but avoiding edges
-        Returns a list of positions, including current position
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y) if grid.map[(a,b)] == 0]
-
-
-    def __get_all_neighbors(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_valid_neighbors, but includes trap positions
-        Returns a list of positions
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
-
-
-    def __get_all_neighbors_avoid_edge(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_all_valid_neighbors, but avoiding edges
-        Returns a list of positions
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
-
-
-    def __find_center(self, player_pos, opp_pos):
         inc_ceil = lambda i,j: int(np.ceil( (i + j) / 2 ))
         inc_floor = lambda i,j: int(np.floor( (i + j) / 2 ))
         if player_pos[0] <= opp_pos[0]:
@@ -551,19 +597,20 @@ class PlayerAI(BaseAI):
 
     def __get_search_start_pos(self, grid: Grid, player_pos, opp_pos) -> tuple:
         '''
-        Start search midway between players, but not on a trap
-        Iteratively get closer to the opponent, can be opponent
+        We want to start the Trap search midway between players.
+        We don't want to start on square that already has a trap (i.e. has value of -1).
+        Iteratively get closer to the opponent, can be opponent.
         '''
-        start_pos = self.__find_center(player_pos, opp_pos)
+        start_pos = PlayerAI.__find_center(player_pos, opp_pos)
         while grid.map[start_pos] == -1 or start_pos not in self.curr_conn_sq_list_opp:
-            start_pos = self.__find_center(start_pos, opp_pos)
+            start_pos = PlayerAI.__find_center(start_pos, opp_pos)
         return start_pos
 
 
     def __get_trap_candidates(self, grid: Grid, pos) -> list:
         """
         Helper function to intelligently locate trap candidates to feed into Expectiminimax.
-        First picks a starting location based on behind halfway between the player and opponent.
+        First picks a starting location based on being halfway between the player and opponent.
         Uses a BFS algo to look for connected traps, and then a basic IDS to expand the circle.
         Augmented to use a class param specifying threshold of max traps.
         Returns a list of tuples (positions)
@@ -592,9 +639,9 @@ class PlayerAI(BaseAI):
                 return trap_candidates
             while not new_neighbors:
                 if self.turns <= 4:                         # strategy optimization
-                    new_neighbors = self.__get_valid_neighbors_avoid_edge(grid, start_pos, radius)
+                    new_neighbors = PlayerAI.__get_valid_neighbors_avoid_edge(grid, start_pos, radius)
                 if not new_neighbors:                       # 
-                    new_neighbors = self.__get_valid_neighbors(grid, start_pos, radius)
+                    new_neighbors = PlayerAI.__get_valid_neighbors(grid, start_pos, radius)
                 radius += 1
             search_frontier = list(set(search_frontier + new_neighbors) - set(explored))
             # no need to intersect with trap_candidates, because it is a subset of explored
@@ -602,32 +649,41 @@ class PlayerAI(BaseAI):
         if trap_count == 0:
             if self.verbose:
                 print(f'No trap positions left after visiting {self.child_nodes_seen} child nodes.')
-            catch_trap = self.__get_valid_neighbors_avoid_edge(grid, start_pos, radius)
+            catch_trap = PlayerAI.__get_valid_neighbors_avoid_edge(grid, start_pos, radius)
             if not catch_trap:
-                catch_trap = self.__get_valid_neighbors(grid, start_pos, radius)
+                catch_trap = PlayerAI.__get_valid_neighbors(grid, start_pos, radius)
             if not catch_trap:
                 catch_trap = grid.getAvailableCells()[0]
             return catch_trap
+            # can terminate search?
 
         if trap_count > self.max_trap_candidates:
             self.max_trap_candidates = trap_count
+
+        if self.verbose and not self.printed:
+            print(f'Traps seen: {trap_count}')
+            self.printed = True
 
         return trap_candidates
 
 
     def __trap_minimize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
-        opponent Min node for throwing Trap
-        returns a tuple of pos, utility
+        Part of Expectiminimax.
+        This is the Opponent Min node for throwing Trap.
+        Returns a tuple of pos, utility.
         """
         if self.verbose:
             self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Move Min, Current depth = {self.current_depth}.')
+            print(f'depth = {depth}, depth_limit = {depth_limit}')
 
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])            # this is the position in question
-        gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
+        gameover_result = PlayerAI.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
         if gameover_result:
-            return self.__evaluate(grid, gameover_result, player_num)
+            return PlayerAI.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
         if depth >= depth_limit:
@@ -639,7 +695,7 @@ class PlayerAI(BaseAI):
         player_pos_a = np.array(player_pos)
         opp_pos_a = np.array(opp_pos)
         x_0, x_1 = player_pos_a - opp_pos_a
-        center_a = np.array(self.__find_center(player_pos, opp_pos))
+        center_a = np.array(PlayerAI.__find_center(player_pos, opp_pos))
         # trap_pos is a list of e.g. [(2,3), (3,4)]
         for trap_pos in self.__get_trap_candidates(grid, player_pos):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
@@ -665,12 +721,12 @@ class PlayerAI(BaseAI):
                     trap_heur = dist_me + dist_opp + 2*dist_mid[0] + 2*dist_mid[1]
                 # cache[key] = utility
                 cache[key] = utility + sum(trap_heur)
-            target_prob = self.__probability(opp_pos, trap_pos)
+            target_prob = PlayerAI.__probability(opp_pos, trap_pos)
             expected_utility = target_prob * utility
             # backtrack
             grid.map[trap_pos] = 0
 
-            neighbors = self.__get_all_neighbors(grid, trap_pos)
+            neighbors = PlayerAI.__get_all_neighbors(grid, trap_pos)
             for neighbor in neighbors:
                 if grid.map[neighbor] in (0, -1):             # to avoid player and opponent location
                     temp = grid.map[neighbor]
@@ -692,17 +748,21 @@ class PlayerAI(BaseAI):
 
     def __move_minimize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
-        opponent Min node for making Move
-        returns a tuple of pos, utility
+        Part of Expectiminimax.
+        This is the Opponent Min node for making Move.
+        Returns a tuple of pos, utility.
         """
         if self.verbose:
             self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Move Min, Current depth = {self.current_depth}.')
+            print(f'depth = {depth}, depth_limit = {depth_limit}')
 
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
-        gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
+        gameover_result = PlayerAI.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
         if gameover_result:
-            return self.__evaluate(grid, gameover_result, player_num)
+            return PlayerAI.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
         if depth >= depth_limit:
@@ -710,7 +770,7 @@ class PlayerAI(BaseAI):
             return _, utility
 
         minChild, minUtility = None, np.inf
-        for neighbor_to_move in self.__get_valid_neighbors(grid, opp_pos):
+        for neighbor_to_move in PlayerAI.__get_valid_neighbors(grid, opp_pos):
             grid.map[opp_pos] = 0
             grid.map[neighbor_to_move] = opp_num
             _, utility = self.__trap_minimize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
@@ -730,17 +790,21 @@ class PlayerAI(BaseAI):
 
     def __trap_maximize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
-        player Max node for throwing Trap
-        returns a tuple of pos, utility
+        Part of Expectiminimax.
+        This is the Player Max node for throwing Trap.
+        Returns a tuple of pos, utility.
         """
         if self.verbose:
             self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Move Min, Current depth = {self.current_depth}.')
+            print(f'depth = {depth}, depth_limit = {depth_limit}')            
 
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])              # this is the position in question
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
-        gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
+        gameover_result = PlayerAI.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
         if gameover_result:
-            return self.__evaluate(grid, gameover_result, player_num)
+            return PlayerAI.__evaluate(grid, gameover_result, player_num)
 
         # break if (exceed) hit depth limit
         if depth > depth_limit:
@@ -752,7 +816,7 @@ class PlayerAI(BaseAI):
         player_pos_a = np.array(player_pos)
         opp_pos_a = np.array(opp_pos)
         x_0, x_1 = player_pos_a - opp_pos_a
-        center_a = np.array(self.__find_center(player_pos, opp_pos))
+        center_a = np.array(PlayerAI.__find_center(player_pos, opp_pos))
         # player_pos = self.getPlayerPosition(grid)
         # opp_pos = self.getOpponentPosition(grid)
         for trap_pos in self.__get_trap_candidates(grid, opp_pos):
@@ -779,12 +843,12 @@ class PlayerAI(BaseAI):
                     trap_heur = dist_me + dist_opp + 2*dist_mid[0] + 2*dist_mid[1]
                 # cache[key] = utility
                 cache[key] = utility + sum(trap_heur)
-            target_prob = self.__probability(player_pos, trap_pos)
+            target_prob = PlayerAI.__probability(player_pos, trap_pos)
             expected_utility = target_prob * utility
             # backtrack
             grid.map[trap_pos] = 0
 
-            neighbors = self.__get_all_neighbors(grid, trap_pos)
+            neighbors = PlayerAI.__get_all_neighbors(grid, trap_pos)
             for neighbor in neighbors:
                 if grid.map[neighbor] in (0, -1):             # to avoid player and opponent location
                     temp = grid.map[neighbor]
@@ -807,16 +871,21 @@ class PlayerAI(BaseAI):
 
     def __move_maximize(self, grid: Grid, alpha, beta, player_num, opp_num, depth, depth_limit) -> tuple:
         """
-        player Max node for making Move
-        returns a tuple of pos, utility
+        Part of Expectiminimax.
+        This is the Player Max node for making Move.
+        Returns a tuple of pos, utility.
         """
         if self.verbose:
             self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Move Min, Current depth = {self.current_depth}.')
+            print(f'depth = {depth}, depth_limit = {depth_limit}')
+
         player_pos = tuple(np.argwhere(grid.map == player_num)[0])
         opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])
-        gameover_result = self.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
+        gameover_result = PlayerAI.__is_over(grid, player_num, player_pos, opp_num, opp_pos)
         if gameover_result:
-            return self.__evaluate(grid, gameover_result, player_num)
+            return PlayerAI.__evaluate(grid, gameover_result, player_num)
 
         # break if (exceed) hit depth limit
         if depth > depth_limit:
@@ -824,7 +893,7 @@ class PlayerAI(BaseAI):
             return _, utility
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
-        for neighbor_to_move in self.__get_valid_neighbors(grid, player_pos):
+        for neighbor_to_move in PlayerAI.__get_valid_neighbors(grid, player_pos):
             grid.map[player_pos] = 0
             grid.map[neighbor_to_move] = player_num
             trap, utility = self.__trap_maximize(grid, alpha, beta, player_num, opp_num, depth + 1, depth_limit)
@@ -903,21 +972,21 @@ class PlayerAI(BaseAI):
         # March 15 WAX
 
         # get player numbers variables
-        player_num = self.getPlayerNum()
-        opp_num = self.getOpponentNum()
-        self.opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])              # find opponent's current position
+        # player_num = self.getPlayerNum()
+        # opp_num = self.getOpponentNum()
+        # self.opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])              # find opponent's current position
 
-        if self.verbose:
-            self.heur_evals = 0
-            self.heur_time = 0
-            self.child_nodes_seen = 0
-            self.printed = False
-            self.utility = 0
-            self.current_depth = 0
+        # if self.verbose:
+        #     self.heur_evals = 0
+        #     self.heur_time = 0
+        #     self.child_nodes_seen = 0
+        #     self.printed = False
+        #     self.utility = 0
+        #     self.current_depth = 0
 
         print(f'Looking for best trap. Depth limit is {self.depth_limit}.') if self.verbose else None
 
-        if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
+        if not PlayerAI.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
             return grid.getAvailableCells()[0]
 
         # use cached optimal trap position that we computed in getMove()

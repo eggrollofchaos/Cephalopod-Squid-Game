@@ -16,8 +16,13 @@ from scipy.sparse.csgraph import connected_components
 DEFAULT_DEPTH_LIMIT = 2
 
 class PlayerAIOpp(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=False) -> None:
-        self.cape_color = 'blue'
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT) -> None:
+        '''
+        Custom AI Opponent, uses Expectiminimax.
+        Only applies n-neighbors heuristics.
+        '''
+
+        # self.cape_color = 'blue'
         super().__init__()
         self.pos = None
         self.player_num = None
@@ -26,7 +31,7 @@ class PlayerAIOpp(BaseAI):
         if self.depth_limit == 0:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
-        self.use_advanced_heuristics = heur
+        # self.use_advanced_heuristics = heur        # none implemented
 
     def getPosition(self):
         return self.pos

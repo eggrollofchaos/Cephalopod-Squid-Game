@@ -16,6 +16,10 @@ DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAIOppV3(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=True) -> None:
+        '''
+        Custom AI Opponent, uses Expectiminimax.
+        Applies most of the same heuristics as PlayerAI.
+        '''
         self.verbose = verbose
         super().__init__()
         self.pos = None
@@ -27,7 +31,7 @@ class PlayerAIOppV3(BaseAI):
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         self.use_advanced_heuristics = heur
-        self.curr_conn_sq = 48
+        # self.curr_conn_sq = 48
         self.search_start_pos = (3, 3)
         self.graph_cut_size_cap = 8
         self.max_search_traps = 12
@@ -104,7 +108,10 @@ class PlayerAIOppV3(BaseAI):
         
         # get maximum trap candidates to search per call to Expectiminimax
         # get maximum graph_cut candidates
-        self.max_search_traps += min(2*(5 - self.depth_limit), 1) # adjust based on depth_level
+
+        # max_search_traps starts at 12, but needs to be adjusted down at early game if depth_level is higher than 5
+        self.max_search_traps += min(2*(5 - self.depth_limit), 1)
+        self.max_search_traps = min(8, abs(self.max_search_traps))      # no less than 5 to begin with
         if self.turns == 2:
             self.max_search_traps += 1
         if self.turns == 3:

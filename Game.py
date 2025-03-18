@@ -219,12 +219,14 @@ class Game():
                 end = time.process_time()
                 total_time = end-start
                 cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green')
-                if total_time >= 5.05:
-                    # raise Exception('Exceeded time limit.')
-                    # cprint('\nExceeded 5 second time limit!', on_color='on_yellow')
-                    # print()
-                    raise RuntimeError('Exceeded 5 second time limit.')
-                    # self.over = True
+                
+                if not self.test_mode:                                  # for testing, can allow exceeding time
+                    if total_time >= timeLimit + allowance:         # i.e. 5.05
+                        # raise Exception('Exceeded time limit.')
+                        # cprint('\nExceeded 5 second time limit!', on_color='on_yellow')
+                        # print()
+                        raise RuntimeError('Exceeded 5 second time limit.')
+                        # self.over = True
 
             else:
 
@@ -323,10 +325,10 @@ def main():
             opp_ai_level = 'PlayerAIOpp(opp_depth_limit)'
             print("Opponent is using custom AI version 2.") if verbose else None
         case 3:
-            opp_ai_level = 'PlayerAIOppV2(opp_depth_limit)'
+            opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
             print("Opponent is using custom AI version 2.") if verbose else None
         case 4:
-            opp_ai_level = 'PlayerAIOppV3(opp_depth_limit)'
+            opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
             print("Opponent is using custom AI version 3.") if verbose else None
         case _:
             opp_ai_level = 'EasyAI()'
@@ -337,7 +339,6 @@ def main():
 
     
     displayer = Displayer()
-    # game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode, depth_limit=depth_limit)
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
     result, moves, traps = game.play()
 

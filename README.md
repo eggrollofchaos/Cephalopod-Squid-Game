@@ -1,13 +1,15 @@
 # AI Squid Game 
 
-This AI project began as the final coding project for the COMS W4701 Artificial Intelligence class at Columbia University, in 2021.
+This AI project began as the final coding project for a COMS W4701 Artificial Intelligence source at Columbia University, in 2021.  
+
+The objective is to develop an Adversarial AI to play a 2-player strategy game on a 7x7 grid.
 
 Algorithms employed:
 
-1. Breadth First Search (BFS)
-2. ExpectiMinimax optimization
-3. Iterative Deepening Search (IDS)
-4. Graph cut optimization
+1. Breadth First Search (BFS) with Iterative Deepening
+2. ExpectiMinimax optimization with Alpha-Beta pruning
+3. Graph cut optimization
+4. Other custom heuristics
 
 In 2025, I am taking another look to see if I can improve on the AI algorithms. Will update when I have something!
 

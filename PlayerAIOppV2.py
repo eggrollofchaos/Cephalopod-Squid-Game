@@ -10,15 +10,20 @@ import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
+# from scipy.sparse import csr_matrix
+# from scipy.sparse.csgraph import connected_components
 from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAIOppV2(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None) -> None:
-        self.cape_color = 'blue'
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, verbose = False) -> None:
+        '''
+        Custom AI Opponent, uses Expectiminimax.
+        Only applies connected squares heuristics.
+        '''
+        self.verbose = verbose
+        # self.cape_color = 'blue'
         super().__init__()
         self.pos = None
         self.opp_pos = None
@@ -28,12 +33,11 @@ class PlayerAIOppV2(BaseAI):
         if self.depth_limit == 0:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
-        self.use_advanced_heuristics = heur
-        self.use_graph_me = False
-        self.use_graph_opp = False
-        self.curr_conn_sq = 48
+        # self.use_advanced_heuristics = heur        # none implemented
+        # self.curr_conn_sq = 48
         self.printed = False
         self.search_start_pos = (3, 3)
+        self.reached_max_search = False
 
     def getPosition(self):                      # used by Game to find CURRENT player position
         return self.pos
@@ -70,19 +74,23 @@ class PlayerAIOppV2(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-        self.heur_evals = 0
-        self.heur_time = 0
+        if self.verbose:
+            self.heur_evals = 0
+            self.heur_time = 0
+            self.child_nodes_seen = 0
+            self.utility = 0
+            self.current_depth = 0
+
+        self.reached_max_search = False
         self.opp_pos = self.getOpponentPosition(grid)               # find opponent's current position
-        self.utility = 0
-        self.current_depth = 0
 
         # depth_delta = int((self.turns+3)**(2)/150)            # adjust based on turn
-        depth_delta = 0                                         # adjust based on turn
+        depth_delta = 0                                         # removing for now
         depth_limit = self.depth_limit + depth_delta
 
         # get players's current connected sq 
-        curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True, is_me=True)
-        curr_conn_sq_opp, curr_conn_sq_list_opp = self.__connected_sq_heur(grid, pos=self.opp_pos, max_size=27, return_pos=True, is_me=False)
+        curr_conn_sq_me, curr_conn_sq_list_me = self.__connected_sq_heur(grid, pos=self.pos, max_size=27, return_pos=True)
+        curr_conn_sq_opp, curr_conn_sq_list_opp = self.__connected_sq_heur(grid, pos=self.opp_pos, max_size=27, return_pos=True)
         self.curr_conn_sq_me = curr_conn_sq_me/5
         self.curr_conn_sq_opp = curr_conn_sq_opp/5
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
@@ -93,15 +101,16 @@ class PlayerAIOppV2(BaseAI):
         turn_adjust = int(((self.turns+5)**2)/30 - (1/2)*(self.turns+5))     # adjustment based on turn
         depth_adjust = 3*(self.depth_limit//4)               # adjustment based on depth
         if self.depth_limit >= 6:                           # set max_traps to return based on depth
-            max_search_traps = max(min(3 + turn_adjust - depth_adjust, 47), 1)
+            max_search_traps = max(min(3 + turn_adjust - depth_adjust, 47), 7)
         elif self.depth_limit >= 5:
-            max_search_traps = max(min(6 + turn_adjust - depth_adjust, 47), 1)
+            max_search_traps = max(min(6 + turn_adjust - depth_adjust, 47), 7)
         elif self.depth_limit >= 4:
-            max_search_traps = max(min(10 + turn_adjust - depth_adjust, 47), 1)
+            max_search_traps = max(min(10 + turn_adjust - depth_adjust, 47), 7)
         else:
             max_search_traps = 47                           # effectively no limit
         self.max_search_traps = max_search_traps
         self.max_trap_candidates = 0
+        print(f'Max search traps = {self.max_search_traps}.')
 
         alpha = -np.inf
         beta = np.inf
@@ -125,7 +134,7 @@ class PlayerAIOppV2(BaseAI):
             return self.getOpponentNum()
 
 
-    def __evaluate(self, grid: Grid, gameover_result) -> int:
+    def __evaluate(self, grid: Grid, gameover_result) -> tuple:
         """
         Function for returning high or low utility based on gameover state.
         """
@@ -136,14 +145,16 @@ class PlayerAIOppV2(BaseAI):
                 return grid, -99999
 
 
-    def __connected_sq_heur(self, grid: Grid, pos, max_size=27, return_pos=False, is_me=True) -> tuple:
+    def __connected_sq_heur(self, grid: Grid, pos, max_size=27, return_pos=False) -> tuple:
         """
         Get number of connected squares for current player in current Grid object.
         This is a DFS algo
         Returns a tuple of heuristic int, list of positions
         v4
         """
-        self.heur_evals += 1
+        if self.verbose:
+            self.heur_evals += 1
+
         # if not pos:
         #     if is_me:
         #         pos = self.getPlayerPosition(grid)
@@ -178,7 +189,7 @@ class PlayerAIOppV2(BaseAI):
             return 5*conn_sq_heur
 
 
-    def __get_heuristics(self, grid: Grid, is_me) -> tuple:
+    def __get_heuristics(self, grid: Grid) -> tuple:
         """
         Apply heuristics
         Returns a tuple of Grid object, heuristic
@@ -370,9 +381,10 @@ class PlayerAIOppV2(BaseAI):
                 # print(f'{pos} is not a trap candidate.')
             # print('trap_count =', trap_count)
             # print('self.max_search_traps =', self.max_search_traps)
-            if trap_count >= self.max_search_traps:
+            if self.verbose and trap_count >= self.max_search_traps:
                 self.max_trap_candidates = trap_count
-                # print('Reached max # of trap positions to consider.')
+                print(f'Reached max # of trap positions to consider after visiting {self.child_nodes_seen} child nodes.')
+                self.reached_max_search = True                             # nothing left to do
                 return trap_candidates
             # print('Radius is', radius)
             while not new_neighbors:
@@ -389,12 +401,18 @@ class PlayerAIOppV2(BaseAI):
         if trap_count == 0:
             # print(pos)
             # return [grid.getAvailableCells()[0]]
-            print(f'Error at depth = {self.current_depth}.')
+            # print(f'Error at depth = {self.current_depth}.')        # incorrect reason
+            
+            print(f'No trap positions left after visiting {self.child_nodes_seen} child nodes.') if self.verbose else None
+            self.reached_max_search = True                             # nothing left to do
+            
             catch_trap = self.__get_valid_neighbors_avoid_edge(grid, start_pos, radius)
             if not catch_trap:
-                catch_trap = self.__get_valid_neighbors(grid, start_pos, radius)
+                catch_trap = PlayerAI.__get_valid_neighbors(grid, start_pos, radius)
+            if not catch_trap:
+                catch_trap = grid.getAvailableCells()[0]
             return catch_trap
-            raise Exception('trap_count is 0')
+            # raise Exception('trap_count is 0')                      # only for testing
 
         if trap_count > self.max_trap_candidates:
             self.max_trap_candidates = trap_count
@@ -460,7 +478,11 @@ class PlayerAIOppV2(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        self.current_depth += 1
+        if self.verbose:
+            self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Trap Min, Current depth = {self.current_depth}.')
+
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
@@ -469,7 +491,9 @@ class PlayerAIOppV2(BaseAI):
 
         # break if hit depth limit
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            self.reached_max_search = True                             # nothing left to do
+            _, utility = self.__get_heuristics(grid)
+            return _, utility
 
         minTrap, minUtility = None, np.inf
         cache = {}
@@ -496,6 +520,10 @@ class PlayerAIOppV2(BaseAI):
 
             if expected_utility < minUtility:
                 minUtility = expected_utility
+
+            if self.reached_max_search:         # if there is nothing more to do
+                break
+
         return minTrap, minUtility
 
 
@@ -505,14 +533,21 @@ class PlayerAIOppV2(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        self.current_depth += 1
+        if self.verbose:
+            self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Move Min, Current depth = {self.current_depth}.')
+            print(f'depth = {depth}, depth_limit = {depth_limit}')
+
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
         # break if hit depth limit
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            self.reached_max_search = True                             # nothing left to do
+            _, utility = self.__get_heuristics(grid)
+            return _, utility
 
         minChild, minUtility = None, np.inf
 
@@ -528,6 +563,9 @@ class PlayerAIOppV2(BaseAI):
             if minUtility < beta:
                 beta = minUtility
 
+            if self.reached_max_search:         # if there is nothing more to do
+                break
+
         return minChild, minUtility
 
 
@@ -537,7 +575,11 @@ class PlayerAIOppV2(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        self.current_depth += 1
+        if self.verbose:
+            self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Trap Max, Current depth = {self.current_depth}.')
+
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
@@ -546,7 +588,9 @@ class PlayerAIOppV2(BaseAI):
 
         # break if (exceed) hit depth limit
         if depth > depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            self.reached_max_search = True                             # nothing left to do
+            _, utility = self.__get_heuristics(grid)
+            return _, utility
 
         maxTrap, maxUtility = None, -np.inf
         cache = {}
@@ -573,6 +617,10 @@ class PlayerAIOppV2(BaseAI):
 
             if expected_utility > maxUtility:
                 maxTrap, maxUtility = trap, expected_utility
+
+            if self.reached_max_search:         # if there is nothing more to do
+                break
+
         # returns max trap so maximize can cache it
         return maxTrap, maxUtility
 
@@ -582,14 +630,20 @@ class PlayerAIOppV2(BaseAI):
         player Min node for making Move
         returns a tuple of Grid object, utility
         """
-        self.current_depth += 1
+        if self.verbose:
+            self.child_nodes_seen += 1
+            self.current_depth += 1
+            print(f'In Move Max, Current depth = {self.current_depth}.')
+
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
         # break if (exceed) hit depth limit
         if depth > depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            self.reached_max_search = True                             # nothing left to do
+            _, utility = self.__get_heuristics(grid)
+            return _, utility
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
 
@@ -603,6 +657,9 @@ class PlayerAIOppV2(BaseAI):
 
             if maxUtility > alpha:
                 alpha = maxUtility
+
+            if self.reached_max_search:         # if there is nothing more to do
+                break
 
         if hasattr(maxTrap, 'trap_position'):
             self.optimal_trap_position = maxTrap.trap_position
