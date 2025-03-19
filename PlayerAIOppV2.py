@@ -14,13 +14,15 @@ from Utils import manhattan_distance, grid_distance
 # from scipy.sparse.csgraph import connected_components
 from termcolor import cprint
 
-DEFAULT_DEPTH_LIMIT = 4
+DEFAULT_DEPTH_LIMIT = 3
 
 class PlayerAIOppV2(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, verbose = False) -> None:
         '''
-        Custom AI Opponent, uses Expectiminimax.
+        Custom AI Opponent Version 2.
+        Uses Expectiminimax, with limits to search power.
         Only applies connected squares heuristics.
+        Set DEFAULT_DEPTH_LIMIT = 3.
         '''
         self.verbose = verbose
         # self.cape_color = 'blue'
@@ -30,7 +32,7 @@ class PlayerAIOppV2(BaseAI):
         self.player_num = None
         self.optimal_trap_position = None
         self.depth_limit = depth_limit
-        if self.depth_limit == 0:
+        if self.depth_limit < 1:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         # self.use_advanced_heuristics = heur        # none implemented
@@ -95,19 +97,19 @@ class PlayerAIOppV2(BaseAI):
         self.curr_conn_sq_opp = curr_conn_sq_opp/5
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
-        self.search_start_pos = self.__get_search_start_pos(grid)       # get square to start trap searches on
+        self.search_start_pos = self.__get_search_start_pos(grid)           # get square to start trap searches on
         
         # get maximum traps to search per call to Expectiminimax
-        turn_adjust = int(((self.turns+5)**2)/30 - (1/2)*(self.turns+5))     # adjustment based on turn
-        depth_adjust = 3*(self.depth_limit//4)               # adjustment based on depth
-        if self.depth_limit >= 6:                           # set max_traps to return based on depth
-            max_search_traps = max(min(3 + turn_adjust - depth_adjust, 47), 7)
+        turn_adjust = int(((self.turns+5)**2)/30 - (1/2)*(self.turns+5))    # adjustment based on turn
+        depth_adjust = 3*(self.depth_limit//4)                              # adjustment based on depth
+        if self.depth_limit >= 6:                                           # set max_traps to return based on depth
+            max_search_traps = max(min(3 + turn_adjust - depth_adjust, 47), 8)
         elif self.depth_limit >= 5:
-            max_search_traps = max(min(6 + turn_adjust - depth_adjust, 47), 7)
+            max_search_traps = max(min(6 + turn_adjust - depth_adjust, 47), 8)
         elif self.depth_limit >= 4:
-            max_search_traps = max(min(10 + turn_adjust - depth_adjust, 47), 7)
+            max_search_traps = max(min(10 + turn_adjust - depth_adjust, 47), 8)
         else:
-            max_search_traps = 47                           # effectively no limit
+            max_search_traps = 5                                            # max = 7 for depth_limit < 4 
         self.max_search_traps = max_search_traps
         self.max_trap_candidates = 0
         print(f'Max search traps = {self.max_search_traps}.')
@@ -478,10 +480,10 @@ class PlayerAIOppV2(BaseAI):
         returns a tuple of Grid object, utility
         returns a grid object and associated utility
         """
-        if self.verbose:
+        if self.verbose > 2:
             self.child_nodes_seen += 1
             self.current_depth += 1
-            print(f'In Trap Min, Current depth = {self.current_depth}.')
+            # print(f'In Trap Min, Current depth = {self.current_depth}.')
 
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -536,8 +538,8 @@ class PlayerAIOppV2(BaseAI):
         if self.verbose:
             self.child_nodes_seen += 1
             self.current_depth += 1
-            print(f'In Move Min, Current depth = {self.current_depth}.')
-            print(f'depth = {depth}, depth_limit = {depth_limit}')
+            # print(f'In Move Min, Current depth = {self.current_depth}.')
+            # print(f'Depth = {depth}, depth_limit = {depth_limit}')
 
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
@@ -578,7 +580,7 @@ class PlayerAIOppV2(BaseAI):
         if self.verbose:
             self.child_nodes_seen += 1
             self.current_depth += 1
-            print(f'In Trap Max, Current depth = {self.current_depth}.')
+            # print(f'In Trap Max, Current depth = {self.current_depth}.')
 
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
@@ -633,7 +635,7 @@ class PlayerAIOppV2(BaseAI):
         if self.verbose:
             self.child_nodes_seen += 1
             self.current_depth += 1
-            print(f'In Move Max, Current depth = {self.current_depth}.')
+            # print(f'In Move Max, Current depth = {self.current_depth}.')
 
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:

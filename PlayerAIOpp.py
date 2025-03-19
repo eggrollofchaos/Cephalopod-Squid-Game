@@ -18,8 +18,10 @@ DEFAULT_DEPTH_LIMIT = 2
 class PlayerAIOpp(BaseAI):
     def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT) -> None:
         '''
-        Custom AI Opponent, uses Expectiminimax.
+        Custom AI Opponent Version 1.
+        Uses Expectiminimax.
         Only applies n-neighbors heuristics.
+        Set DEFAULT_DEPTH_LIMIT = 2.
         '''
 
         # self.cape_color = 'blue'
@@ -28,7 +30,7 @@ class PlayerAIOpp(BaseAI):
         self.player_num = None
         self.optimal_trap_position = None
         self.depth_limit = depth_limit
-        if self.depth_limit == 0:
+        if self.depth_limit < 1:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         # self.use_advanced_heuristics = heur        # none implemented
@@ -101,7 +103,7 @@ class PlayerAIOpp(BaseAI):
     def __get_heuristics(self, grid: Grid, is_me) -> tuple:
         """
         Apply heuristics
-        Returns a tuple of Grid object, heuristic
+        Returns a tuple of Grid object, heuristic int
         """
 
         return grid, self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)

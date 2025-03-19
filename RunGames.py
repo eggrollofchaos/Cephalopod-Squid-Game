@@ -27,8 +27,9 @@ class RunGames(object):
     -oa : set opponent AI level [0-4]
     -od : set opponent search depth limit of [opp_depth_limit], min 1, default 2 (only applicable if opponent AI level is 2 or above)
     
-    Example:
+    Examples:
     $ python3 RunGames.py 100 -c -v -p -g -h -d 4 -oa 0 -od 1
+    $ python3 RunGames.py 100 -c -p -h -d 6 -oa 4 -od 2 
     '''
 
     def __init__(self, n, verbose, progress, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, results_filename):
@@ -86,9 +87,15 @@ class RunGames(object):
         if self.heur == 'geodesics':
             run_arg_list.append('-h2')
             run_arg_list3.append('-h2')
-        if self.verbose:
+        if self.verbose == 1:
             run_arg_list.append('-v')
             run_arg_list3.append('-v')
+        if self.verbose == 2:
+            run_arg_list.append('-vv')
+            run_arg_list3.append('-vv')
+        if self.verbose == 3:
+            run_arg_list.append('-vvv')
+            run_arg_list3.append('-vvv')
 
         start_run = time()
         try:
@@ -119,7 +126,7 @@ class RunGames(object):
         # except:
             # rounds = 0
 
-        # animation to show progress indicator if self.verbose is False
+        # animation to show progress indicator if self.verbose is 0
         if not self.verbose:
             tri = it % 3
             if tri == 1:
@@ -166,7 +173,7 @@ class RunGames(object):
 def main():
     clear = lambda: system('clear')   # pretty cool way to clear the output, should look into more
     n = 100
-    verbose = False
+    verbose = 0
     progress = False
     suppress_output = True
     heur = False
@@ -180,6 +187,9 @@ def main():
     dl_flag_index = -1
     opp_dl_flag_index = -1
     opp_ai_int_flag_index = -1
+    comment = False
+    com_flag_index = -1
+    com_str = ''
 
     if len(argv)>1:
         dl_flag_index = 0
@@ -204,13 +214,24 @@ def main():
                 opp_depth_str = f'_od_{opp_depth_limit}'
             except:
                 pass
+        if '-m' in argv:
+            try:
+                com_flag_index = argv.index('-m')
+                comment = argv[com_flag_index+1]
+            except:
+                pass
+                
         num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_ai_int_flag_index+1 and n!=opp_dl_flag_index+1 ]
         if num:
             n = int(num[0]) if n>0 else 1
         if '-c' in argv:
             clear()
         if '-v' in argv:
-            verbose = True
+            verbose = 1
+        if '-vv' in argv:
+            verbose = 2
+        if '-vvv' in argv:
+            verbose = 3
         if '-p' in argv:
             progress = True
         if '-g' in argv:
@@ -223,8 +244,16 @@ def main():
             heur_str = '_h2'
 
     cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
+    
+    cprint(f'Command line:')
+    delimiter = ' '
+    run_str = delimiter.join(argv)
+    cprint(f'$ {run_str}', 'blue')
+
     # if depth_limit:
     cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')
+    if heur:
+        cprint(f'Applying advanced heuristics for Player AI.', 'blue')
     match opp_ai_int:
         case 0:
             opp_ai_level = 'Easy AI'
@@ -241,8 +270,11 @@ def main():
     cprint(f'Setting Opponent AI to {opp_ai_level}.', 'blue')
     if opp_ai_int >1 and opp_depth_limit:
         cprint(f'Setting Opponent search depth limit to {opp_depth_limit}.', 'blue')
-    if heur:
-        cprint(f'Applying advanced heuristics.\n', 'blue')
+    if verbose == 1:
+        cprint(f'Verbose mode.', 'green')
+    if verbose == 2:
+        cprint(f'Extra verbose mode.', 'green')
+    print('')
 
     results_filename = f"batch_results{depth_str}{opp_ai_level_str}{opp_depth_str}{heur_str}.txt"
     if exists(results_filename):

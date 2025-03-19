@@ -33,7 +33,7 @@ class Grid():
         return grid_copy
 
     def find(self, player_num : int):
-        """Find a player given the player's number."""
+        """Find a player's position given the player's number."""
         
         assert(player_num in [1,2])
         

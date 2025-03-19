@@ -20,7 +20,7 @@ timeLimit = 5
 allowance = 0.05
 
 class Game():
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode = False, verbose = False):
+    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode = False, verbose = 0):
         '''
         Description
         ----------
@@ -164,7 +164,8 @@ class Game():
         total_player_traps = 0
 
         print("")
-        cprint("AI SQUID GAME", 'blue')
+        cprint("\n\nAI SQUID GAME\n", color='blue', on_color = "on_white")
+        print("")
         
         self.initialize_game()
 
@@ -275,17 +276,21 @@ def main():
     depth_limit = 0
     opp_depth_limit = 0
     test_mode = False
-    verbose = False
+    verbose = 0
     heur = False
     # heur = 'graphcut'
     opp_ai_int = -1
     opp_ai_level = 'EasyAI()'
     
     if len(argv)>1:
-        if '-t' in argv:
+        if '-t' in argv:                        # enable to skip the 5 seconds wait in between moves
             test_mode = True
         if '-v' in argv:
-            verbose = True
+            verbose = 1
+        if '-vv' in argv:                       # for extra information
+            verbose = 2
+        if '-vvv' in argv:                      # for extra debugging
+            verbose = 3
         if '-h' in argv:
             heur = 'graphcut'
         if '-h2' in argv:
@@ -338,7 +343,7 @@ def main():
     #### EDIT HERE ####
 
     
-    displayer = Displayer()
+    displayer = Displayer(N = 7)
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
     result, moves, traps = game.play()
 

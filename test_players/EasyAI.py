@@ -47,7 +47,10 @@ class EasyAI(BaseAI):
         # find all available cells surrounding Opponent
         available_cells = grid.get_neighbors(opponent, only_available=True)
 
-        # throw to one of the available cells randomly
-        trap = random.choice(available_cells)
-    
+        # throw to one of the available cells randomly (unless now occupying the last space)
+        if available_cells:
+            trap = random.choice(available_cells)
+        else:
+            trap = opponent
+
         return trap

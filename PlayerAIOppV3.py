@@ -15,10 +15,13 @@ from termcolor import cprint
 DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAIOppV3(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=True) -> None:
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=False) -> None:
         '''
-        Custom AI Opponent, uses Expectiminimax.
+        Custom AI Opponent Version 3.
+        Uses Expectiminimax.
         Applies most of the same heuristics as PlayerAI.
+        Set DEFAULT_DEPTH_LIMIT = 4.
+        Set starting max_search_traps to minimum of 5.
         '''
         self.verbose = verbose
         super().__init__()
@@ -27,14 +30,19 @@ class PlayerAIOppV3(BaseAI):
         self.player_num = None
         self.optimal_trap_pos = None
         self.depth_limit = depth_limit
-        if self.depth_limit == 0:
+        if self.depth_limit < 1:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         self.use_advanced_heuristics = heur
         # self.curr_conn_sq = 48
         self.search_start_pos = (3, 3)
         self.graph_cut_size_cap = 8
+
         self.max_search_traps = 12
+        # max_search_traps starts at 12, but needs to be adjusted down at early game if depth_level is higher than 5
+        self.max_search_traps += min(2*(5 - self.depth_limit), 0)
+        self.max_search_traps = min(5, abs(self.max_search_traps))      # no less than 5 to begin with
+
         self.max_radius = 3
         self.use_graph_me = False
         self.use_graph_d2_me = False
@@ -106,50 +114,67 @@ class PlayerAIOppV3(BaseAI):
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
         self.search_start_pos = self.__get_search_start_pos(grid, self.pos, self.opp_pos)       # get square to start trap searches on
         
+        if self.verbose:
+            # if self.curr_conn_sq_me >= 28 or self.curr_conn_sq_opp >= 28:
+            #     print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
+            # else:
+            #     print(f'Player\'s component has {int(self.curr_conn_sq_me)} connected squares, opponent\'s component has {int(self.curr_conn_sq_opp)}; max_radius=3.')
+            print(f'Trap search will start at {self.search_start_pos}.')
+
         # get maximum trap candidates to search per call to Expectiminimax
         # get maximum graph_cut candidates
 
-        # max_search_traps starts at 12, but needs to be adjusted down at early game if depth_level is higher than 5
-        self.max_search_traps += min(2*(5 - self.depth_limit), 1)
-        self.max_search_traps = min(8, abs(self.max_search_traps))      # no less than 5 to begin with
-        if self.turns == 2:
-            self.max_search_traps += 1
-        if self.turns == 3:
-            self.max_search_traps += 1
-        if self.turns == 4:                     # graph_cut starts here
-            self.max_search_traps = 9           # reset to 9
-        if self.turns == 5:
-            self.max_search_traps += 1
-        if self.turns == 6:                     # 2-ply graph_cut starts here
-            self.max_search_traps = 7           # reset to 7
-            self.graph_cut_size_cap = 6         # starting lower for graph cut 2-ply
-            self.max_radius = 2                 # starting lower for graph cut 2-ply
-        if self.turns == 7:
-            # self.max_search_traps += 1
-            self.graph_cut_size_cap += 1
-        if self.turns == 8:
-            # self.max_search_traps += 1
-            # self.graph_cut_size_cap += 1
-            pass
-        if self.turns == 9:
-            self.max_search_traps += 1
-            self.graph_cut_size_cap += 1
-            self.max_radius += 1                # back up to 3
-        if self.turns == 10:
-            self.max_search_traps += 1
-            self.graph_cut_size_cap += 1
-        if self.turns == 11:
-            self.max_search_traps += 1
-            self.graph_cut_size_cap += 1
-        if self.turns == 12:
-            self.max_search_traps += 1
-            self.graph_cut_size_cap += 1
-        if self.turns == 13:
-            self.max_search_traps += 1
-            self.graph_cut_size_cap += 1
-        if self.turns == 14:
-            self.graph_cut_size_cap += 1
-            self.max_radius += 1                # pretty overkill at this point
+        match self.turns:
+            case 2:
+            # if self.turns == 2:
+                self.max_search_traps += 1
+            case 3:
+            # if self.turns == 3:
+                self.max_search_traps += 1
+            case 4:
+            # if self.turns == 4:                     # graph_cut starts here - but why?
+                self.max_search_traps = 9          # reset to 9
+            case 5:
+            # if self.turns == 5:
+                self.max_search_traps += 1
+            case 6:
+            # if self.turns == 6:                     # 2-ply graph_cut starts here
+                self.max_search_traps = 7           # reset to 7
+                self.graph_cut_size_cap = 5         # starting lower for graph cut 2-ply
+                self.max_radius = 2                 # starting lower for graph cut 2-ply, changed from 2
+            case 7:
+            # if self.turns == 7:
+                # self.max_search_traps += 1
+                self.graph_cut_size_cap += 1
+            case 8:
+            # if self.turns == 8:
+                self.max_search_traps += 1
+                # self.graph_cut_size_cap += 1
+            case 9:
+            # if self.turns == 9:
+                self.max_search_traps += 1
+                self.graph_cut_size_cap += 1
+                self.max_radius += 1                # now to 4, changed from 3
+            case 10:
+            # if self.turns == 10:
+                self.max_search_traps += 1
+                self.graph_cut_size_cap += 1
+            case 11:
+            # if self.turns == 11:
+                self.max_search_traps += 1
+                self.graph_cut_size_cap += 1
+            case 12:
+            # if self.turns == 12:
+                self.max_search_traps += 1
+                self.graph_cut_size_cap += 1
+            case 13:
+            # if self.turns == 13:
+                self.max_search_traps += 1
+                self.graph_cut_size_cap += 1
+            case 14:
+            # if self.turns == 14:
+                self.graph_cut_size_cap += 1
+                self.max_radius += 1                # pretty overkill at this point
 
         self.max_trap_candidates = 0                        # initialize count
         if self.verbose:
