@@ -344,7 +344,7 @@ def main():
             opp_ai_level = 'EasyAI()'
             print("Opponent is defaulting to Easy AI.") if verbose else None
             
-    if opp_ai_int == 5
+    if opp_ai_int == 5:
         computerAI = HumanOpp()
     else:
         computerAI = eval(opp_ai_level)
