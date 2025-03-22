@@ -131,15 +131,17 @@ class PlayerAI(BaseAI):
         curr_conn_sq_heur_opp, curr_conn_sq_opp, curr_conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, pos=self.opp_pos, max_radius=3, only_heur=False)
         self.curr_conn_sq_heur_me = curr_conn_sq_heur_me
         self.curr_conn_sq_heur_opp = curr_conn_sq_heur_opp
+        self.curr_conn_sq_me = curr_conn_sq_me
+        self.curr_conn_sq_opp = curr_conn_sq_opp
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
         self.search_start_pos_me = self.__get_search_start_pos(grid, self.curr_conn_sq_list_opp, self.pos, self.opp_pos)       # get start square for Player trap search
         self.search_start_pos_opp = self.__get_search_start_pos(grid, self.curr_conn_sq_list_me, self.opp_pos, self.pos)       # get start square for Opponent trap search
         if self.verbose:
-            if self.curr_conn_sq_heur_me >= 28 or self.curr_conn_sq_opp >= 28:
+            if self.curr_conn_sq_me >= 28 or self.curr_conn_sq_opp >= 28:
                 print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
             else:
-                print(f'Player\'s component has {int(self.curr_conn_sq_heur_me)} connected squares, opponent\'s component has {int(self.curr_conn_sq_heur_opp)}; max_radius=3.')
+                print(f'Player\'s component has {int(self.curr_conn_sq_me)} connected squares, opponent\'s component has {int(self.curr_conn_sq_opp)}; max_radius=3.')
             print(f'Trap search will start at {self.search_start_pos_me}.', end=' ')
         
         # get maximum trap candidates to search per call to Expectiminimax
