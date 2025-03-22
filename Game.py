@@ -314,7 +314,9 @@ def main():
             except:
                 pass
             
+            
     #### EDIT HERE ####
+    
     playerAI = PlayerAI(depth_limit, heur, verbose)    # change this to PlayerAI() to test your player!
     # playerAI = None                                    # will use random moves / throws in ComputerAI.py, for testing only
     # computerAI = None                                  # will use random moves / throws in ComputerAI.py, for testing only
@@ -335,10 +337,18 @@ def main():
         case 4:
             opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
             print("Opponent is using custom AI version 3.") if verbose else None
+        case 5:
+            # opp
+            print("Opponent will be a human player.") if verbose else None
         case _:
             opp_ai_level = 'EasyAI()'
             print("Opponent is defaulting to Easy AI.") if verbose else None
-    computerAI = eval(opp_ai_level)
+            
+    if opp_ai_int == 5
+        computerAI = HumanOpp()
+    else:
+        computerAI = eval(opp_ai_level)
+        
     # depth_limit = 0, for testing
     #### EDIT HERE ####
 
