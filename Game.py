@@ -1,8 +1,10 @@
+import time
 import numpy as np
 from sys import argv
 from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
+from HumanOpp import HumanOpp
 from PlayerAI import PlayerAI
 from PlayerAIOpp import PlayerAIOpp
 from PlayerAIOppV2 import PlayerAIOppV2
@@ -10,14 +12,16 @@ from PlayerAIOppV3 import PlayerAIOppV3
 from test_players.EasyAI import EasyAI
 from test_players.MediumAI import MediumAI
 from Utils import *
-import time
 from termcolor import cprint
+from os import system
 
 PLAYER_TURN, COMPUTER_TURN = 1,2
 
 # Time Limit Before Losing
 timeLimit = 5
 allowance = 0.05
+clear = lambda: system('cls')               # Windows
+
 
 class Game():
     def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode = False, verbose = 0):
@@ -162,9 +166,12 @@ class Game():
         """ DO NOT MODIFY """
         total_player_moves = 0
         total_player_traps = 0
-
+        
+        # clear = lambda: system('clear')           # UNIX
+        
         print("")
-        cprint("\n\nAI SQUID GAME\n", color='blue', on_color = "on_white")
+        # cprint("\n\nAI SQUID GAME\n", color='blue', on_color = "on_white")
+        print("\n\nAI SQUID GAME\n")
         print("")
         
         self.initialize_game()
@@ -184,7 +191,8 @@ class Game():
 
                 total_player_moves += 1
 
-                cprint(f"Player's Turn {total_player_moves}: ", 'green')
+                # cprint(f"Player's Turn {total_player_moves}: ", 'green')
+                print(f"Player's Turn {total_player_moves}: ")
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
                 # input()
@@ -219,7 +227,7 @@ class Game():
 
                 end = time.process_time()
                 total_time = end-start
-                cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green')
+                cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green') if self.verbose else None
                 
                 if not self.test_mode:                                  # for testing, can allow exceeding time
                     if total_time >= timeLimit + allowance:         # i.e. 5.05
@@ -231,7 +239,8 @@ class Game():
 
             else:
 
-                cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta')
+                # cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta')
+                print(f"Opponent's Turn {total_player_moves}: ")
                 
                 # make move
                 move = self.computerAI.getMove(grid_copy)
@@ -260,7 +269,9 @@ class Game():
 
                 end = time.process_time()
                 total_time = end-start
-                cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta')
+                cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta') if self.verbose else None
+                
+                # clear()
 
             if self.is_over(turn):
                 self.over = True
@@ -268,6 +279,8 @@ class Game():
             if not self.test_mode:              # wait time in between
                 self.updateAlarm(time.process_time())
             turn = 3 - turn
+            
+            
             self.displayer.display(self.grid)
 
         return self.is_over(turn), total_player_moves, total_player_traps
@@ -318,6 +331,14 @@ def main():
     #### EDIT HERE ####
     
     playerAI = PlayerAI(depth_limit, heur, verbose)    # change this to PlayerAI() to test your player!
+    match heur:
+        case False:
+            heur_str = "standard"
+        case 'graphcut':
+            heur_str = "standard + graph cut advanced"
+    print(f"Player is using Expectiminimax with depth limit of {depth_limit} and {heur_str} heuristics.") if verbose else None
+    
+    
     # playerAI = None                                    # will use random moves / throws in ComputerAI.py, for testing only
     # computerAI = None                                  # will use random moves / throws in ComputerAI.py, for testing only
 
@@ -339,13 +360,14 @@ def main():
             print("Opponent is using custom AI version 3.") if verbose else None
         case 5:
             # opp
+            # print("Opponent will be a human player.👴👵") if verbose else None
             print("Opponent will be a human player.") if verbose else None
         case _:
             opp_ai_level = 'EasyAI()'
             print("Opponent is defaulting to Easy AI.") if verbose else None
             
     if opp_ai_int == 5:
-        computerAI = HumanOpp()
+        computerAI = HumanOpp(verbose = verbose)
     else:
         computerAI = eval(opp_ai_level)
         

@@ -100,7 +100,8 @@ class PlayerAI(BaseAI):
         # get player numbers variables
         player_num = self.getPlayerNum()
         opp_num = self.getOpponentNum()
-        self.opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])              # find opponent's current position
+        # self.opp_pos = tuple(np.argwhere(grid.map == opp_num)[0])              # find opponent's current position
+        self.opp_pos = grid.find(3 - self.player_num)                            # find opponent's current position using method
 
         if self.verbose:
             self.heur_evals = 0
@@ -1118,16 +1119,16 @@ class PlayerAI(BaseAI):
                     cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
             
             print(f'Best move found has utility of {self.utility:.2f}. ', end = '')
-            if self.utility >= 90000:
-                print('Win imminent? 😱')
-            elif self.utility >= 1000:
-                print('Doing decent! 😲')
-            elif self.utility <= -1000:
-                print('Not looking so good. 😟')
-            elif self.utility <= -90000:
-                print('OMG no... 😵‍💫')
-            else:
-                print('Hey, doing what we can. 😐')
+            # if self.utility >= 90000:
+                # print('Win imminent? 😱')
+            # elif self.utility >= 1000:
+                # print('Doing decent! 😲')
+            # elif self.utility <= -1000:
+                # print('Not looking so good. 😟')
+            # elif self.utility <= -90000:
+                # print('OMG no... 😵‍💫')
+            # else:
+                # print('Hey, doing what we can. 😐')
             # end = time.time()
             # print(f'This move took {end-start:.5f} seconds.')
         else:
