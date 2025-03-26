@@ -4,7 +4,8 @@ from sys import argv
 from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
-from HumanOpp import HumanOpp
+# from HumanOpp import HumanOpp
+from platform import system as os_type
 from PlayerAI import PlayerAI
 from PlayerAIOpp import PlayerAIOpp
 from PlayerAIOppV2 import PlayerAIOppV2
@@ -16,6 +17,7 @@ from termcolor import cprint
 from os import system
 
 PLAYER_TURN, COMPUTER_TURN = 1,2
+is_unix = os_type()
 
 # Time Limit Before Losing
 timeLimit = 5
@@ -170,8 +172,7 @@ class Game():
         # clear = lambda: system('clear')           # UNIX
         
         print("")
-        # cprint("\n\nAI SQUID GAME\n", color='blue', on_color = "on_white")
-        print("\n\nAI SQUID GAME\n")
+        cprint("\n\nAI SQUID GAME\n", color='blue', on_color = "on_white") if is_unix else print("\n\nAI SQUID GAME\n")
         print("")
         
         self.initialize_game()
