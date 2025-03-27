@@ -192,8 +192,7 @@ class Game():
 
                 total_player_moves += 1
 
-                # cprint(f"Player's Turn {total_player_moves}: ", 'green')
-                print(f"Player's Turn {total_player_moves}: ")
+                cprint(f"Player's Turn {total_player_moves}: ", 'green') if is_unix else print("\n\nAI SQUID GAME\n")
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
                 # input()
