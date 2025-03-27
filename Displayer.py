@@ -21,9 +21,9 @@ class Displayer(BaseDisplayer):
         if "Windows" == platform.system():
             self.display = self.winDisplay
         else:
-            self.display = self.unixDisplay
+            # self.display = self.unixDisplay
             
-        # self.display = self.unixDisplayTest
+            self.display = self.unixDisplayTest
 
     def display(self, grid):
         pass
@@ -67,6 +67,7 @@ class Displayer(BaseDisplayer):
     
     def unixDisplayTest(self, grid):
 
+        print()
         for i in range(-1, self.dim):
             print("  ", end = "")
             if i == -1:

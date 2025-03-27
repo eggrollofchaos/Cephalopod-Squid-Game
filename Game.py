@@ -4,7 +4,7 @@ from sys import argv
 from Grid import Grid
 from ComputerAI import ComputerAI
 from Displayer import Displayer
-# from HumanOpp import HumanOpp
+from HumanOpp import HumanOpp
 from platform import system as os_type
 from PlayerAI import PlayerAI
 from PlayerAIOpp import PlayerAIOpp
@@ -22,7 +22,7 @@ is_unix = os_type()
 # Time Limit Before Losing
 timeLimit = 5
 allowance = 0.05
-clear = lambda: system('cls')               # Windows
+clear = lambda: system('clear') if is_unix else system('cls')               # clear screen
 
 
 class Game():
@@ -168,12 +168,14 @@ class Game():
         """ DO NOT MODIFY """
         total_player_moves = 0
         total_player_traps = 0
-        
-        # clear = lambda: system('clear')           # UNIX
-        
+                
         print("")
-        cprint("\n\nAI SQUID GAME\n", color='blue', on_color = "on_white") if is_unix else print("\n\nAI SQUID GAME\n")
-        print("")
+        # cprint('\n', on_color = 'on_yellow')
+        cprint(" " * 49, on_color = 'on_yellow') if is_unix else print("")
+        cprint("                  AI SQUID GAME                  ", color='blue', on_color = "on_yellow") if is_unix else print("\n\nAI SQUID GAME\n")
+        cprint(" " * 49, on_color = 'on_yellow') if is_unix else print("")
+        # cprint('  ', on_color = 'on_yellow')
+        # print("")
         
         self.initialize_game()
 
@@ -192,7 +194,7 @@ class Game():
 
                 total_player_moves += 1
 
-                cprint(f"Player's Turn {total_player_moves}: ", 'green') if is_unix else print("\n\nAI SQUID GAME\n")
+                cprint(f"Player's Turn {total_player_moves}: ", 'green') if is_unix else print(f"Player's Turn {total_player_moves}:")
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
                 # input()
@@ -227,20 +229,22 @@ class Game():
 
                 end = time.process_time()
                 total_time = end-start
-                cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green') if self.verbose else None
+
+                if self.verbose:
+                    cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green') if is_unix else print(f'Player\'s move + throw took {total_time:.3f} seconds.')
                 
                 if not self.test_mode:                                  # for testing, can allow exceeding time
                     if total_time >= timeLimit + allowance:         # i.e. 5.05
                         # raise Exception('Exceeded time limit.')
-                        # cprint('\nExceeded 5 second time limit!', on_color='on_yellow')
+                        cprint('\nExceeded 5 second time limit!', on_color='on_yellow') if is_unix else print('\nExceeded 5 second time limit!')
                         # print()
-                        raise RuntimeError('Exceeded 5 second time limit.')
+                        # raise RuntimeError('Exceeded 5 second time limit.')
+                        raise RuntimeError('GAME OVER')
                         # self.over = True
 
             else:
 
-                # cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta')
-                print(f"Opponent's Turn {total_player_moves}: ")
+                cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta') if is_unix else print(f"Opponent's Turn {total_player_moves}: ")
                 
                 # make move
                 move = self.computerAI.getMove(grid_copy)
@@ -269,7 +273,9 @@ class Game():
 
                 end = time.process_time()
                 total_time = end-start
-                cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta') if self.verbose else None
+
+                if self.verbose:
+                    cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta') if is_unix else print(f'Opponent\'s move + throw took {total_time:.3f} seconds.')
                 
                 # clear()
 
@@ -327,6 +333,7 @@ def main():
             except:
                 pass
             
+    clear()
             
     #### EDIT HERE ####
     
@@ -336,7 +343,12 @@ def main():
             heur_str = "standard"
         case 'graphcut':
             heur_str = "standard + graph cut advanced"
-    print(f"Player is using Expectiminimax with depth limit of {depth_limit} and {heur_str} heuristics.") if verbose else None
+    
+    if verbose:
+        print('Running AI Squid Game with ', end='')
+        cprint('verbose', 'blue', end='') if is_unix else print('verbose', end='')
+        print(f' level = {verbose}.\n')
+        print(f"Player is using Expectiminimax with depth limit of {depth_limit} and {heur_str} heuristics.")
     
     
     # playerAI = None                                    # will use random moves / throws in ComputerAI.py, for testing only
