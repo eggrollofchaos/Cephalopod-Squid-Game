@@ -1,14 +1,17 @@
 # gc2950
 # mhr2145
 # wax1
-from sys import argv
-from subprocess import run
-from time import time, sleep
+from ast import literal_eval
 from os import system, remove
 from os.path import exists
-from ast import literal_eval
+from platform import system as os_type
+from sys import argv
+from subprocess import run
 from termcolor import cprint
+from time import time, sleep
 from tqdm import tqdm
+
+is_unix = os_type()
 
 class RunGames(object):
     '''
@@ -141,7 +144,8 @@ class RunGames(object):
             # if winning_player == 0:         # normal exit code is 0
             if winning_player == 1:             # normal exit code is 0
                 win = f'Run {it}: Player Wins! Process completed in {run_time:.3f} seconds.\n'
-                cprint('\n\n' + win, on_color='on_green') if self.verbose else None
+                if self.verbose:
+                    cprint('\n\n' + win, on_color='on_green') if is_unix else print('\n\n' + win)
                 f.write(win)
                 self.run_success += 1           # increment number of successful runs
                 self.player_wins += 1           # increment number of player wins
@@ -149,14 +153,16 @@ class RunGames(object):
 
             elif winning_player == 2:       # player has lost
                 loss = f'Run {it}: Player Loses! Process completed in {run_time:.3f} seconds.\n'
-                cprint('\n\n' + loss, on_color='on_red') if self.verbose else None
+                if self.verbose:
+                    cprint('\n\n' + loss, on_color='on_red') if is_unix else print('\n\n' + loss)
                 f.write(loss)
                 self.run_success += 1           # increment number of successful runs
                 print()
 
             else:                               # encountered runtime error, exit code was 1
                 error = f'Run {it}: Runtime error...\n'
-                cprint('\n\n' + error, on_color='on_yellow') if self.verbose else None
+                if self.verbose:
+                    cprint('\n\n' + error, on_color='on_yellow') if is_unix else print('\n\n' + error)
                 f.write(error)
                 stderr = str(result.stderr)
                 # search_from = len(stderr) - 200
@@ -220,7 +226,7 @@ def main():
                 comment = argv[com_flag_index+1]
             except:
                 pass
-                
+
         num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_ai_int_flag_index+1 and n!=opp_dl_flag_index+1 ]
         if num:
             n = int(num[0]) if n>0 else 1
@@ -243,17 +249,9 @@ def main():
             heur = 'geodesics'
             heur_str = '_h2'
 
-    cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
-    
-    cprint(f'Command line:')
     delimiter = ' '
     run_str = delimiter.join(argv)
-    cprint(f'$ {run_str}', 'blue')
 
-    # if depth_limit:
-    cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')
-    if heur:
-        cprint(f'Applying advanced heuristics for Player AI.', 'blue')
     match opp_ai_int:
         case 0:
             opp_ai_level = 'Easy AI'
@@ -267,14 +265,39 @@ def main():
             opp_ai_level = 'custom AI version 3'
         case _:
             opp_ai_level = 'Easy AI'
-    cprint(f'Setting Opponent AI to {opp_ai_level}.', 'blue')
-    if opp_ai_int >1 and opp_depth_limit:
-        cprint(f'Setting Opponent search depth limit to {opp_depth_limit}.', 'blue')
-    if verbose == 1:
-        cprint(f'Verbose mode.', 'green')
-    if verbose == 2:
-        cprint(f'Extra verbose mode.', 'green')
-    print('')
+
+    # RunGames batch parameters to output to terminal
+    if is_unix:
+        cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
+        cprint(f'Command line:', 'blue')
+        cprint(f'  $ {run_str}', 'yellow')
+        cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')      # if depth_limit:
+        if heur:
+            cprint(f'Applying advanced heuristics for Player AI.', 'blue')
+        cprint(f'Setting Opponent AI to {opp_ai_level}.', 'blue')
+        if opp_ai_int >1 and opp_depth_limit:
+            cprint(f'Setting Opponent search depth limit to {opp_depth_limit}.', 'blue')
+        if verbose == 1:
+            cprint(f'Verbose mode.', 'green')
+        if verbose == 2:
+            cprint(f'Extra verbose mode.', 'green')
+        print('')
+    else:
+        print(f'Running batch test via {argv[0]}, {n} times...')
+        print(f'Command line:')
+        print(f'  $ {run_str}')
+        print(f'Setting Player search depth limit to {depth_limit}.')
+        if heur:
+            print(f'Applying advanced heuristics for Player AI.')
+        print(f'Setting Opponent AI to {opp_ai_level}.')
+        if opp_ai_int >1 and opp_depth_limit:
+            print(f'Setting Opponent search depth limit to {opp_depth_limit}.')
+        if verbose == 1:
+            print(f'Verbose mode.')
+        if verbose == 2:
+            print(f'Extra verbose mode.')
+        print('')
+
 
     results_filename = f"batch_results{depth_str}{opp_ai_level_str}{opp_depth_str}{heur_str}.txt"
     if exists(results_filename):
@@ -319,15 +342,20 @@ def main():
                 batch_output.append(line)
 
     for line in batch_output:
-        if run_success == 0 and 'successfully' in line:
-            cprint(line, 'red')
-        elif 'win rate' in line:
-            if win_rate >= 75:
-                cprint(line, 'green')
-            else:
+        if is_unix:                                                 # add color if Unix
+            if run_success == 0 and 'successfully' in line:
                 cprint(line, 'red')
-        elif 'move time' in line:
-            cprint(line, 'blue')
+            elif 'win rate' in line:
+                if win_rate >= 75:
+                    cprint(line, 'green')
+                elif win_rate >= 60:
+                    cprint(line, 'yellow')
+                else:
+                    cprint(line, 'red')
+            elif 'move time' in line:
+                cprint(line, 'blue')
+            else:
+                print(line)
         else:
             print(line)
 
