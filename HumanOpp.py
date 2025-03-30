@@ -2,13 +2,16 @@ import numpy as np
 import random
 import sys
 import os 
-from Utils import manhattan_distance, grid_distance
 # setting path to parent directory
-sys.path.append(os.getcwd())
-
+# sys.path.append(os.getcwd())
 from BaseAI import BaseAI
 from Grid import Grid
+from platform import system as os_type
+from termcolor import cprint
+from Utils import manhattan_distance, grid_distance
 
+
+is_unix = os_type()
 OPPONENT = lambda player: 3 - player
 TO_CLEAN = str.maketrans('', '', ".()")
 
@@ -57,21 +60,21 @@ class HumanOpp(BaseAI):
                 pos_input_list = pos_input.translate(TO_CLEAN).replace(" ", ",").strip().split(",")                       # sanitize
                 x, y, *rest = tuple(map(int, [num.strip() for num in pos_input_list if num]))           # sanitize more, take first 2 numbers
             except ValueError:
-                print('Invalid entry, please try again.')
+                cprint('Invalid entry, please try again.', 'yellow') if is_unix else print('Invalid entry, please try again.')
                 continue
                 
-            print(f'You\'ve entered ({x},{y}).') if self.verbose else None
+            cprint(f'You\'ve entered ({x},{y}) as your move.', 'green') if self.verbose and is_unix else None
             
             try:
                 cell_value = int(grid.getCellValue((x,y)))
             except IndexError:
-                print(f'Invalid square: ({x},{y}) does not exist on this game board.')                  # if self.verbose else None
+                cprint(f'Invalid square: ({x},{y}) does not exist on this game board.', 'yellow') if is_unix else print(f'Invalid square: ({x},{y}) does not exist on this game board.')
                 continue
                 
             if (x,y) in available_moves:
                 return x,y
             else:
-                print('That move is invalid.')
+                cprint('That move is invalid.', 'yellow') if is_unix else print('That move is invalid.')
                 print(f'Intended square ({x}, {y}) has value of {cell_value} and is a distance {grid_distance(self.pos,(x,y))} from current position.') if self.verbose else None
 
     def getTrap(self, grid : Grid):
@@ -105,20 +108,20 @@ class HumanOpp(BaseAI):
                 trap_input_list = trap_input.translate(TO_CLEAN).replace(" ", ",").strip().split(",")                     # sanitize
                 x, y, *rest = tuple(map(int, [num.strip() for num in trap_input_list if num]))          # sanitize more, take first 2 numbers
             except ValueError:
-                print('Invalid entry, please try again.')
+                cprint('Invalid entry, please try again.', 'yellow') if is_unix else print('Invalid entry, please try again.')
                 continue
             
-            print(f'You\'ve entered ({x},{y}).') if self.verbose else None
+            cprint(f'You\'ve entered ({x},{y}) as your intended trap position.', 'red') if self.verbose and is_unix else None
             
             try:
                 cell_value = int(grid.getCellValue((x,y)))
             except IndexError:
-                print(f'Invalid square: ({x},{y}) does not exist on this game board.')                  # if self.verbose else None
+                cprint(f'Invalid square: ({x},{y}) does not exist on this game board.', 'yellow') if is_unix else print(f'Invalid square: ({x},{y}) does not exist on this game board.')
                 continue
             
             if (x,y) in available_cells:
                 return x,y
             else:
-                print('That trap position is invalid.')
+                cprint('That trap position is invalid.', 'yellow') if is_unix else print('That trap position is invalid.')
                 print(f'Intended square ({x}, {y}) has value of {cell_value} and is a distance {grid_distance(opp_pos,(x,y))} from opponent\'s position.') if self.verbose else None
                 
