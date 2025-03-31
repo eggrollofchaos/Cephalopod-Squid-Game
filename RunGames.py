@@ -267,7 +267,7 @@ def main():
             opp_ai_level = 'Easy AI'
 
     # RunGames batch parameters to output to terminal
-    if is_unix:
+    if is_unix:                                                                     # if Unix, print in color
         cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
         cprint(f'Command line:', 'blue')
         cprint(f'  $ {run_str}', 'yellow')
