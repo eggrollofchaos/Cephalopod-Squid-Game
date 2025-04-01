@@ -299,6 +299,7 @@ def main():
         print('')
 
 
+    # delete file if exists
     results_filename = f"batch_results{depth_str}{opp_ai_level_str}{opp_depth_str}{heur_str}.txt"
     if exists(results_filename):
       remove(results_filename)
