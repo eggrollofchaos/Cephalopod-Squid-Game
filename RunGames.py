@@ -304,6 +304,7 @@ def main():
     if exists(results_filename):
       remove(results_filename)
         
+    # initialize RunGames Class, call start_batch Method, get overall stats
     run_games = RunGames(n, verbose, progress, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, results_filename)
     total_time, run_times, rounds_list, run_success, player_wins = run_games.start_batch()
     total_moves = sum(rounds_list)
