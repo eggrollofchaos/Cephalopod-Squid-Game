@@ -314,8 +314,9 @@ def main():
         win_rate = 100*player_wins/run_success
     except:
         pass
-
     print('> ... Done.')
+
+    # write summary of batch run to file
     with open(results_filename, 'a') as f:
         f.write('------------------------------')
 
