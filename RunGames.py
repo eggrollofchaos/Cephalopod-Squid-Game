@@ -334,6 +334,7 @@ def main():
         f.write(f'The average player move time is {avg_move_time:.4f} seconds.\n') if total_moves!=n else None
         f.write(f'All processes took {total_time:.2f} seconds to {error_str}.\n')
 
+    # get lines from file
     with open(results_filename, 'r') as f:
         batch_output = []
         lines = f.read().splitlines()
