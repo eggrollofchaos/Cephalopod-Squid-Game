@@ -1,6 +1,4 @@
-# gc2950
-# mhr2145
-# wax1
+# wax
 from ast import literal_eval
 from os import system, remove
 from os.path import exists
@@ -47,17 +45,39 @@ class RunGames(object):
         self.run_success = 0
         self.player_wins = 0
         self.filename = results_filename
+        self.run_arg_list = []
+        self.run_arg_list3 = []
 
 
     def start_batch(self):
         # begin batch run
 
-        run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+
+        # build command line arguments
+        self.run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+        self.run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+        if self.heur == 'graphcut':
+            self.run_arg_list.append('-h')
+            self.run_arg_list3.append('-h')
+        if self.heur == 'geodesics':
+            self.run_arg_list.append('-h2')
+            self.run_arg_list3.append('-h2')
+        if self.verbose == 1:
+            self.run_arg_list.append('-v')
+            self.run_arg_list3.append('-v')
+        if self.verbose == 2:
+            self.run_arg_list.append('-vv')
+            self.run_arg_list3.append('-vv')
+        if self.verbose == 3:
+            self.run_arg_list.append('-vvv')
+            self.run_arg_list3.append('-vvv')
+
+        # write command line to file for clarity
         delimiter = ' '
-        run_arg_list3_str = delimiter.join(run_arg_list3)
+        self.run_arg_list3_str = delimiter.join(self.run_arg_list3)
         with open(self.filename, 'a') as f:
-            # print(run_arg_list3)
-            f.write(run_arg_list3_str)
+            # print(self.run_arg_list3)
+            f.write(self.run_arg_list3_str)
             f.write('\n\n')
 
         start_batch = time()
@@ -82,32 +102,17 @@ class RunGames(object):
         return total_time, run_times, rounds_list, self.run_success, self.player_wins
 
     def __run_process(self, it):
-        run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
-        run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
-        if self.heur == 'graphcut':
-            run_arg_list.append('-h')
-            run_arg_list3.append('-h')
-        if self.heur == 'geodesics':
-            run_arg_list.append('-h2')
-            run_arg_list3.append('-h2')
-        if self.verbose == 1:
-            run_arg_list.append('-v')
-            run_arg_list3.append('-v')
-        if self.verbose == 2:
-            run_arg_list.append('-vv')
-            run_arg_list3.append('-vv')
-        if self.verbose == 3:
-            run_arg_list.append('-vvv')
-            run_arg_list3.append('-vvv')
-
+        
+        # print(self.run_arg_list3)
+        
         start_run = time()
         try:
             # result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
-            # print(run_arg_list3)
-            result = run(run_arg_list3, capture_output=self.suppress_output)
+            # print(self.run_arg_list3)
+            result = run(self.run_arg_list3, capture_output=self.suppress_output)
         except:
             # result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
-            result = run(run_arg_list, capture_output=self.suppress_output)
+            result = run(self.run_arg_list, capture_output=self.suppress_output)
 
         end_run = time()
         run_time = end_run-start_run

@@ -1,6 +1,4 @@
-# gc2950
-# mhr2145
-# wax1
+# wax
 import numpy as np
 import random
 import time

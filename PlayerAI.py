@@ -1,6 +1,4 @@
-# gc2950
-# mhr2145
-# wax1
+# wax
 # hard-coded to a 7x7 grid size
 
 import numpy as np
