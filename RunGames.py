@@ -104,15 +104,15 @@ class RunGames(object):
 
     def __run_process(self, it):
         
+        # print for debugging
         # print(self.run_arg_list3)
         
+        # start individual process, capture elapsed time
         start_run = time()
+
         try:
-            # result = run(['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
-            # print(self.run_arg_list3)
             result = run(self.run_arg_list3, capture_output=self.suppress_output)
         except:
-            # result = run(['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-a', str(self.opp_depth_limit)], capture_output=self.suppress_output)
             result = run(self.run_arg_list, capture_output=self.suppress_output)
 
         end_run = time()
@@ -135,7 +135,7 @@ class RunGames(object):
         # except:
             # rounds = 0
 
-        # animation to show progress indicator if self.verbose is 0
+        # animation to show progress indicator for entire batch, if self.verbose is 0
         if not self.verbose:
             tri = it % 3
             if tri == 1:
