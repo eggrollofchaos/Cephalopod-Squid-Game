@@ -80,6 +80,7 @@ class RunGames(object):
             f.write(self.run_arg_list3_str)
             f.write('\n\n')
 
+        # run processes and capture elapsed time
         start_batch = time()
         run_times = []
         rounds_list = []    
