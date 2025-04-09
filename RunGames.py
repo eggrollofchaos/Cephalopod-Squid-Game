@@ -145,6 +145,7 @@ class RunGames(object):
             else:
                 print('> ...', end='\r')
 
+        # write the outcome of this run: win, loss, or error
         with open(self.filename, 'a') as f:
 
             # if winning_player == 0:         # normal exit code is 0
@@ -179,6 +180,7 @@ class RunGames(object):
                 f.write(stderr_str)
                 f.write('\n')
         # sleep(1)
+        
         return run_time, rounds
 
 
