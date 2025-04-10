@@ -180,10 +180,10 @@ class RunGames(object):
                 f.write(stderr_str)
                 f.write('\n')
         # sleep(1)
-        
+
         return run_time, rounds
 
-
+# main method, called when running this script directly
 def main():
     clear = lambda: system('clear')   # pretty cool way to clear the output, should look into more
     n = 100
