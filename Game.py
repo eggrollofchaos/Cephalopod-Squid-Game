@@ -333,7 +333,7 @@ def main():
             except:
                 pass
             
-    clear()
+    # clear()
             
     #### EDIT HERE ####
     
