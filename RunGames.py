@@ -14,7 +14,7 @@ is_unix = os_type()
 class RunGames(object):
     '''
     Helper script to run Game.py n times to test successful execution, win/loss, and gather statistics.
-    Outputs results to batch_results.txt
+    Outputs results to "batch_results[ ... ].txt" with various additional filename decorations based on arguments used.
 
     Usage:
     $ python3 RunGames.py [n] -c -p -v|-vv|-vvv -g -h -d [depth_limit] -oa [opponent AI level] -od [opponent_depth_limit] -m [comment]
@@ -32,6 +32,8 @@ class RunGames(object):
     Examples:
     $ python3 RunGames.py 100 -c -v -p -g -h -d 4 -oa 0 -od 1
     $ python3 RunGames.py 100 -c -p -h -d 6 -oa 4 -od 2 -m "Trying something new"
+    
+    See main() for additional notes on flags and arguments.
     '''
 
     def __init__(self, results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment):
@@ -74,7 +76,7 @@ class RunGames(object):
             self.run_arg_list.append('-vvv')
             self.run_arg_list3.append('-vvv')
 
-        # write command line to file for clarity
+        # write Game.py command line statement to file for clarity
         delimiter = ' '
         self.run_arg_list3_str = delimiter.join(self.run_arg_list3)
         # print(f'Filename = {self.filename}')
@@ -83,10 +85,11 @@ class RunGames(object):
             f.write(self.run_arg_list3_str)
             f.write('\n\n')
 
-        # write comment to file
-        with open(self.filename, 'a') as f:
-            f.write(self.comment)
-            f.write('\n\n')
+        # write optional comment to file
+        if self.comment:
+            with open(self.filename, 'a') as f:
+                f.write(self.comment)
+                f.write('\n\n')
 
         # run processes and capture elapsed time
         start_batch = time()
@@ -111,10 +114,7 @@ class RunGames(object):
         return total_time, run_times, rounds_list, self.run_success, self.player_wins
 
     def __run_process(self, it):
-        
-        # print for debugging
-        # print(self.run_arg_list3)
-        
+                
         # start individual process, capture elapsed time
         start_run = time()
 
@@ -125,7 +125,7 @@ class RunGames(object):
 
         end_run = time()
         run_time = end_run-start_run
-        stdout = str(result.stdout)
+        # stdout = str(result.stdout)             # don't need this anymore
         returncode = result.returncode
         if returncode == 1:                     # encountered error, exit code = 1
             winning_player = -1
@@ -198,23 +198,28 @@ def main():
     verbose = 0                             # verbosity level
     progress = False                        # show progress through all tests
     suppress_output = True                  # this is passed to capture_output argument; counterintuitively, adding '-g' means supress_output = False
-    heur = False
+    heur = False                            # advanced heuristics disabled by default
     depth_limit = 4                         # Player AI search depth defaults to 4
     depth_str = ''                          # part of results filename
-    opp_ai_int = 0                          # Opponent AI level defaults 0; if 0 or 1, depth limit won't apply
-    opp_ai_level = 'Easy AI'
+    opp_ai_int = 0                          # Opponent AI level defaults 0 (Easy AI); if 0 or 1, depth limit won't apply
+    opp_ai_level = 'Easy AI'                # Opponent AI level default to Easy AI
     opp_ai_level_str = ''                   # part of results filename
     opp_depth_limit = 2                     # Opponent AI search depth defaults to 2, only applies if AI level in [2,3,4]
     opp_depth_str = ''                      # part of results filename
     heur_str = ''                           # part of results filename
-    comment = False
-    com_str = ''                            # part of results filename - TO DO
+    comment = False                         # default is no comment
+    com_str = ''                            # part of results filename
 
     dl_flag_index = -1
     opp_dl_flag_index = -1
     opp_ai_int_flag_index = -1
     com_flag_index = -1
 
+    # rebuild original command line statement
+    delimiter = ' '
+    run_str = delimiter.join(argv)
+
+    # process command line arguments
     if len(argv)>1:
         
         if '-d' in argv:                        # set Player AI search depth
@@ -249,9 +254,14 @@ def main():
                 pass
             com_str = f'_m'
 
-        num = [arg for n, arg in enumerate(argv) if arg.isnumeric() and n!=dl_flag_index+1 and n!=opp_ai_int_flag_index+1 and n!=opp_dl_flag_index+1 ]
+        # a fancy way to capture a number anywhere in the command line statement as the number of iterations to run
+        num = [arg for arg_idx, arg in enumerate(argv) if arg.isnumeric()
+            and arg_idx!=dl_flag_index+1
+            and arg_idx!=opp_ai_int_flag_index+1
+            and arg_idx!=opp_dl_flag_index+1 ]
         if num:
             n = int(num[0]) if n>0 else 1
+
         if '-c' in argv:
             clear()
         if '-v' in argv:
@@ -270,9 +280,6 @@ def main():
         if '-h2' in argv:
             heur = 'geodesics'
             heur_str = '_h2'
-
-    delimiter = ' '
-    run_str = delimiter.join(argv)
 
     match opp_ai_int:
         case 0:
