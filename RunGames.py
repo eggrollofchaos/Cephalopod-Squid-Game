@@ -17,21 +17,21 @@ class RunGames(object):
     Outputs results to "batch_results[ ... ].txt" with various additional filename decorations based on arguments used.
 
     Usage:
-    $ python3 RunGames.py [n] -c -p -v|-vv|-vvv -g -h -d [depth_limit] -oa [opponent AI level] -od [opponent_depth_limit] -m [comment]
-    [N] : number of processes to run
+    $ python3 RunGames.py [n] -c -p -v|-vv|-vvv -g -h -d [depth_limit] -oa [opp_ai_level] -od [opp_depth_limit] -m [comment]
+     n  : number of processes to run, default 100
     -c  : clear terminal screen prior to running
     -p  : show progress bars
     -v  : verbose output to terminal: -v shows additional game info, -vv shows all AI steps, -vvv shows detailed Expectiminimax search steps
     -g  : show game output (note: can be very verbose)
     -h  : enable advanced heuristics
-    -d  : set Player search depth limit of [depth_limit], min 1, default 4
-    -oa : set Opponent AI level [0-4], default = 0; level = 5 indicates Human Opponent, however batch run is intended for AI
-    -od : set Opponent AI search depth limit of [opp_depth_limit], min 1, default 2 (only applicable if Opponent AI level is 2 or above)
+    -d  : set Player search depth limit; min 1, default 4
+    -oa : set Opponent AI level of {-1,0,1,2,3}; default 0; level = 9 indicates Human Opponent, however batch run is intended for AI
+    -od : set Opponent AI search depth limit; min 1, default 2, only applicable if Opponent AI level in {1,2,3}
     -m  : add a comment to the log file, must enclose in quotes
     
     Examples:
     $ python3 RunGames.py 100 -c -v -p -g -h -d 4 -oa 0 -od 1
-    $ python3 RunGames.py 100 -c -p -h -d 6 -oa 4 -od 2 -m "Trying something new"
+    $ python3 RunGames.py 10 -c -p -h -d 6 -oa 3 -od 2 -m "Trying something new"
     
     See main() for additional notes on flags and arguments.
     '''
@@ -58,6 +58,7 @@ class RunGames(object):
         # print('In start_batch')
 
         # build command line arguments for Game.py
+        # note that -od (set Opponent AI search depth) is always passed, though ignored by Game.py if -oa not in {1,2,3}
         self.run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
         self.run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
         if self.heur == 'graphcut':
@@ -201,10 +202,10 @@ def main():
     heur = False                            # advanced heuristics disabled by default
     depth_limit = 4                         # Player AI search depth defaults to 4
     depth_str = ''                          # part of results filename
-    opp_ai_int = 0                          # Opponent AI level defaults 0 (Easy AI); if 0 or 1, depth limit won't apply
-    opp_ai_level = 'Easy AI'                # Opponent AI level default to Easy AI
+    opp_ai_int = 0                          # Opponent AI level defaults 0 (Medium AI); if -1 or 0, depth limit won't apply
+    opp_ai_level = 'Medium AI'              # Opponent AI level default to Medium AI
     opp_ai_level_str = ''                   # part of results filename
-    opp_depth_limit = 2                     # Opponent AI search depth defaults to 2, only applies if AI level in [2,3,4]
+    opp_depth_limit = 2                     # Opponent AI search depth defaults to 2, only applies if AI level in {2,3,4}
     opp_depth_str = ''                      # part of results filename
     heur_str = ''                           # part of results filename
     comment = False                         # default is no comment
@@ -238,7 +239,7 @@ def main():
                 pass
         opp_ai_level_str = f'_oa_{opp_ai_int}'
         
-        if opp_ai_int > 1 and '-od' in argv:    # set Opponent AI search depth
+        if opp_ai_int > 0 and '-od' in argv:    # set Opponent AI search depth
             try:
                 opp_dl_flag_index = argv.index('-od')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
@@ -255,7 +256,7 @@ def main():
             com_str = f'_m'
 
         # a fancy way to capture a number anywhere in the command line statement as the number of iterations to run
-        num = [arg for arg_idx, arg in enumerate(argv) if arg.isnumeric()
+        num = [ arg for arg_idx, arg in enumerate(argv) if arg.isnumeric()
             and arg_idx!=dl_flag_index+1
             and arg_idx!=opp_ai_int_flag_index+1
             and arg_idx!=opp_dl_flag_index+1 ]
@@ -281,21 +282,25 @@ def main():
             heur = 'geodesics'
             heur_str = '_h2'
 
+    # get Opponent AI level text from argument
     match opp_ai_int:
+        case -1:
+            opp_ai_level = 'Easy AI'
         case 0:
-            opp_ai_level = 'Easy AI'
-        case 1:
             opp_ai_level = 'Medium AI'
-        case 2:
+        case 1:
             opp_ai_level = 'custom AI version 1'
-        case 3:
+        case 2:
             opp_ai_level = 'custom AI version 2'
-        case 4:
+        case 3:
             opp_ai_level = 'custom AI version 3'
+        case 9:
+            opp_ai_level = 'Human player'
         case _:
-            opp_ai_level = 'Easy AI'
+            opp_ai_int = 0                                      # default
+            opp_ai_level = 'Medium AI'
 
-    # RunGames batch parameters to output to terminal
+    # output RunGames.py batch parameters to terminal
     if is_unix:                                                                     # if Unix, print in color
         cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
         cprint(f'Command line:', 'blue')
@@ -303,13 +308,17 @@ def main():
         cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')      # if depth_limit:
         if heur:
             cprint(f'Applying advanced heuristics for Player AI.', 'blue')
-        cprint(f'Setting Opponent AI to {opp_ai_level}.', 'blue')
-        if opp_ai_int >1 and opp_depth_limit:
+        
+        cprint(f'Setting Opponent to {opp_ai_level}.', 'blue')
+        if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
             cprint(f'Setting Opponent AI search depth limit to {opp_depth_limit}.', 'blue')
+        
         if verbose == 1:
             cprint(f'Verbose mode.', 'green')
         if verbose == 2:
             cprint(f'Extra verbose mode.', 'green')
+        if verbose == 3:
+            cprint(f'Extra verbose + debug mode.', 'green')
         print('')
     else:
         print(f'Running batch test via {argv[0]}, {n} times...')
@@ -318,15 +327,18 @@ def main():
         print(f'Setting Player search depth limit to {depth_limit}.')
         if heur:
             print(f'Applying advanced heuristics for Player AI.')
-        print(f'Setting Opponent AI to {opp_ai_level}.')
-        if opp_ai_int >1 and opp_depth_limit:
+
+        print(f'Setting Opponent to {opp_ai_level}.')
+        if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
             print(f'Setting Opponent AI search depth limit to {opp_depth_limit}.')
+
         if verbose == 1:
             print(f'Verbose mode.')
         if verbose == 2:
             print(f'Extra verbose mode.')
+        if verbose == 3:
+            print(f'Extra verbose + debug mode.')
         print('')
-
 
     # delete log file if exists
     results_filename = f"batch_results{depth_str}{opp_ai_level_str}{opp_depth_str}{heur_str}{com_str}.txt"
@@ -335,7 +347,7 @@ def main():
         # print('Deleting existing file')
         remove(results_filename)
         
-    # initialize RunGames Class, call start_batch Method, get overall stats
+    # initialize RunGames Class, call `start_batch` Method, get overall stats
     run_games = RunGames(results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment)
     total_time, run_times, rounds_list, run_success, player_wins = run_games.start_batch()
     total_moves = sum(rounds_list)

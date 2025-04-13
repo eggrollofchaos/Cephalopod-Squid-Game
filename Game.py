@@ -7,7 +7,7 @@ from Displayer import Displayer
 from HumanOpp import HumanOpp
 from platform import system as os_type
 from PlayerAI import PlayerAI
-from PlayerAIOpp import PlayerAIOpp
+from PlayerAIOppV1 import PlayerAIOppV1
 from PlayerAIOppV2 import PlayerAIOppV2
 from PlayerAIOppV3 import PlayerAIOppV3
 from test_players.EasyAI import EasyAI
@@ -293,18 +293,18 @@ class Game():
 
 def main():
     depth_limit = 0
-    opp_depth_limit = 0
     test_mode = False
     verbose = 0
     heur = False
     # heur = 'graphcut'
-    opp_ai_int = -1
-    opp_ai_level = 'EasyAI()'
+    opp_ai_int = 0
+    opp_ai_level = 'MediumAI()'
+    opp_depth_limit = 2                         # only applicable for AI level higher than Easy/Medium AI
     
     if len(argv)>1:
         if '-t' in argv:                        # enable to skip the 5 seconds wait in between moves
             test_mode = True
-        if '-v' in argv:
+        if '-v' in argv:                        # for more game info
             verbose = 1
         if '-vv' in argv:                       # for extra information
             verbose = 2
@@ -326,7 +326,7 @@ def main():
                 opp_ai_int = int(argv[od_flag_index+1])
             except:
                 pass
-        if opp_ai_int > 1 and '-od' in argv:    # opponent AI depth limit (if applicable)
+        if opp_ai_int > 0 and opp_ai_int != 0 and '-od' in argv:    # applicable if higher than Easy/Medium AI and not Human Opponent
             try:
                 opp_dl_flag_index = argv.index('-od')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
@@ -355,30 +355,29 @@ def main():
     # computerAI = None                                  # will use random moves / throws in ComputerAI.py, for testing only
 
     match opp_ai_int:
-        case 0:
+        case -1:
             opp_ai_level = 'EasyAI()'
             print("Opponent is using Easy AI.") if verbose else None
-        case 1:
+        case 0:
             opp_ai_level = 'MediumAI()'
             print("Opponent is using Medium AI.") if verbose else None
+        case 1:
+            opp_ai_level = 'PlayerAIOppV1(opp_depth_limit)'
+            print("Opponent is using custom AI version 1.") if verbose else None
         case 2:
-            opp_ai_level = 'PlayerAIOpp(opp_depth_limit)'
-            print("Opponent is using custom AI version 2.") if verbose else None
-        case 3:
             opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
             print("Opponent is using custom AI version 2.") if verbose else None
-        case 4:
+        case 3:
             opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
             print("Opponent is using custom AI version 3.") if verbose else None
-        case 5:
-            # opp
+        case 9:
             # print("Opponent will be a human player.👴👵") if verbose else None
             print("Opponent will be a human player.") if verbose else None
         case _:
-            opp_ai_level = 'EasyAI()'
-            print("Opponent is defaulting to Easy AI.") if verbose else None
+            opp_ai_level = 'MediumAI()'
+            print("Opponent is defaulting to Medium AI.") if verbose else None
             
-    if opp_ai_int == 5:
+    if opp_ai_int == 9:
         computerAI = HumanOpp(verbose = verbose)
     else:
         computerAI = eval(opp_ai_level)
