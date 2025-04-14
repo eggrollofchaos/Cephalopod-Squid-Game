@@ -309,6 +309,7 @@ def main():
         if heur:
             cprint(f'Applying advanced heuristics for Player AI.', 'blue')
         
+        # logic for Opponent AI & depth level 
         cprint(f'Setting Opponent to {opp_ai_level}.', 'blue')
         if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
             cprint(f'Setting Opponent AI search depth limit to {opp_depth_limit}.', 'blue')
@@ -328,6 +329,7 @@ def main():
         if heur:
             print(f'Applying advanced heuristics for Player AI.')
 
+        # logic for Opponent AI & depth level 
         print(f'Setting Opponent to {opp_ai_level}.')
         if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
             print(f'Setting Opponent AI search depth limit to {opp_depth_limit}.')
