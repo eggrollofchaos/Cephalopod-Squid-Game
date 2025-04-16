@@ -57,7 +57,8 @@ class Game():
                 print("Note: Opponent is using no AI, all moves/throws are random.")
 
         # exit('Testing')
-        
+    
+    # initialization of game variables
     def initialize_game(self):
 
         p1_index, p2_index = (0, self.dim // 2), (self.dim - 1, self.dim // 2)
