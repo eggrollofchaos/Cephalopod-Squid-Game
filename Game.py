@@ -58,8 +58,8 @@ class Game():
 
         # exit('Testing')
     
-    # initialization of game variables
     def initialize_game(self):
+        '''Initialization of game variables'''
 
         p1_index, p2_index = (0, self.dim // 2), (self.dim - 1, self.dim // 2)
         
@@ -72,7 +72,8 @@ class Game():
         self.computerAI.setPlayerNum(2)
         
     def is_over(self, turn):
-        """Check if game is over, i.e., Player or Opponent has no moves to make"""
+        '''Check if game is over, i.e., Player or Opponent has no moves to make'''
+        
         # check if Player has won
         # find available neighbors of player 1
         opponent_neighbors = self.grid.get_neighbors(self.computerAI.getPosition(), only_available=True)
