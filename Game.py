@@ -89,6 +89,7 @@ class Game():
             self.over = True
             return 2
         
+        # catch-all
         elif self.over:
             return turn
 
