@@ -96,8 +96,7 @@ class Game():
         else: 
             return 0
 
-    def is_valid_move(self, grid : Grid, player, move : tuple):
-
+    def is_valid_move(self, grid : Grid, player, move : tuple) -> bool:
         '''Validate move - cell has to be available and immediate neighbor'''
         
         if grid.getCellValue(move) == 0 and move in grid.get_neighbors(player.getPosition()):
