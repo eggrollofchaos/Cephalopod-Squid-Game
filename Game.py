@@ -106,6 +106,7 @@ class Game():
 
     def is_valid_trap(self, grid : Grid, trap : tuple):
         '''Validate trap - cell can't be a player'''
+        # TODO - maybe remove this limitation?
 
         if grid.getCellValue(trap) > 0:
             return False
