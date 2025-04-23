@@ -5,6 +5,10 @@ import numpy as np
 class Grid():
     
     def __init__(self, N = 7) -> None:
+        '''
+        Grid constructor (initialization) method.
+        Creates an NxN grid, filled with zeros.
+        '''
         self.dim  = N
         self.map = np.zeros((N,N)) # empty board
     
@@ -41,7 +45,7 @@ class Grid():
 
         return result
 
-    def get_neighbors(self, pos, only_available = False):
+    def get_neighbors(self, pos, only_available = False) -> list:
         """
         Description
         -----------

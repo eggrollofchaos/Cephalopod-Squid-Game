@@ -58,7 +58,7 @@ class Game():
 
         # exit('Testing')
     
-    def initialize_game(self):
+    def initialize_game(self) -> None:
         '''Initialization of game variables'''
 
         p1_index, p2_index = (0, self.dim // 2), (self.dim - 1, self.dim // 2)
@@ -71,7 +71,7 @@ class Game():
         self.computerAI.setPosition(p2_index)
         self.computerAI.setPlayerNum(2)
         
-    def is_over(self, turn):
+    def is_over(self, turn) -> int:
         '''Check if game is over, i.e., Player or Opponent has no moves to make'''
         
         # check if Player has won
@@ -104,7 +104,7 @@ class Game():
         
         return False
 
-    def is_valid_trap(self, grid : Grid, trap : tuple):
+    def is_valid_trap(self, grid : Grid, trap : tuple) -> bool:
         '''Validate trap - cell can't be a player'''
         # TODO - maybe remove this limitation?
 
@@ -118,11 +118,12 @@ class Game():
         Description
         ----------
         Function returns the coordinates in which the trap lands, given an intended location.
+        This implements a random chance factor to determine if trap lands correctly or in a neighboring cell.
 
         Parameters
         ----------
 
-        player : the player throwing the trap
+        player : the current player throwing the trap
 
         grid : current game Grid
 
@@ -136,23 +137,25 @@ class Game():
  
         # find neighboring cells
         neighbors = grid.get_neighbors(intended_position)
+        print(f'\nneighbors list =:\n{neighbors}')
 
+        # include only empty cells or existing traps
         neighbors = [neighbor for neighbor in neighbors if grid.getCellValue(neighbor) <= 0]
+        print(f'\nneighbors list after <= 0 list comp =:\n{neighbors}')
+
         n = len(neighbors)
+        probs = np.ones(1 + n)                                      # intended position + neighbors
         
-        probs = np.ones(1 + n)
-        
-        # compute probability of success, p
+        # compute probability of success, p, based on factor of 0.05 and the distance to intended trap position
         p = 1 - 0.05*(manhattan_distance(player.getPosition(), intended_position) - 1)
 
-        probs[0] = p
+        probs[0] = playerAI                                         # intended position gets base probability
+        probs[1:] = np.ones(len(neighbors)) * ((1-p)/n)             # remaining probability is split among neighbors
 
-        probs[1:] = np.ones(len(neighbors)) * ((1-p)/n)
-
-        # add desired coordinates to neighbors
+        # insert intended position coordinates to neighbors list
         neighbors.insert(0, intended_position)
         
-        # return 
+        # determine where trap lands
         result = np.random.choice(np.arange(n + 1), p = probs)
         
         return neighbors[result]
