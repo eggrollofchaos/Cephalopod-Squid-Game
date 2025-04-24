@@ -160,7 +160,11 @@ class Game():
         
         return neighbors[result]
 
-    def updateAlarm(self, currTime):
+    def updateAlarm(self, currTime) -> None:
+        '''
+        A method to handle time limit calculation.
+        Only runs if self.test_mode is True, i.e. if -t flag is not passed at init.
+        '''
         if currTime - self.prevTime > timeLimit + allowance:
             self.over = True
             print("Went over time. Doll Shot!")
