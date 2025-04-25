@@ -167,7 +167,7 @@ class Game():
         '''
         if currTime - self.prevTime > timeLimit + allowance:
             self.over = True
-            print("Went over time. Doll Shot!")
+            print("Went over time. The Doll has shot the Player! Game over.")
         else:
             while time.process_time() - self.prevTime < timeLimit + allowance:
                 pass
