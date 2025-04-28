@@ -80,9 +80,9 @@ class PlayerAI(BaseAI):
 
     def getMove(self, grid: Grid) -> tuple:
         '''
-        YOUR CODE GOES HERE
+        Entry point for starting a move.
 
-        The function should return a tuple of (x,y) coordinates to which the player moves.
+        The function should return a tuple of (x,y) coordinates to which the Player moves.
 
         It should be the result of the ExpectiMinimax algorithm, maximizing over the Opponent's *Trap* actions, 
         taking into account the probabilities of them landing in the positions you believe they'd throw to.

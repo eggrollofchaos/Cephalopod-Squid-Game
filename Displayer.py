@@ -7,7 +7,7 @@ colorMap = { 0: 100,
              2: 105,
              -1: 40}
 
-# cTemp = "\x1b[%dm%7s\x1b[0m "
+# cTemp = "\x1b[%dm%7s\x1b[0m "         # no longer needed, implemented via a dynamic resizer in self.cTemp
 
 class Displayer(BaseDisplayer):
     '''
@@ -22,14 +22,17 @@ class Displayer(BaseDisplayer):
             self.display = self.winDisplay
         else:
             # self.display = self.unixDisplay
-            
-            self.display = self.unixDisplayTest
+            self.display = self.unixDisplayNew
 
+    # placeholder for generic display
     def display(self, grid):
         pass
 
     def winDisplay(self, grid):
-        
+        '''
+        Windows Displayer method.
+        Slightly updated.
+        '''
         for i in range(self.dim):
             print("------" * self.dim)
             for j in range(self.dim):
@@ -46,7 +49,8 @@ class Displayer(BaseDisplayer):
         print("------" * self.dim)
 
     
-    def unixDisplay(self, grid):
+    def unixDisplay(self, grid) -> None:
+        '''Original Unix Displayer method'''
         
         for i in range(self.dim):
             for j in range(self.dim):
@@ -65,7 +69,12 @@ class Displayer(BaseDisplayer):
         print("")
 
     
-    def unixDisplayTest(self, grid):
+    def unixDisplayNew(self, grid) -> None:
+        '''
+        Enhanced Unix Displayer method.
+        Shortens the boxes so that the entire grid is closer to a square.
+        Displays axes in range(N), where N is dimension.
+        '''
 
         print()
         for i in range(-1, self.dim):
@@ -102,7 +111,7 @@ class Displayer(BaseDisplayer):
 
     
     @staticmethod
-    def half_and_odd(num):
+    def half_and_odd(num) -> int:
         num = num // 2 + 1
         if num % 2 == 0:
             num += 1

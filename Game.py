@@ -2,7 +2,7 @@ import time
 import numpy as np
 from sys import argv
 from Grid import Grid
-from ComputerAI import ComputerAI
+from RandomAI import RandomAI
 from Displayer import Displayer
 from HumanOpp import HumanOpp
 from platform import system as os_type
@@ -16,13 +16,13 @@ from Utils import *
 from termcolor import cprint
 from os import system
 
-PLAYER_TURN, COMPUTER_TURN = 1,2
+PLAYER_TURN, COMPUTER_TURN = 1,2                                    # convention: set Player to Player 1, AI Opponent to Player 2
 is_unix = os_type()
 
 # Time Limit Before Losing
 timeLimit = 5
 allowance = 0.05
-clear = lambda: system('clear') if is_unix else system('cls')               # clear screen
+clear = lambda: system('clear') if is_unix else system('cls')       # clear screen
 
 
 class Game():
@@ -34,16 +34,26 @@ class Game():
 
         Parameters
         ----------
-        playerAI   - Human player AI, of type PlayerAI. default = None 
+        playerAI    - Human player AI, of type PlayerAI. default = None 
+                    - This is the player that the adversarial AI will optimize.
+                    - In the code, this player will be Player 1, and plays when 'turn' = 1
 
-        computerAI - Human or Computer Opponent. default = None
+        computerAI  - Computer or Human Opponent. default = None
+                    - If Computer opponent, there is a choice of Easy, Medium, CustomV1, CustomV2, or CustomV3.
+                    - There is also a RandomAI class, but it is only used for testing.
         
-        N  - dimension of grid.
+        N           - Dimension of grid.
+
+        displayer   - Class for handling drawing of the game board aka grid.
+
+        test_mode   - Handles whether to pause 5 seconds between moves.
+
+        verbose     - Verbosity level of output in [0,1,2,3].
 
         '''
         self.grid       = Grid(N)
-        self.playerAI   = playerAI or ComputerAI() 
-        self.computerAI = computerAI or ComputerAI() 
+        self.playerAI   = playerAI or RandomAI() 
+        self.computerAI = computerAI or RandomAI() 
         self.dim        = N
         self.over       = False
         self.displayer  = displayer
@@ -149,7 +159,7 @@ class Game():
         # compute probability of success, p, based on factor of 0.05 and the distance to intended trap position
         p = 1 - 0.05*(manhattan_distance(player.getPosition(), intended_position) - 1)
 
-        probs[0] = playerAI                                         # intended position gets base probability
+        probs[0] = p                                                # intended position gets base probability
         probs[1:] = np.ones(len(neighbors)) * ((1-p)/n)             # remaining probability is split among neighbors
 
         # insert intended position coordinates to neighbors list
@@ -174,40 +184,50 @@ class Game():
 
             self.prevTime = time.process_time()
 
-    def play(self):
-        """ DO NOT MODIFY """
+    def play(self) -> tuple:
+        '''
+        Handles all game logistics.
+        Do not modify.
+        '''
+
         total_player_moves = 0
         total_player_traps = 0
                 
         print("")
         # cprint('\n', on_color = 'on_yellow')
-        cprint(" " * 49, on_color = 'on_yellow') if is_unix else print("")
-        cprint("                  AI SQUID GAME                  ", color='blue', on_color = "on_yellow") if is_unix else print("\n\nAI SQUID GAME\n")
-        cprint(" " * 49, on_color = 'on_yellow') if is_unix else print("")
+        if is_unix:
+            cprint(" " * 49, on_color = 'on_yellow')
+            cprint("                  AI SQUID GAME                  ", color='blue', on_color = "on_yellow", attrs=["bold"])
+            cprint(" " * 49, on_color = 'on_yellow')
+        else:
+            print("")
+            print("\n\nAI SQUID GAME\n")
+            print("")
+
         # cprint('  ', on_color = 'on_yellow')
         # print("")
         
-        self.initialize_game()
+        self.initialize_game()                                              # set initial game variables
 
-        self.displayer.display(self.grid)
+        self.displayer.display(self.grid)                                   # display starting game board
 
-        turn = PLAYER_TURN
+        turn = PLAYER_TURN                                                  # Player goes first
         
+        # main game loop
         while not self.over:
             self.prevTime = time.process_time()
             start = self.prevTime
-            grid_copy = self.grid.clone()
+            grid_copy = self.grid.clone()                                   # convention, always make a copy of current game board
 
             move = None
             
-            if turn == 1:
+            if turn == 1:                                                   # Player 
 
                 total_player_moves += 1
 
                 cprint(f"Player's Turn {total_player_moves}: ", 'green') if is_unix else print(f"Player's Turn {total_player_moves}:")
                 # find best move; should return two coordinates - new position and bombed tile.
                 move = self.playerAI.getMove(grid_copy)
-                # input()
 
                 # if move is valid, perform it
                 if self.is_valid_move(self.grid, self.playerAI, move):
@@ -226,7 +246,11 @@ class Game():
                 if self.is_valid_trap(self.grid, intended_trap):
                     print(f"Throwing a trap to: {intended_trap}... ", end='')
                     trap = self.throw(self.playerAI, self.grid, intended_trap)
-                    print(f"Trap landed in {trap}", end='')
+                    if trap == intended_trap:
+                        cprint(f"Trap landed successfully in {trap}", end='', color='green') if is_unix else print(f"Trap landed successfully in {trap}", end='')
+                    else:
+                        cprint(f"Trap missed, landed in {trap}", end='', color='red') if is_unix else print(f"Trap missed, landed in {trap}", end='')
+
                     if self.grid.getCellValue(trap) == -1:
                         print(', which already had a trap, no effect.')
                     print('.')
@@ -252,7 +276,7 @@ class Game():
                         raise RuntimeError('GAME OVER')
                         # self.over = True
 
-            else:
+            else:                                                           # Opponent
 
                 cprint(f"Opponent's Turn {total_player_moves}: ", 'magenta') if is_unix else print(f"Opponent's Turn {total_player_moves}: ")
                 
@@ -267,7 +291,7 @@ class Game():
 
                 else:
                     self.over = True
-                    print("invalid Computer AI Move")
+                    print("Invalid Opponent move")
 
                 intended_trap = self.computerAI.getTrap(self.grid.clone())
 
@@ -307,6 +331,7 @@ def main():
     verbose = 0
     heur = False
     # heur = 'graphcut'
+    opp_ai_default = True
     opp_ai_int = 0
     opp_ai_level = 'MediumAI()'
     opp_depth_limit = 2                         # only applicable for AI level higher than Easy/Medium AI
@@ -334,9 +359,10 @@ def main():
             try:
                 od_flag_index = argv.index('-oa')
                 opp_ai_int = int(argv[od_flag_index+1])
+                opp_ai_default = False
             except:
                 pass
-        if opp_ai_int > 0 and opp_ai_int != 0 and '-od' in argv:    # applicable if higher than Easy/Medium AI and not Human Opponent
+        if opp_ai_int > 0 and '-od' in argv:    # applicable if higher than Easy/Medium AI and not Human Opponent
             try:
                 opp_dl_flag_index = argv.index('-od')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
@@ -344,10 +370,8 @@ def main():
                 pass
             
     # clear()
-            
-    #### EDIT HERE ####
     
-    playerAI = PlayerAI(depth_limit, heur, verbose)    # change this to PlayerAI() to test your player!
+    playerAI = PlayerAI(depth_limit, heur, verbose)     # PlayerAI is the primary Expectiminimax adversarial search AI for this game
     match heur:
         case False:
             heur_str = "standard"
@@ -361,51 +385,56 @@ def main():
         print(f"Player is using Expectiminimax with depth limit of {depth_limit} and {heur_str} heuristics.")
     
     
-    # playerAI = None                                    # will use random moves / throws in ComputerAI.py, for testing only
-    # computerAI = None                                  # will use random moves / throws in ComputerAI.py, for testing only
+    # playerAI = None                                    # will use random moves / throws via RandomAI.py, for testing only
+    # computerAI = None                                  # will use random moves / throws via RandomAI.py, for testing only
 
-    match opp_ai_int:
-        case -1:
-            opp_ai_level = 'EasyAI()'
-            print("Opponent is using Easy AI.") if verbose else None
-        case 0:
-            opp_ai_level = 'MediumAI()'
-            print("Opponent is using Medium AI.") if verbose else None
-        case 1:
-            opp_ai_level = 'PlayerAIOppV1(opp_depth_limit)'
-            print("Opponent is using custom AI version 1.") if verbose else None
-        case 2:
-            opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
-            print("Opponent is using custom AI version 2.") if verbose else None
-        case 3:
-            opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
-            print("Opponent is using custom AI version 3.") if verbose else None
-        case 9:
-            # print("Opponent will be a human player.👴👵") if verbose else None
-            print("Opponent will be a human player.") if verbose else None
-        case _:
-            opp_ai_level = 'MediumAI()'
-            print("Opponent is defaulting to Medium AI.") if verbose else None
-            
+    if opp_ai_default:
+        opp_ai_level = 'MediumAI()'
+        print("Opponent is defaulting to Medium AI.") if verbose else None
+    else:
+        match opp_ai_int:
+            case -1:
+                opp_ai_level = 'EasyAI()'
+                print("Opponent is using Easy AI.") if verbose else None
+            case 0:
+                opp_ai_level = 'MediumAI()'
+                print("Opponent is using Medium AI.") if verbose else None
+            case 1:
+                opp_ai_level = 'PlayerAIOppV1(opp_depth_limit)'
+                print("Opponent is using custom AI version 1.") if verbose else None
+            case 2:
+                opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
+                print("Opponent is using custom AI version 2.") if verbose else None
+            case 3:
+                opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
+                print("Opponent is using custom AI version 3.") if verbose else None
+            case 9:
+                if verbose:
+                    if is_unix:
+                        print("Opponent will be a human player.👴👵")
+                    else:
+                        print("Opponent will be a human player.")
+            case _:                                             # in standard runtime, this catch-all will never be used
+                opp_ai_level = 'MediumAI()'
+                print("Opponent is defaulting to Medium AI.") if verbose else None
+                
     if opp_ai_int == 9:
         computerAI = HumanOpp(verbose = verbose)
     else:
         computerAI = eval(opp_ai_level)
         
-    # depth_limit = 0, for testing
-    #### EDIT HERE ####
-
+    # depth_limit = 0                                   # for testing
     
     displayer = Displayer(N = 7)
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer=displayer, test_mode=test_mode)
     result, moves, traps = game.play()
 
-    exit_code = int(str(result) + str(moves))
+    exit_code = int(str(result) + str(moves))           # combine player number and number of moves in exit_code for capture
     if result == 1: 
-        print("Player 1 wins!")
+        cprint("Player 1 wins!", color='green', on_color='on_black', attrs=['bold','blink']) if is_unix else print("Player 1 wins!")
         print(f"Total turns: {moves}")
     elif result == 2:
-        print("Player 1 loses!")
+        cprint("Player 1 loses!", color='magenta', on_color='on_black', attrs=['bold','blink']) if is_unix else print("Player 1 loses!")
         print(f"Total turns: {moves}")
     exit(exit_code)
 

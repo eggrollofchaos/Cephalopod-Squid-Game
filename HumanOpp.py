@@ -53,7 +53,7 @@ class HumanOpp(BaseAI):
         # while not valid_move:
                 
         while True:
-            pos_input = input('Where will you move to? Enter the coordinates: ')
+            pos_input = input('Where will you move to? Enter the coordinates (row #, column #): ')
             
             # x, y, *rest = tuple(map(int, pos_input.translate(TO_CLEAN).strip().split(" ")))           # sanitize, take first 2 numbers
             
@@ -64,7 +64,7 @@ class HumanOpp(BaseAI):
                 cprint('Invalid entry, please try again.', 'yellow') if is_unix else print('Invalid entry, please try again.')
                 continue
                 
-            cprint(f'You\'ve entered ({x},{y}) as your move.', 'green') if self.verbose and is_unix else None
+            cprint(f'You\'ve entered ({x},{y}) as your move.', 'yellow') if self.verbose and is_unix else None
             
             try:
                 cell_value = int(grid.getCellValue((x,y)))
