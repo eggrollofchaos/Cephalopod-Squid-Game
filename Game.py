@@ -221,6 +221,8 @@ class Game():
 
             move = None
             
+            # TODO: Refactor below so that the code is not duplicative for Player vs Opponent
+            
             if turn == 1:                                                   # Player 
 
                 total_player_moves += 1
