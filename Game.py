@@ -27,7 +27,7 @@ clear = lambda: system('clear') if is_unix else system('cls')       # clear scre
 
 class Game():
     def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode = False, verbose = 0):
-        '''
+        """
         Description
         ----------
         Construct new game given two players, board size and displayer.
@@ -50,7 +50,7 @@ class Game():
 
         verbose     - Verbosity level of output in [0,1,2,3].
 
-        '''
+        """
         self.grid       = Grid(N)
         self.playerAI   = playerAI or RandomAI() 
         self.computerAI = computerAI or RandomAI() 
@@ -62,14 +62,14 @@ class Game():
 
         if self.verbose:
             if playerAI == None:
-                print("Note: Player is using no AI, all moves/throws are random.")
+                print('Note: Player is using no AI, all moves/throws are random.')
             if computerAI == None:
-                print("Note: Opponent is using no AI, all moves/throws are random.")
+                print('Note: Opponent is using no AI, all moves/throws are random.')
 
         # exit('Testing')
     
     def initialize_game(self) -> None:
-        '''Initialization of game variables'''
+        """Initialization of game variables"""
 
         p1_index, p2_index = (0, self.dim // 2), (self.dim - 1, self.dim // 2)
         
@@ -82,7 +82,7 @@ class Game():
         self.computerAI.setPlayerNum(2)
         
     def is_over(self, turn) -> int:
-        '''Check if game is over, i.e., Player or Opponent has no moves to make'''
+        """Check if game is over, i.e., Player or Opponent has no moves to make"""
         
         # check if Player has won
         # find available neighbors of player 1
@@ -107,7 +107,7 @@ class Game():
             return 0
 
     def is_valid_move(self, grid : Grid, player, move : tuple) -> bool:
-        '''Validate move - cell has to be available and immediate neighbor'''
+        """Validate move - cell has to be available and immediate neighbor"""
         
         if grid.getCellValue(move) == 0 and move in grid.get_neighbors(player.getPosition()):
             return True
@@ -115,7 +115,7 @@ class Game():
         return False
 
     def is_valid_trap(self, grid : Grid, trap : tuple) -> bool:
-        '''Validate trap - cell can't be a player'''
+        """Validate trap - cell can't be a player"""
         # TODO - maybe remove this limitation?
 
         if grid.getCellValue(trap) > 0:
@@ -124,7 +124,7 @@ class Game():
         return True
 
     def throw(self, player, grid : Grid, intended_position : tuple) -> tuple:
-        '''
+        """
         Description
         ----------
         Function returns the coordinates in which the trap lands, given an intended location.
@@ -143,7 +143,7 @@ class Game():
         -------
         Position (x_0,y_0) in which the trap landed : tuple
 
-        '''
+        """
  
         # find neighboring cells
         neighbors = grid.get_neighbors(intended_position)
@@ -171,13 +171,13 @@ class Game():
         return neighbors[result]
 
     def updateAlarm(self, currTime) -> None:
-        '''
+        """
         A method to handle time limit calculation.
         Only runs if self.test_mode is True, i.e. if -t flag is not passed at init.
-        '''
+        """
         if currTime - self.prevTime > timeLimit + allowance:
             self.over = True
-            print("Went over time. The Doll has shot the Player! Game over.")
+            print('Went over time. The Doll has shot the Player! Game over.')
         else:
             while time.process_time() - self.prevTime < timeLimit + allowance:
                 pass
@@ -185,27 +185,27 @@ class Game():
             self.prevTime = time.process_time()
 
     def play(self) -> tuple:
-        '''
+        """
         Handles all game logistics.
         Do not modify.
-        '''
+        """
 
         total_player_moves = 0
         total_player_traps = 0
                 
-        print("")
+        print('')
         # cprint('\n', on_color = 'on_yellow')
         if is_unix:
-            cprint(" " * 49, on_color = 'on_yellow')
-            cprint("                  AI SQUID GAME                  ", color='blue', on_color = "on_yellow", attrs=["bold"])
-            cprint(" " * 49, on_color = 'on_yellow')
+            cprint(' ' * 49, on_color = 'on_yellow')
+            cprint('                  AI SQUID GAME                  ', color='blue', on_color = 'on_yellow', attrs=['bold'])
+            cprint(' ' * 49, on_color = 'on_yellow')
         else:
-            print("")
-            print("\n\nAI SQUID GAME\n")
-            print("")
+            print('')
+            print('\n\nAI SQUID GAME\n')
+            print('')
 
         # cprint('  ', on_color = 'on_yellow')
-        # print("")
+        # print('')
         
         self.initialize_game()                                              # set initial game variables
 
@@ -222,60 +222,61 @@ class Game():
             move = None
             
             # TODO: Refactor below so that the code is not duplicative for Player vs Opponent
-            
+
             if turn == 1:                                                   # Player 
 
                 total_player_moves += 1
 
-                cprint(f"Player's Turn {total_player_moves}: ", 'green') if is_unix else print(f"Player's Turn {total_player_moves}:")
-                # find best move; should return two coordinates - new position and bombed tile.
+                if total_player_moves == 1:
+                    input()                                                 # waiting for input to continue for debugging
+
+                cprint(f"Player's Turn {total_player_moves}: ", color='green') if is_unix else print(f"Player's Turn {total_player_moves}:")
+                # find best move; should return two coordinates: new player position and position that the trap landed on
                 move = self.playerAI.getMove(grid_copy)
 
                 # if move is valid, perform it
                 if self.is_valid_move(self.grid, self.playerAI, move):
                     self.grid.move(move, turn)
                     self.playerAI.setPosition(move)
-                    print(f"Moving to {move}")
-                else:
+                    print(f'Moving to {move}')
+                else:                                                       # check this condition, does it ever happen?
                     self.over = True
-                    print(f"Tried to move to : {move}")
-                    print("invalid Player AI move!")
+                    print(f'Tried to move to : {move}')
+                    print('invalid Player AI move!')
                 
                 total_player_traps += 1
 
                 intended_trap = self.playerAI.getTrap(self.grid.clone())
                 # input()
                 if self.is_valid_trap(self.grid, intended_trap):
-                    print(f"Throwing a trap to: {intended_trap}... ", end='')
+                    print(f'Throwing a trap to: {intended_trap}... ', end='')
                     trap = self.throw(self.playerAI, self.grid, intended_trap)
                     if trap == intended_trap:
-                        cprint(f"Trap landed successfully in {trap}", end='', color='green') if is_unix else print(f"Trap landed successfully in {trap}", end='')
+                        cprint(f'Trap landed successfully in {trap}', end='', color='green') if is_unix else print(f'Trap landed successfully in {trap}', end='')
                     else:
-                        cprint(f"Trap missed, landed in {trap}", end='', color='red') if is_unix else print(f"Trap missed, landed in {trap}", end='')
+                        cprint(f'Trap missed, landed in {trap}', end='', color='red') if is_unix else print(f'Trap missed, landed in {trap}', end='')
 
                     if self.grid.getCellValue(trap) == -1:
                         print(', which already had a trap, no effect.')
                     print('.')
                     self.grid.trap(trap)
 
-                else: 
+                else:                                                       # check this condition, does it ever happen?
                     self.over = True
-                    print(f"Tried to put trap in {intended_trap}")
-                    print("Invalid trap!")
+                    print(f'Tried to put trap in {intended_trap}')
+                    print('Invalid trap!')
 
                 end = time.process_time()
                 total_time = end-start
 
                 if self.verbose:
-                    cprint(f'Player\'s move + throw took {total_time:.3f} seconds.', 'green') if is_unix else print(f'Player\'s move + throw took {total_time:.3f} seconds.')
+                    cprint(f"Player's move + throw took {total_time:.3f} seconds.", 'green') if is_unix else print(f"Player's move + throw took {total_time:.3f} seconds.")
                 
                 if not self.test_mode:                                  # for testing, can allow exceeding time
                     if total_time >= timeLimit + allowance:         # i.e. 5.05
                         # raise Exception('Exceeded time limit.')
-                        cprint('\nExceeded 5 second time limit!', on_color='on_yellow') if is_unix else print('\nExceeded 5 second time limit!')
-                        # print()
-                        # raise RuntimeError('Exceeded 5 second time limit.')
-                        raise RuntimeError('GAME OVER')
+                        cprint('\nExceeded 5 second time limit!\n', on_color='on_yellow') if is_unix else print('\nExceeded 5 second time limit!\n')
+                        raise RuntimeError('GAME OVER')             # TODO: why RunTimeError vs Exception?
                         # self.over = True
 
             else:                                                           # Opponent
@@ -289,33 +290,35 @@ class Game():
                 if self.is_valid_move(self.grid, self.computerAI, move):
                     self.grid.move(move, turn)
                     self.computerAI.setPosition(move)
-                    print(f"Moving to {move}")
+                    print(f'Moving to {move}')
 
                 else:
                     self.over = True
-                    print("Invalid Opponent move")
+                    print('Invalid Opponent move')
 
                 intended_trap = self.computerAI.getTrap(self.grid.clone())
 
                 if self.is_valid_trap(self.grid, intended_trap):
-                    print(f"Throwing a trap to: {intended_trap}...", end='')
+                    print(f'Throwing a trap to: {intended_trap}...', end='')
                     trap = self.throw(self.computerAI, self.grid, intended_trap)
                     self.grid.trap(trap)
-                    print(f"Trap landed in {trap}")
+                    print(f'Trap landed in {trap}')
                 else: 
                     self.over = True
-                    print(f"Tried to put trap in {intended_trap}")
-                    print("Invalid trap!")
+                    print(f'Tried to put trap in {intended_trap}')
+                    print('Invalid trap!')
 
                 end = time.process_time()
                 total_time = end-start
 
                 if self.verbose:
-                    cprint(f'Opponent\'s move + throw took {total_time:.3f} seconds.', 'magenta') if is_unix else print(f'Opponent\'s move + throw took {total_time:.3f} seconds.')
+                    cprint(f"Opponent's move + throw took {total_time:.3f} seconds.", 'magenta') if is_unix else print(f"Opponent's move + throw took {total_time:.3f} seconds.")
                 
                 # clear()
 
             if self.is_over(turn):
+                # cprint('is_over(turn) evaluated to True. Press Enter.')
+                # input()                         # waiting for input to continue for debugging
                 self.over = True
 
             if not self.test_mode:              # wait time in between
@@ -328,7 +331,7 @@ class Game():
         return self.is_over(turn), total_player_moves, total_player_traps
 
 def main():
-    depth_limit = 0
+    depth_limit = 0                             # default depth limit for Player AI
     test_mode = False
     verbose = 0
     heur = False
@@ -376,49 +379,54 @@ def main():
     playerAI = PlayerAI(depth_limit, heur, verbose)     # PlayerAI is the primary Expectiminimax adversarial search AI for this game
     match heur:
         case False:
-            heur_str = "standard"
+            heur_str = 'standard'
         case 'graphcut':
-            heur_str = "standard + graph cut advanced"
+            heur_str = 'standard + graph cut advanced'
     
     if verbose:
-        print('Running AI Squid Game with ', end='')
+        print('\n\nRunning AI Squid Game with ', end='')
         cprint('verbose', 'blue', end='') if is_unix else print('verbose', end='')
         print(f' level = {verbose}.\n')
-        print(f"Player is using Expectiminimax with depth limit of {depth_limit} and {heur_str} heuristics.")
+        print(f'Player is using Expectiminimax with ', end='')
+        cprint(f'depth limit of {depth_limit}', color='green', end='') if is_unix else print(f'{depth_limit}', end='')
+        print(' and ', end='')
+        cprint(f'{heur_str} heuristics.', color='cyan') if is_unix else print(f'and {heur_str} heuristics.')
     
     
     # playerAI = None                                    # will use random moves / throws via RandomAI.py, for testing only
     # computerAI = None                                  # will use random moves / throws via RandomAI.py, for testing only
 
+    # TODO: refactor to move stdout strings to one statement for if verbose
+    # also add color coding via is_unix
     if opp_ai_default:
         opp_ai_level = 'MediumAI()'
-        print("Opponent is defaulting to Medium AI.") if verbose else None
+        print('Opponent is defaulting to Medium AI.') if verbose else None
     else:
         match opp_ai_int:
             case -1:
                 opp_ai_level = 'EasyAI()'
-                print("Opponent is using Easy AI.") if verbose else None
+                print('Opponent is using Easy AI.') if verbose else None
             case 0:
                 opp_ai_level = 'MediumAI()'
-                print("Opponent is using Medium AI.") if verbose else None
+                print('Opponent is using Medium AI.') if verbose else None
             case 1:
                 opp_ai_level = 'PlayerAIOppV1(opp_depth_limit)'
-                print("Opponent is using custom AI version 1.") if verbose else None
+                print('Opponent is using custom AI version 1.') if verbose else None
             case 2:
                 opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
-                print("Opponent is using custom AI version 2.") if verbose else None
+                print('Opponent is using custom AI version 2.') if verbose else None
             case 3:
                 opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
-                print("Opponent is using custom AI version 3.") if verbose else None
+                print('Opponent is using custom AI version 3.') if verbose else None
             case 9:
                 if verbose:
                     if is_unix:
-                        print("Opponent will be a human player.👴👵")
+                        print('Opponent will be a human player.👴👵')
                     else:
-                        print("Opponent will be a human player.")
+                        print('Opponent will be a human player.')
             case _:                                             # in standard runtime, this catch-all will never be used
                 opp_ai_level = 'MediumAI()'
-                print("Opponent is defaulting to Medium AI.") if verbose else None
+                print('Opponent is defaulting to Medium AI.') if verbose else None
                 
     if opp_ai_int == 9:
         computerAI = HumanOpp(verbose = verbose)
@@ -433,11 +441,11 @@ def main():
 
     exit_code = int(str(result) + str(moves))           # combine player number and number of moves in exit_code for capture
     if result == 1: 
-        cprint("Player 1 wins!", color='green', on_color='on_black', attrs=['bold','blink']) if is_unix else print("Player 1 wins!")
-        print(f"Total turns: {moves}")
+        cprint('Player 1 wins!', color='green', on_color='on_black', attrs=['bold','blink']) if is_unix else print('Player 1 wins!')
+        print(f'Total turns: {moves}')
     elif result == 2:
-        cprint("Player 1 loses!", color='magenta', on_color='on_black', attrs=['bold','blink']) if is_unix else print("Player 1 loses!")
-        print(f"Total turns: {moves}")
+        cprint('Player 1 loses!', color='magenta', on_color='on_black', attrs=['bold','blink']) if is_unix else print('Player 1 loses!')
+        print(f'Total turns: {moves}')
     exit(exit_code)
 
 if __name__ == "__main__":
