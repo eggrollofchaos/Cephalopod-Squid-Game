@@ -12,15 +12,16 @@ from Utils import manhattan_distance, grid_distance
 DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAIOppV3(BaseAI):
+    """
+    Custom AI Opponent Version 3.
+    Uses Expectiminimax.
+    Applies most of the same heuristics as PlayerAI.
+    Connected Square Heuristics updated from Custom AI V2 to become a depth-limited DFS.
+    Set DEFAULT_DEPTH_LIMIT = 4.
+    Set starting max_search_traps to minimum of 5.
+    """
+    
     def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = None, verbose = 0) -> None:
-        '''
-        Custom AI Opponent Version 3.
-        Uses Expectiminimax.
-        Applies most of the same heuristics as PlayerAI.
-        Connected Square Heuristics updated from Custom AI V2 to become a depth-limited DFS.
-        Set DEFAULT_DEPTH_LIMIT = 4.
-        Set starting max_search_traps to minimum of 5.
-        '''
 
         super().__init__()
         self.verbose = verbose
@@ -563,10 +564,10 @@ class PlayerAIOppV3(BaseAI):
 
 
     def __get_search_start_pos(self, grid: Grid, player_pos, opp_pos) -> tuple:
-        '''
+        """
         Start search midway between players, but not on a trap
         Iteratively get closer to the opponent, can be opponent
-        '''
+        """
         start_pos = self.__find_center(player_pos, opp_pos)
         while grid.map[start_pos] == -1 or start_pos not in self.curr_conn_sq_list_opp:
             start_pos = self.__find_center(start_pos, opp_pos)

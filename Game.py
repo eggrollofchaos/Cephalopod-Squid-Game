@@ -1,3 +1,7 @@
+"""
+2-player turn-based game implenting Adversarial AI search using Expectiminimax and various heuristics.
+Can have Player (AI) vs Computer Opponent (AI), or Player (AI) vs Human Opponent.
+"""
 import time
 import numpy as np
 from sys import argv
@@ -418,34 +422,34 @@ def main():
         opp_ai_level = 'RandomAI(verbose)'
         opp_pre_string = 'NOTE: Debug mode -- '
         # print('Note: Opponent is using no AI, all moves/throws are random.')
-        opp_string = 'is using no AI, all moves/throws are random.'
+        opp_string = 'no AI, all moves/throws are random.'
         # print('Here')
     elif opp_ai_default:
         opp_ai_level = 'MediumAI(verbose)'
         # print('Opponent is defaulting to Medium AI.') if verbose else None
-        opp_string = 'is defaulting to Medium AI.'
+        opp_string = 'Medium AI (default) as none was specified.'
     else:
         match opp_ai_int:
             case -1:
                 opp_ai_level = 'EasyAI(verbose)'
                 # print('Opponent is using Easy AI.') if verbose else None
-                opp_string = 'is using Easy AI.'
+                opp_string = 'Easy AI.'
             case 0:
                 opp_ai_level = 'MediumAI(verbose)'
                 # print('Opponent is using Medium AI.') if verbose else None
-                opp_string = 'is using Medium AI.'
+                opp_string = 'Medium AI.'
             case 1:
                 opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose)'
                 # print('Opponent is using custom AI version 1.')   if verbose else None
-                opp_string = 'is using custom AI version 1.'
+                opp_string = 'Custom AI version 1.'
             case 2:
                 opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
                 # print('Opponent is using custom AI version 2.') if verbose else None
-                opp_string = 'is using custom AI version 2.'
+                opp_string = 'Custom AI version 2.'
             case 3:
                 opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
                 # print('Opponent is using custom AI version 3.') if verbose else None
-                opp_string = 'is using custom AI version 3.'
+                opp_string = 'Custom AI version 3.'
             case 9:
                 # if verbose:
                     # if is_unix:
@@ -459,7 +463,7 @@ def main():
             case _:                                             # in standard runtime, this catch-all will never be used
                 opp_ai_level = 'MediumAI()'
                 # print('Opponent is defaulting to Medium AI.') if verbose else None
-                opp_string = 'is defaulting to Medium AI.'
+                opp_string = 'Medium AI (default) as none was specified.'
                 
 
     # initialize Opponent
@@ -470,23 +474,54 @@ def main():
 
     # output Opponent selection
     if verbose and is_unix:
-        cprint(f'{opp_pre_string}Opponent {opp_string}', color='magenta')
+        cprint(f'{opp_pre_string}Opponent is using {opp_string}', color='magenta')
     elif verbose:
-        print(f'{opp_pre_string}Opponent {opp_string}')
+        print(f'{opp_pre_string}Opponent is using {opp_string}')
 
     # depth_limit = 0                                   # for testing
     
+    # initialize Displayer, Game, start gameplay
     displayer = Displayer(N = 7)
     game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer = displayer, test_mode = test_mode, verbose = verbose)
     result, moves, traps = game.play()
 
+    # game has ended
     exit_code = int(str(result) + str(moves))           # combine player number and number of moves in exit_code for capture
     if result == 1: 
-        cprint('Player 1 wins!', color='green', on_color='on_black', attrs=['bold','blink']) if is_unix else print('Player 1 wins!')
-        print(f'Total rounds: {moves}\n\n')
+        cprint('\n\nPlayer 1 wins!\n', color='green', on_color='on_black', attrs=['bold','blink']) if is_unix else print('\n\nPlayer 1 wins!\n')
     elif result == 2:
-        cprint('Player 1 loses!', color='magenta', on_color='on_black', attrs=['bold','blink']) if is_unix else print('Player 1 loses!')
+        cprint('\n\nPlayer 1 loses!\n', color='magenta', on_color='on_black', attrs=['bold','blink']) if is_unix else print('\n\nPlayer 1 loses!\n')
+    
+    # print summary
+    if verbose:
+        print('\n\nSUMMARY\n')
+        if playerAIdebug:
+            print('Player used no AI, with all random moves and throws...')
+        else:
+            print(f'Player used Expectiminimax with ', end='')
+            cprint(f'depth limit of {depth_limit}', color='green', end='') if is_unix else print(f'{depth_limit}', end='')
+            print(' and ', end='')
+            cprint(f'{heur_str} heuristics...', color='cyan') if is_unix else print(f'and {heur_str} heuristics...')
+        
+        if result == 1:
+            cprint('and defeated...', color='green') if is_unix else print('and defeated...')
+        elif result == 2:
+            cprint('and lost to...', color='magenta') if is_unix else print('and lost to...')
+        
+        if computerAIdebug:
+            print('Computer opponent who used no AI, with all random moves and throws.\n')
+        else:
+            if is_unix:
+                cprint(f'Computer opponent, who used {opp_string}\n', color='magenta')
+            else:
+                print(f'Computer opponent, who used {opp_string}\n')
+
         print(f'Total rounds: {moves}\n\n')
+        
+    # TODO
+    # Add other statistics:
+    # total game time, best seen utility, average move length, throw accuracy
+
     exit(exit_code)
 
 if __name__ == "__main__":

@@ -14,14 +14,15 @@ from Utils import manhattan_distance, grid_distance
 DEFAULT_DEPTH_LIMIT = 3
 
 class PlayerAIOppV2(BaseAI):
-    def __init__(self, depth_limi = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
-        '''
-        Custom AI Opponent Version 2.
-        Uses Expectiminimax, with limits to search power.
-        Only applies connected squares heuristics.
-        Set DEFAULT_DEPTH_LIMIT = 3.
-        '''
+    """
+    Custom AI Opponent Version 2.
+    Uses Expectiminimax, with limits to search power.
+    Only applies connected squares heuristics.
+    Set DEFAULT_DEPTH_LIMIT = 3.
+    """
         
+    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
+
         super().__init__()
         # self.cape_color = 'blue'
         self.verbose = verbose
@@ -315,10 +316,10 @@ class PlayerAIOppV2(BaseAI):
 
 
     def __get_search_start_pos(self, grid: Grid) -> tuple:
-        '''
+        """
         Start search midway between players, but not on a trap
         Iteratively get closer to the opponent, can be opponent
-        '''
+        """
         def __find_center(pos, opp_pos):
             inc_ceil = lambda i,j: int(np.ceil( (i + j) / 2 ))
             inc_floor = lambda i,j: int(np.floor( (i + j) / 2 ))

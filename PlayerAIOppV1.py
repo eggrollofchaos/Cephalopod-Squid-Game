@@ -12,13 +12,14 @@ from Utils import manhattan_distance, grid_distance
 DEFAULT_DEPTH_LIMIT = 2
 
 class PlayerAIOppV1(BaseAI):
+    """
+    Custom AI Opponent Version 1.
+    Uses Expectiminimax.
+    Only applies n-neighbors heuristics.
+    Set DEFAULT_DEPTH_LIMIT = 2.
+    """
+
     def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
-        '''
-        Custom AI Opponent Version 1.
-        Uses Expectiminimax.
-        Only applies n-neighbors heuristics.
-        Set DEFAULT_DEPTH_LIMIT = 2.
-        '''
 
         super().__init__()
         # self.cape_color = 'blue'

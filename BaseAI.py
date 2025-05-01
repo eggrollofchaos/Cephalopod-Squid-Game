@@ -1,5 +1,5 @@
 class BaseAI():
-    ''' Barebones AI class. '''
+    """ Barebones AI class. """
 
 
     def getMove(self, grid):
