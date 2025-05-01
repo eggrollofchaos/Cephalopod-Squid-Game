@@ -3,28 +3,22 @@ import numpy as np
 import random
 import sys
 import os 
-# setting path to parent directory
-# sys.path.append(os.getcwd())
 from BaseAI import BaseAI
 from Grid import Grid
 from platform import system as os_type
 from termcolor import cprint
 from Utils import manhattan_distance, grid_distance
 
-
 is_unix = os_type()
-OPPONENT = lambda player: 3 - player
-TO_CLEAN = str.maketrans('', '', ".()")
+OPPONENT = lambda player: 3 - player                    # TODO: may not be needed?
+TO_CLEAN = str.maketrans('', '', ".()")                 # for sanitizing user input
 
 class HumanOpp(BaseAI):
-
-
-
     def __init__(self, initial_position = None, verbose = 0) -> None:
         super().__init__()
+        self.verbose = verbose
         self.pos = initial_position
         self.player_num = None
-        self.verbose = verbose
 
     def setPosition(self, new_pos: tuple):
         self.pos = new_pos

@@ -25,8 +25,8 @@ class RunGames(object):
     -g  : show game output (note: can be very verbose)
     -h  : enable advanced heuristics
     -d  : set Player search depth limit; min 1, default 4
-    -oa : set Opponent AI level of {-1,0,1,2,3}; default 0; level = 9 indicates Human Opponent, however batch run is intended for AI
-    -od : set Opponent AI search depth limit; min 1, default 2, only applicable if Opponent AI level in {1,2,3}
+    -oa : set Opponent AI level of {-2,-1,0,1,2,3}; default = 0 (Medium); level = 9 indicates Human Opponent, however batch run is intended for AI
+    -od : set Opponent AI search depth limit; min 1, default = 2, only applicable if Opponent AI level in {1,2,3}
     -m  : add a comment to the log file, must enclose in quotes
     
     Examples:

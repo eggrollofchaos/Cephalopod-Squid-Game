@@ -10,9 +10,10 @@ from Grid import Grid
 
 class MediumAI(BaseAI):
 
-    def __init__(self, position = None) -> None:
+    def __init__(self, initial_position = None, verbose = 0) -> None:
         super().__init__()
-        self.pos = position
+        self.verbose = verbose
+        self.pos = initial_position
         self.player_num = None
 
     def setPosition(self, new_pos: tuple):

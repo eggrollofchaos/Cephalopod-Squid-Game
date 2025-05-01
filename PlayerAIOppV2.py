@@ -10,21 +10,21 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 # from scipy.sparse import csr_matrix
 # from scipy.sparse.csgraph import connected_components
-from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 3
 
 class PlayerAIOppV2(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, verbose = False) -> None:
+    def __init__(self, depth_limi = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
         '''
         Custom AI Opponent Version 2.
         Uses Expectiminimax, with limits to search power.
         Only applies connected squares heuristics.
         Set DEFAULT_DEPTH_LIMIT = 3.
         '''
-        self.verbose = verbose
-        # self.cape_color = 'blue'
+        
         super().__init__()
+        # self.cape_color = 'blue'
+        self.verbose = verbose
         self.pos = None
         self.opp_pos = None
         self.player_num = None

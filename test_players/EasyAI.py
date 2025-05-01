@@ -8,12 +8,13 @@ sys.path.append(os.getcwd())
 from BaseAI import BaseAI
 from Grid import Grid
 
-OPPONENT = lambda player: 3 - player
+# OPPONENT = lambda player: 3 - player
 
 class EasyAI(BaseAI):
 
-    def __init__(self, initial_position = None) -> None:
+    def __init__(self, initial_position = None, verbose = 0) -> None:
         super().__init__()
+        self.verbose = verbose
         self.pos = initial_position
         self.player_num = None
 

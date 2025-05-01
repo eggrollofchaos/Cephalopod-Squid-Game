@@ -8,21 +8,22 @@ import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
-from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAIOppV3(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=False) -> None:
+    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = None, verbose = 0) -> None:
         '''
         Custom AI Opponent Version 3.
         Uses Expectiminimax.
         Applies most of the same heuristics as PlayerAI.
+        Connected Square Heuristics updated from Custom AI V2 to become a depth-limited DFS.
         Set DEFAULT_DEPTH_LIMIT = 4.
         Set starting max_search_traps to minimum of 5.
         '''
-        self.verbose = verbose
+
         super().__init__()
+        self.verbose = verbose
         self.pos = None
         self.opp_pos = None
         self.player_num = None

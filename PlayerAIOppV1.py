@@ -8,13 +8,11 @@ import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import connected_components
 
 DEFAULT_DEPTH_LIMIT = 2
 
 class PlayerAIOppV1(BaseAI):
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT) -> None:
+    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
         '''
         Custom AI Opponent Version 1.
         Uses Expectiminimax.
@@ -22,8 +20,9 @@ class PlayerAIOppV1(BaseAI):
         Set DEFAULT_DEPTH_LIMIT = 2.
         '''
 
-        # self.cape_color = 'blue'
         super().__init__()
+        # self.cape_color = 'blue'
+        self.verbose = verbose
         self.pos = None
         self.player_num = None
         self.optimal_trap_position = None
@@ -105,7 +104,6 @@ class PlayerAIOppV1(BaseAI):
         """
 
         return grid, self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
-        # return self.__connected_sq_heur(grid, is_me)
 
     def __n_neighbors_heur(self, grid: Grid, is_me=True) -> int:
         """

@@ -16,27 +16,29 @@ from termcolor import cprint
 DEFAULT_DEPTH_LIMIT = 4
 
 class PlayerAI(BaseAI):
-    # def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=False) -> None:
-    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur=None, verbose=0) -> None:
+    # def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = 'graphcut', verbose = False) -> None:
+    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = None, verbose = 0) -> None:
         '''
         Player AI.
         Uses Expectiminimax.
         Applies various heuristics.
-        Set DEFAULT_DEPTH_LIMIT = 4.
         Note that Expectiminimax needs a depth of 4 in order to go through one full cycle:
             Move Maximize -> Trap Maximize -> Move Minimize -> Trap Minimize
+        Set DEFAULT_DEPTH_LIMIT = 4.
         This means that finding the best move happens concurrently with finding the best trap.
-        Set starting max_search_traps to minimum of 8.
+        Set starting max_search_traps to minimum of 21, boosted significantly from 8.
         '''
-        self.verbose = verbose
+
         super().__init__()
+        self.verbose = verbose
         self.pos = None
         self.opp_pos = None
         self.player_num = None
         self.optimal_trap_pos = None
-        self.depth_limit = max(depth_limit,1)   # Expectiminimax needs at least a search depth of 1, but really 2
-        if self.depth_limit < 1:
-            self.depth_limit = DEFAULT_DEPTH_LIMIT
+        self.depth_limit = max(depth_limit, 1)  # Expectiminimax needs at least a search depth of 1, but really 2
+        # print(f'Depth limit arg is {depth_limit}, setting depth_limit to {self.depth_limit}.')
+        # if self.depth_limit < 1:
+        #     self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1                          # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         self.use_advanced_heuristics = heur     # graphcut, geodesics, None
         # self.curr_conn_sq = 48                # essentially dim^2 - 1
@@ -718,7 +720,7 @@ class PlayerAI(BaseAI):
                 # print(f'Trap search start candidate: {start_pos}.')
                 # print(f'Component squares: {curr_conn_sq_list_target}.')
                 else:
-                    cprint('Terminating.',color='magenta',on_color='on_white')
+                    cprint('Terminating.', color='magenta', on_color='on_white')
                     exit('Loop in finding a starting point for trap search.')
 
         return start_pos
@@ -893,7 +895,7 @@ class PlayerAI(BaseAI):
                 if self.verbose > 2:
                     if minUtility < self.trap_min_utility:
                         self.trap_min_utility = minUtility
-                        cprint(f'Found better (lower) trap utility of {minUtility}.','red')
+                        cprint(f'Found better (lower) trap utility of {minUtility}.', color='red')
                         pass
 
         return minTrap, minUtility
@@ -938,7 +940,7 @@ class PlayerAI(BaseAI):
                 if self.verbose > 2:
                     if minUtility < self.move_min_utility:
                         self.move_min_utility = minUtility
-                        cprint(f'Found better (lower) move utility of {minUtility}.','yellow')
+                        cprint(f'Found better (lower) move utility of {minUtility}.', color='yellow')
                         pass
 
             if minUtility <= alpha:
@@ -1034,7 +1036,7 @@ class PlayerAI(BaseAI):
                 if self.verbose > 2:
                     if maxUtility > self.trap_max_utility:
                         self.trap_max_utility = maxUtility
-                        cprint(f'Found better (high) trap utility of {maxUtility}.','green')
+                        cprint(f'Found better (high) trap utility of {maxUtility}.', color='green')
                         pass
 
         # returns max trap so maximize can cache it
@@ -1086,7 +1088,7 @@ class PlayerAI(BaseAI):
                 if self.verbose > 2:
                     if maxUtility > self.move_max_utility:
                         self.move_max_utility = maxUtility
-                        cprint(f'Found better (high) move utility of {maxUtility}.','cyan')
+                        cprint(f'Found better (high) move utility of {maxUtility}.', color='cyan')
                         pass
 
         self.optimal_trap_pos = maxTrap        # maxTrap is now just a position, not a Grid object
@@ -1108,15 +1110,15 @@ class PlayerAI(BaseAI):
                 print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
             # if end-start >= 5.05:
                 if self.use_graph_me:
-                    cprint(f'Used graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
+                    cprint(f'Used graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', color='blue')
                 if self.use_graph_d2_me:
-                    cprint(f'Used 2-ply graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
+                    cprint(f'Used 2-ply graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', color='blue')
                 if self.use_graph_opp:
-                    cprint(f'Used graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
+                    cprint(f'Used graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', color='red')
                 if self.use_graph_d2_opp:
-                    cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
+                    cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', color='red')
             
-            print(f'Best move found has utility of {self.utility:.2f}. ', end = '')
+            print(f'Best move found has utility of {self.utility:.2f}. ', end='')
             # if self.utility >= 90000:
                 # print('Win imminent? 😱')
             # elif self.utility >= 1000:
