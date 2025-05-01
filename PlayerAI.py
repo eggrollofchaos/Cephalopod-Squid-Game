@@ -455,7 +455,7 @@ class PlayerAI(BaseAI):
         n_neighbors_heur_opp = PlayerAI.__n_neighbors_heur(grid, opp_pos)
         n_neighbors_heur = n_neighbors_heur_me - n_neighbors_heur_opp
 
-        # move max radius up to the top TO DO?
+        # move max radius up to the top TODO?
         max_radius = self.max_radius
 
         # advanced heuristic not allowed until turn 4?
@@ -1151,7 +1151,7 @@ class PlayerAI(BaseAI):
         
         '''
 
-        # TO DO
+        # TODO
         # need to code this up separately from getMove
         # essentially need two Expetiminimax algos
         # March 15 WAX

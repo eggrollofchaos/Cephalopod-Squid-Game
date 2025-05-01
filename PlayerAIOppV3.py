@@ -42,6 +42,9 @@ class PlayerAIOppV3(BaseAI):
         self.max_search_traps += min(2*(5 - self.depth_limit), 0)
         self.max_search_traps = min(5, abs(self.max_search_traps))      # no less than 5 to begin with
 
+        # TODO:
+        # look at self.reached_max_search logic in Custom AI V2, see if it's helpful at all
+
         self.max_radius = 3
         self.use_graph_me = False
         self.use_graph_d2_me = False
