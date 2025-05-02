@@ -36,12 +36,15 @@ class MediumAI(BaseAI):
         # find all available moves 
         available_moves = grid.get_neighbors(self.pos, only_available = True)
 
+        # create a copy of the Grid for each potential move
         states = [grid.clone().move(mv, self.player_num) for mv in available_moves]
 
-        # find move with best AM score
+        # for each potential move, calculate the number of available moves (AM)
         am_scores = np.array([AM(state, self.player_num) for state in states])
 
-        new_pos = available_moves[np.argmax(am_scores)]                     # will return the first occurence in the event of a tie
+        # find move with best AM score
+        # will return the first occurrence in the event of a tie
+        new_pos = available_moves[np.argmax(am_scores)]
         
         return new_pos
 
@@ -61,10 +64,13 @@ class MediumAI(BaseAI):
             
         states = [grid.clone().trap(cell) for cell in available_neighbors]
 
-        # find trap that minimizes opponent's moves
+        # for each potential trap position, calculate the difference in available moves for player vs opponent
+        # TODO: rather than pass in player_um = '3-self.player_num' and finding argmin, could pass self.player_num and find argmax
         is_scores = np.array([IS(state, 3 - self.player_num) for state in states])
 
-        # throw to one of the available cells randomly
+        # find trap position with greatest difference
+        # will return the first occurrence in the event of a tie
+        # TODO: see above
         trap = available_neighbors[np.argmin(is_scores)] 
     
         return trap
