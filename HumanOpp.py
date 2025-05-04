@@ -87,12 +87,6 @@ class HumanOpp(BaseAI):
         
         # find all available cells on board
         available_cells = grid.getAvailableCells()
-
-        # throw to one of the available cells randomly (unless now occupying the last space)
-        # if available_cells:
-            # trap = random.choice(available_cells)
-        # else:
-            # trap = opp_pos
             
         # get Trap coordinates
         while True:

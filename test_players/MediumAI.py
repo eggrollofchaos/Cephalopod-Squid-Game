@@ -57,23 +57,31 @@ class MediumAI(BaseAI):
         # find all available cells surrounding opponent
         available_neighbors = grid.get_neighbors(opponent, only_available = True)
 
-        # edge case - if there are no available cell around opponent, then 
-        # player constitutes last trap and will win. throwing randomly.
-        if not available_neighbors:
-            return rand_choice(grid.getAvailableCells())
-            
-        states = [grid.clone().trap(cell) for cell in available_neighbors]
+        if available_neighbors:
 
-        # for each potential trap position, calculate the difference in available moves for player vs opponent
-        # TODO: rather than pass in player_um = '3-self.player_num' and finding argmin, could pass self.player_num and find argmax
-        is_scores = np.array([IS(state, 3 - self.player_num) for state in states])
+            # create a copy of the Grid for each potential move
+            states = [grid.clone().trap(cell) for cell in available_neighbors]
 
-        # find trap position with greatest difference
-        # will return the first occurrence in the event of a tie
-        # TODO: see above
-        trap = available_neighbors[np.argmin(is_scores)] 
-    
+            # for each potential trap position, calculate the difference in available moves for player vs opponent
+            # TODO: rather than pass in player_um = '3-self.player_num' and finding argmin, could pass self.player_num and find argmax
+            is_scores = np.array([IS(state, 3 - self.player_num) for state in states])
+
+            # find trap position with greatest difference
+            # will return the first occurrence in the event of a tie
+            # TODO: see above
+            trap = available_neighbors[np.argmin(is_scores)] 
+
+        else:
+
+            # edge case - if there are no available cell around opponent,
+            # then player will win; therefore choosing a random trap position
+            # TODO: change the trap position to be somewhere not in the vicinity of current player
+            print('MediumAI')
+            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
+            trap = rand_choice(grid.getAvailableCells())
+
         return trap
+        
 
 def AM(grid : Grid, player_num) -> int:
     """ Get number of available moves for the Grid argument passed. """

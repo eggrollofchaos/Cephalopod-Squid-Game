@@ -54,6 +54,8 @@ class EasyAI(BaseAI):
         if available_neighbors:
             trap_pos = rand_choice(available_neighbors)
         else:
+            print('EasyAI')
+            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
             trap_pos = opponent
 
         return trap_pos

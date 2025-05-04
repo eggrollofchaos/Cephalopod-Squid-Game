@@ -228,8 +228,8 @@ class Game():
 
                 total_player_moves += 1
 
-                if total_player_moves == 1:
-                    input('<Press enter to begin!>')                      # waiting for input to continue for debugging
+                # if total_player_moves == 1:
+                    # input('<Press enter to begin!>')                      # waiting for input to continue for debugging
 
                 cprint(f"Player's Turn {total_player_moves}: ", color='green') if is_unix else print(f"Player's Turn {total_player_moves}:")
                 # find best move; should return two coordinates: new player position and position that the trap landed on
@@ -258,7 +258,7 @@ class Game():
                         cprint(f'Trap missed, landed in {trap}', end='', color='red') if is_unix else print(f'Trap missed, landed in {trap}', end='')
 
                     if self.grid.getCellValue(trap) == -1:
-                        print(', which already had a trap, no effect.')
+                        print(', which already had a trap, no effect.', end='')
                     print('.')
                     self.grid.trap(trap)
 

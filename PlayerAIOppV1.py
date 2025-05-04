@@ -359,6 +359,7 @@ class PlayerAIOppV1(BaseAI):
 
         return maxMove, maxUtility
 
+
     def __decision(self, grid: Grid, alpha, beta, depth_limit=DEFAULT_DEPTH_LIMIT) -> object:
         """
         Helper function to start the Expectiminimax algo
@@ -369,6 +370,7 @@ class PlayerAIOppV1(BaseAI):
         end = time.time()
         # print(f'This move took {end-start:.5f} seconds.')
         return child
+
 
     def getTrap(self, grid: Grid) -> tuple:
         """
@@ -384,7 +386,17 @@ class PlayerAIOppV1(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
+
+        # TODO: copied from PlayerAI, need to refactor
+        # # if no available valid neighbors around opponent, throw to first available cell, starting from upper-left-most square
+        # # TODO: change the trap position to be somewhere not in the vicinity of current player
+        # if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
+        #     input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
+        #     return grid.getAvailableCells()[0]
+
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
+            input('No optional trap position in cache.') if self.verbose else None
             return grid.getAvailableCells()[0]
+
         return self.optimal_trap_position

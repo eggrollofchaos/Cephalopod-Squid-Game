@@ -246,12 +246,13 @@ class PlayerAI(BaseAI):
     def __evaluate(grid: Grid, gameover_result, player_num) -> tuple:
         '''
         Function for returning high or low utility based on gameover state.
+        Adjusted from 99999 and -99999
         '''
         if gameover_result:
             if gameover_result == player_num:
-                return grid, 99999
+                return grid, 999999
             else:
-                return grid, -99999
+                return grid, -999999
 
 
     @staticmethod
@@ -279,22 +280,23 @@ class PlayerAI(BaseAI):
     def __get_all_neighbors(pos, radius=1) -> list:
         '''
         Same as __get_valid_neighbors, but includes trap positions.
+        Can specify radius, default is 1.
         Updated to not return current position.
         Returns a list of positions as tuples.
-        
         '''
         x,y = pos
         valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
         return list({(a,b) for a in valid_range(x) for b in valid_range(y)} - {(x,y)})
 
 
+    # TODO: not currently used
     @staticmethod
     def __get_all_neighbors_avoid_edge(pos, radius=1) -> list:
         '''
-        Same as __get_all_valid_neighbors, but avoiding edges.
+        Same as __get_all_neighbors, but avoiding edges.
+        Can specify radius, default is 1.
         Updated to not return current position.
         Returns a list of positions as tuples.
-        
         '''
         x,y = pos
         valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
@@ -304,9 +306,10 @@ class PlayerAI(BaseAI):
     @staticmethod
     def __get_valid_neighbors(grid: Grid, pos, radius=1) -> list:
         '''
-        Modification of original function for returning neighboring cells.
-        Returns a list of positions as tuples
-        
+        Modification of function grid.get_neighbors() for returning neighboring cells, excluding traps.
+        Can specify radius, default is 1.
+        Includes current position.
+        Returns a list of positions as tuples.
         '''
         x,y = pos
         valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
@@ -316,9 +319,10 @@ class PlayerAI(BaseAI):
     @staticmethod
     def __get_valid_neighbors_avoid_edge(grid: Grid, pos, radius=1) -> list:
         '''
-        Same as __get_valid_neighbors, but avoiding edges
-        Returns a list of positions as tuples, including current position
-        
+        Same as __get_valid_neighbors, but avoiding edges.
+        Can specify radius, default is 1.
+        Includes current position.
+        Returns a list of positions as tuples.
         '''
         x,y = pos
         valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
@@ -1151,9 +1155,9 @@ class PlayerAI(BaseAI):
         
         '''
 
-        # TODO
+        # TODO - no more
         # need to code this up separately from getMove
-        # essentially need two Expetiminimax algos
+        # essentially need two Expectiminimax algos
         # March 15 WAX
 
         # get player numbers variables
@@ -1171,18 +1175,23 @@ class PlayerAI(BaseAI):
 
         # print(f'Looking for best trap. Depth limit is {self.depth_limit}.') if self.verbose else None
 
+        # if no available valid neighbors around opponent, throw to first available cell, starting from upper-left-most square
+        # TODO: change the trap position to be somewhere not in the vicinity of current player
         if not PlayerAI.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
+            print('PlayerAI')
+            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
             return grid.getAvailableCells()[0]
 
-        # use cached optimal trap position that we computed in getMove()
+        # other edge cases
         if not self.optimal_trap_pos:
-            print('No trap positions') if self.verbose else None
+            input('No optional trap position in cache.') if self.verbose else None
             return grid.getAvailableCells()[0]
         if self.optimal_trap_pos == self.current_move:
             # if game ends because we took the last spot
-            print('We\'ve taken up the last spot. Throwing trap randomly because we\'ll win anyway.')
+            input("We've taken up the last spot. Throwing trap randomly because we'll win anyway.") if self.verbose else None
             return grid.getAvailableCells()[0]
 
+        # use cached optimal trap position that we computed in getMove()
         print(f'Using cached optimal trap position that was found during Expectiminimax.') if self.verbose else None
 
         return self.optimal_trap_pos

@@ -229,6 +229,29 @@ class PlayerAIOppV2(BaseAI):
         return p
 
 
+    def __get_all_neighbors(self, grid, pos, radius=1) -> list:
+        """
+        Same as __get_valid_neighbors, but includes trap positions
+        Returns a list of positions
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
+
+
+    # TODO: not currently used
+    def __get_all_neighbors_avoid_edge(self, grid, pos, radius=1) -> list:
+        """
+        Same as __get_all_valid_neighbors, but avoiding edges
+        Returns a list of positions
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
+
+
     def __get_valid_neighbors(self, grid, pos, radius=1) -> list:
         """
         Description
@@ -258,28 +281,6 @@ class PlayerAIOppV2(BaseAI):
         x,y = pos
         valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
         return [(a,b) for a in valid_range(x) for b in valid_range(y) if grid.map[(a,b)] == 0]
-
-
-    def __get_all_neighbors(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_valid_neighbors, but includes trap positions
-        Returns a list of positions
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
-
-
-    def __get_all_neighbors_avoid_edge(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_all_valid_neighbors, but avoiding edges
-        Returns a list of positions
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
 
 
     def __move_children(self, grid: Grid, is_me=True) -> list:
@@ -695,7 +696,16 @@ class PlayerAIOppV2(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
+
+        # if no available valid neighbors around opponent, throw to first available cell, starting from upper-left-most square
+        # TODO: change the trap position to be somewhere not in the vicinity of current player
+        if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
+            print('OppV2')
+            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
+            return grid.getAvailableCells()[0]
+
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
+            input('No optional trap position in cache.') if self.verbose else None
             return grid.getAvailableCells()[0]
         return self.optimal_trap_position
