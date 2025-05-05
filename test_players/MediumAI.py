@@ -10,8 +10,8 @@ from Grid import Grid
 class MediumAI(BaseAI):
     """
     Medium Computer AI player, default.
-    Move AI finds move with best score.
-    Trap AI finds position that minimizes opponent's remaining moves.
+    Move AI finds move that maximizes number of available moves for current player.
+    Trap AI finds position that maximizes difference between current player's available moves vs opponent's.
     """
 
     def __init__(self, initial_position = None, verbose = 0) -> None:
