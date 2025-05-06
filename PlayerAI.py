@@ -1,6 +1,7 @@
+"""
 # wax
 # hard-coded to a 7x7 grid size
-
+"""
 import numpy as np
 import random
 import time
@@ -345,6 +346,8 @@ class PlayerAI(BaseAI):
             return opp_num
 
 
+    # TODO: this @staticmethod exists in for other AIs, which is duplicative;
+    # possibly move it to a new, shared AI_utils module
     @staticmethod
     def __probability(pos, trap_pos) -> float:
         '''

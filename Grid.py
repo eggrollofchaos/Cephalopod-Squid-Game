@@ -1,3 +1,6 @@
+"""
+# Grid utilty functions
+"""
 from copy import deepcopy
 import numpy as np
 
@@ -5,21 +8,21 @@ import numpy as np
 class Grid():
     
     def __init__(self, N = 7) -> None:
-        '''
+        """
         Grid constructor (initialization) method.
         Creates an NxN grid, filled with zeros.
-        '''
+        """
         self.dim  = N
         self.map = np.zeros((N,N)) # empty board
     
-
-    def getAvailableCells(self):
+    def getAvailableCells(self) -> list[tuple[int, int]]:
         """
         Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)]
         """
         return [(x,y) for x,y in np.argwhere(self.map == 0)]
     
-    def getMap(self):
+    # not currently used
+    def getMap(self) -> np.ndarray:
         return self.map
 
     def setCellValue(self, pos: tuple, val):

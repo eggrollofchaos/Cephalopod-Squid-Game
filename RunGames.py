@@ -1,4 +1,7 @@
-# wax
+"""
+# RunGames batch module
+# Authored by wax
+"""
 from ast import literal_eval
 from os import system, remove
 from os.path import exists

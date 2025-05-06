@@ -1,3 +1,7 @@
+"""
+# EasyAI module
+# Commented by wax
+"""
 
 from random import choice as rand_choice
 import sys

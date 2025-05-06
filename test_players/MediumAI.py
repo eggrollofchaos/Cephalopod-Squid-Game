@@ -1,3 +1,7 @@
+"""
+# MediumAI module
+# Commented by wax
+"""
 import numpy as np
 from random import choice as rand_choice
 import sys

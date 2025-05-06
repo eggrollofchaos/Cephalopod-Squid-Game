@@ -1,3 +1,7 @@
+"""
+# Displayer Class module
+# Enhanced by wax
+"""
 from BaseDisplayer import BaseDisplayer
 import platform
 import os

@@ -8,7 +8,7 @@ from sys import argv
 from Grid import Grid
 from Displayer import Displayer
 from platform import system as os_type
-from RandomAI import RandomAI
+from test_players.RandomAI import RandomAI
 from test_players.EasyAI import EasyAI
 from test_players.MediumAI import MediumAI
 from PlayerAIOppV1 import PlayerAIOppV1
@@ -158,6 +158,7 @@ class Game():
         probs = np.ones(1 + n)                                      # intended position + neighbors
         
         # compute probability of success, p, based on factor of 0.05 and the distance to intended trap position
+        # distance is computed as Manhattan Distance, which is the sum of the absolute distances in both X and Y directions
         p = 1 - 0.05*(manhattan_distance(player.getPosition(), intended_position) - 1)
 
         probs[0] = p                                                # intended position gets base probability
