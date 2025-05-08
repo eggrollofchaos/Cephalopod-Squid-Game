@@ -5,7 +5,7 @@
 import numpy as np
 import math
 
-def manhattan_distance(position, target) -> float:
+def manhattan_distance(position, target) -> np.int64:
     """
     Computes the Manhattan Distance between two points on a Cartesian plane.
     Manhattan Distance is the distance in horizontal and vertical units, aka Taxicab Distance.
@@ -15,7 +15,7 @@ def manhattan_distance(position, target) -> float:
     return np.abs(target[0] - position[0]) + np.abs(target[1] - position[1])
 
 
-def euclidean_distance(position, target):
+def euclidean_distance(position, target) -> float:
     """
     Computes the Euclidian Distance between two points on a Cartesian grid.
     Euclidian Distance is the straight-line distance, aka "as the crow flies".
@@ -26,7 +26,7 @@ def euclidean_distance(position, target):
     return math.sqrt(np.abs(target[0] - position[0]) ** 2 + np.abs(target[1] - position[1]) ** 2)
 
 
-def grid_distance(position, target):
+def grid_distance(position, target) -> np.int64:
     """
     Computes the Grid Distance between two points on a Cartesian grid.
     Grid Distance is the number of steps between two points in any direction, with diagonals counting as length one, aka Chebyshev Distance.

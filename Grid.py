@@ -25,7 +25,7 @@ class Grid():
     def getMap(self) -> np.ndarray:
         return self.map
 
-    def setCellValue(self, pos: tuple, val):
+    def setCellValue(self, pos: tuple, val) -> None:
         self.map[pos] = val
 
     def getCellValue(self, pos: tuple):
