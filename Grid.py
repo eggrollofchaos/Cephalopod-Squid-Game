@@ -7,7 +7,7 @@ import numpy as np
 
 class Grid():
     
-    def __init__(self, N = 7) -> None:
+    def __init__(self, N: int = 7) -> None:
         """
         Grid constructor (initialization) method.
         Creates an NxN grid, filled with zeros.
@@ -25,10 +25,10 @@ class Grid():
     def getMap(self) -> np.ndarray:
         return self.map
 
-    def setCellValue(self, pos: tuple, val) -> None:
+    def setCellValue(self, pos: tuple, val: int) -> None:
         self.map[pos] = val
 
-    def getCellValue(self, pos: tuple):
+    def getCellValue(self, pos: tuple) -> int:
         return self.map[pos]
 
     def clone(self):
@@ -39,7 +39,7 @@ class Grid():
         grid_copy.map = deepcopy(self.map)
         return grid_copy
 
-    def find(self, player_num : int):
+    def find(self, player_num: int):
         """Find a player's position given the player's number."""
         
         assert(player_num in [1,2])
