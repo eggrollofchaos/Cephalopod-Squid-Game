@@ -25,10 +25,10 @@ class Grid():
     def getMap(self) -> np.ndarray:
         return self.map
 
-    def setCellValue(self, pos: tuple, val: int) -> None:
+    def setCellValue(self, pos: tuple[int, int], val: int) -> None:
         self.map[pos] = val
 
-    def getCellValue(self, pos: tuple) -> int:
+    def getCellValue(self, pos: tuple[int, int]) -> int:
         return self.map[pos]
 
     def clone(self):
