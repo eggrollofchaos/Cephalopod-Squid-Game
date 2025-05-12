@@ -16,9 +16,7 @@ class Grid():
         self.map = np.zeros((N,N)) # empty board
     
     def getAvailableCells(self) -> list[tuple[int, int]]:
-        """
-        Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)]
-        """
+        """ Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)] """
         return [(x,y) for x,y in np.argwhere(self.map == 0)]
     
     # not currently used
@@ -31,16 +29,14 @@ class Grid():
     def getCellValue(self, pos: tuple[int, int]) -> int:
         return self.map[pos]
 
-    def clone(self):
-        """
-        Makes a full copy of current grid
-        """
+    def clone(self) -> "Grid":
+        """ Makes a full copy of current grid. """
         grid_copy = Grid(self.dim)
         grid_copy.map = deepcopy(self.map)
         return grid_copy
 
-    def find(self, player_num: int):
-        """Find a player's position given the player's number."""
+    def find(self, player_num: int) -> tuple[int, int]:
+        """ Find a player's position given the player's number. """
         
         assert(player_num in [1,2])
         
@@ -48,7 +44,7 @@ class Grid():
 
         return result
 
-    def get_neighbors(self, pos, only_available = False) -> list:
+    def get_neighbors(self, pos, only_available = False) -> list[tuple[int, int]]:
         """
         Description
         -----------
