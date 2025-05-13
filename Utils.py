@@ -5,6 +5,7 @@
 import numpy as np
 import math
 
+
 def manhattan_distance(position, target) -> np.int64:
     """
     Computes the Manhattan Distance between two points on a Cartesian plane.

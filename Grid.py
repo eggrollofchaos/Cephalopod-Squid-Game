@@ -6,7 +6,7 @@ import numpy as np
 
 
 class Grid():
-    
+
     def __init__(self, N: int = 7) -> None:
         """
         Grid constructor (initialization) method.
@@ -44,7 +44,7 @@ class Grid():
 
         return result
 
-    def get_neighbors(self, pos, only_available = False) -> list[tuple[int, int]]:
+    def get_neighbors(self, pos: tuple[int, int], only_available = False) -> list[tuple[int, int]]:
         """
         Description
         -----------
@@ -71,7 +71,7 @@ class Grid():
         
         return neighbors
 
-    def move(self, move, player):
+    def move(self, move: tuple[int, int], player: int) -> "Grid":
         """
         Description 
         -----------
@@ -86,7 +86,7 @@ class Grid():
 
         Returns
         -------
-        the grid with the new configuration. 
+        Grid instance with the new configuration.
 
         """
         old_pos = np.where(self.map == player)
@@ -108,7 +108,7 @@ class Grid():
 
         Returns
         -------
-        the grid with the new configuration.
+        Grid instance with the new configuration.
 
         """
         self.map[pos] = -1
