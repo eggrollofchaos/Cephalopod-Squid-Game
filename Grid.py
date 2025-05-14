@@ -95,7 +95,7 @@ class Grid():
 
         return self
 
-    def trap(self, pos):
+    def trap(self, pos) -> "Grid":
         """
         Description 
         -----------
