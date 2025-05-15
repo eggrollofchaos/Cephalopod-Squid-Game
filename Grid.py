@@ -115,5 +115,5 @@ class Grid():
 
         return self
 
-    def print_grid(self):
+    def print_grid(self) -> None:
         print(self.map)
