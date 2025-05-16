@@ -1,6 +1,7 @@
 """
-# HumanOpp module
-# Authored by wax
+HumanOpp Class module.
+Contains logic for handling a human opponent's inputs.
+Authored by WAX.
 """
 import numpy as np
 import random

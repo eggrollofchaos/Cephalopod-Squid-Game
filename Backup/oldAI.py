@@ -1,41 +1,23 @@
 """
-PlayerAIOppV1 Class module.
-Primarily authored by WAX.
-Early contributions by @mhr and @gongchen161.
+Older version of PlayerAI, no longer used.
+Authored by @mhr, @gongchen161, and WAX.
 """
 import numpy as np
 import random
 import time
 import sys
-import os
-import queue as Q
+import os 
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 
-DEFAULT_DEPTH_LIMIT = 2
-
-class PlayerAIOppV1(BaseAI):
-    """
-    Custom AI Opponent Version 1.
-    Uses Expectiminimax.
-    Only applies n-neighbors heuristics.
-    Set DEFAULT_DEPTH_LIMIT = 2.
-    """
-
-    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
-
+class PlayerAI(BaseAI):
+    def __init__(self) -> None:
+        self.cape_color = 'blue'
         super().__init__()
-        # self.cape_color = 'blue'
-        self.verbose = verbose
         self.pos = None
         self.player_num = None
         self.optimal_trap_position = None
-        self.depth_limit = depth_limit
-        if self.depth_limit < 1:
-            self.depth_limit = DEFAULT_DEPTH_LIMIT
-        self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
-        # self.use_advanced_heuristics = heur        # none implemented
 
     def getPosition(self):
         return self.pos
@@ -58,7 +40,7 @@ class PlayerAIOppV1(BaseAI):
     def setPlayerNum(self, num):
         self.player_num = num
 
-    def getMove(self, grid: Grid) -> tuple:
+    def getMove(self, grid: Grid, depth_limit=4) -> tuple:
         """
         YOUR CODE GOES HERE
 
@@ -74,11 +56,12 @@ class PlayerAIOppV1(BaseAI):
         """
         alpha = -np.inf
         beta = np.inf
-        max_grid = self.__decision(grid, alpha, beta, self.depth_limit)
-        self.turns += 1
+        if depth_limit == 0:
+            depth_limit = 4
+        max_grid = self.__decision(grid, alpha, beta, depth_limit)
         return max_grid.move_position
 
-    def __is_over(self, grid: Grid, turn) -> int:
+    def __is_over(self, grid: Grid, turn):
         """
         Check if game is over, i.e., Player or Opponent has no moves to make
         """
@@ -93,52 +76,25 @@ class PlayerAIOppV1(BaseAI):
             return self.getOpponentNum()
 
     def __evaluate(self, grid: Grid, gameover_result) -> int:
-        """
-        Function for returning high or low utility based on gameover state.
-        """
         if gameover_result:
             if gameover_result == self.getPlayerNum():
                 return grid, 99999
             else:
                 return grid, -99999
 
-    def __get_heuristics(self, grid: Grid, is_me) -> tuple:
-        """
-        Apply heuristics
-        Returns a tuple of Grid object, heuristic int
-        """
+    def IS_heuristic(self, grid):
+        return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
+            grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
 
-        return grid, self.__n_neighbors_heur(grid, is_me=True) - self.__n_neighbors_heur(grid, is_me=False)
-
-    def __n_neighbors_heur(self, grid: Grid, is_me=True) -> int:
-        """
-        Returns the difference in available squares around player vs available squares around opponent.
-        """
-        if is_me:
-            pos = self.getPlayerPosition(grid)
-            # other_pos = self.getOpponentPosition(grid)
-        else:
-            pos = self.getOpponentPosition(grid)
-            # other_pos = self.getPlayerPosition(grid)
-        # return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
-        #     grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
-        # return ( len(grid.get_neighbors(pos, only_available=True)) - len(
-        #     grid.get_neighbors(other_pos, only_available=True)) )
-        return len(grid.get_neighbors(pos, only_available=True))
-
-    def __probability(self, position, trap_position) -> float:
-        """
-            Calculates probability of a trap landing in an intended square.
-        """
-        alpha = manhattan_distance(position, trap_position)
-        # alpha = grid_distance(position, trap_position)
+    def __probability(self, position, trap_position):
+        # alpha = manhattan_distance(position, trap_position)
+        alpha = grid_distance(position, trap_position)
         p = 1 - 0.05 * (alpha - 1)
         return p
 
-    def __move_children(self, grid: Grid, is_me=True) -> list:
+    def __move_children(self, grid: Grid, is_me=True) -> None:
         """
-        get neighbors of a player's intended Move
-        returns a list of Grid objects
+        a player (either us or opponent) moves
         """
         if is_me:
             player = self.getPlayerNum()
@@ -160,27 +116,16 @@ class PlayerAIOppV1(BaseAI):
 
         return children
 
-    def __get_all_available_traps(self, grid: Grid, position) -> list:
-        """
-        helper function to get a list of open spots on the board
-        default is threshold of 3 squares away from position param
-        returns a list of tuples (positions)
-        """
+    def get_all_available_traps(self, grid, position):
         all_available_pos = grid.getAvailableCells()
         available_traps = []
-        threshold = 2
+        threshold = 3
         for trap_pos in all_available_pos:
-            # if manhattan_distance(position, trap_pos) < threshold:
-            if grid_distance(position, trap_pos) < threshold:
+            if manhattan_distance(position, trap_pos) < threshold:
                 available_traps.append(trap_pos)
         return available_traps
 
-    def __trap_children(self, grid: Grid, is_me=True) -> list:
-        """
-        a player (either player or opponent) throws Trap
-        function expands node of trades from param position
-        returns a list of Grid objects
-        """
+    def __trap_children(self, grid, is_me=True):
         if is_me:
             player = self.getPlayerNum()
             position = grid.move_position # hypothetical move
@@ -191,7 +136,7 @@ class PlayerAIOppV1(BaseAI):
             other_position = self.getPlayerPosition(grid)
 
         children = []
-        available_traps = self.__get_all_available_traps(grid, other_position)
+        available_traps = self.get_all_available_traps(grid, other_position)
         for trap_position in available_traps:
             if trap_position != position:
                 trap_clone = grid.clone()
@@ -203,11 +148,7 @@ class PlayerAIOppV1(BaseAI):
 
         return children
 
-    def __trap_neighbors(self, grid: Grid, trap_position) -> list:
-        """
-        get neighbors of intended trap_pos
-        returns a list of Grid objects
-        """
+    def __trap_neighbors(self, grid, trap_position):
         neighbors = []
 
         for trap_position in grid.get_neighbors(trap_position, only_available=True):
@@ -219,60 +160,40 @@ class PlayerAIOppV1(BaseAI):
 
         return neighbors
 
-    def __trap_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
-        """
-        opponent Min node for throwing Trap
-        returns a list of Grid objects
-        """
+    def __trap_minimize(self, grid, alpha, beta, depth, depth_limit):
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=False)[0]
             return self.__evaluate(grid, gameover_result)
-        
-        # break if hit depth limit
         if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+            return self.IS_heuristic(grid)
 
         minTrap, minUtility = None, np.inf
-        cache = {}
 
         for trap in self.__trap_children(grid, is_me=False):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
-            key = tuple(map(tuple, trap.map))
-            if key in cache:
-                utility = cache[key]
-            else:
-                _, utility = self.__move_maximize(trap, alpha, beta, depth+1, depth_limit)
-                cache[key] = utility
+            _, utility = self.__move_maximize(trap, alpha, beta, depth+1, depth_limit)
             expected_utility = trap.probability * utility
 
             neighbors = self.__trap_neighbors(grid, trap.trap_position)
             for neighbor in neighbors:
-                key = tuple(map(tuple, neighbor.map))
-                if key in cache:
-                    utility = cache[key]
-                else:
-                    _, utility = self.__move_maximize(neighbor, alpha, beta, depth+1, depth_limit)
-                    cache[key] = utility
+                _, utility = self.__move_maximize(neighbor, alpha, beta, depth+1, depth_limit)
                 expected_utility += (1-trap.probability)/len(neighbors) * utility
 
             if expected_utility < minUtility:
                 minUtility = expected_utility
+
         return minTrap, minUtility
 
-    def __move_minimize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
-        """
-        opponent Min node for making Move
-        returns a list of Grid objects
-        """
+    def __move_minimize(self, grid: Grid, alpha, beta, depth_limit, depth=1) -> tuple:
         gameover_result = self.__is_over(grid, self.getOpponentNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
         # break if hit depth limit
-        if depth >= depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+        if depth == depth_limit:
+            return self.IS_heuristic(grid)
 
         minChild, minUtility = None, np.inf
 
@@ -290,65 +211,48 @@ class PlayerAIOppV1(BaseAI):
 
         return minChild, minUtility
 
-    def __trap_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
-        """
-        player Max node for throwing Trap
-        returns a list of Grid objects
-        """
+    def __trap_maximize(self, grid, alpha, beta, depth, depth_limit):
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             # if game ends because move above results in a gameover, then we need to place a valid trap somewhere randomly
             # grid = self.__trap_children(grid, is_me=True)[0]
             return self.__evaluate(grid, gameover_result)
 
-        # break if (exceed) hit depth limit
-        if depth > depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+        if depth >= depth_limit:
+            return self.IS_heuristic(grid)
 
         maxTrap, maxUtility = None, -np.inf
         cache = {}
         for trap in self.__trap_children(grid, is_me=True):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
-            key = tuple(map(tuple, trap.map))
-            if key in cache:
-                utility = cache[key]
-            else:
-                _, utility = self.__move_minimize(trap, alpha, beta, depth+1, depth_limit)
-                cache[key] = utility
+            _, utility = self.__move_minimize(trap, alpha, beta, depth_limit, depth+1)
             expected_utility = trap.probability * utility
 
             neighbors = self.__trap_neighbors(grid, trap.trap_position)
             for neighbor in neighbors:
-                key = tuple(map(tuple, neighbor.map))
-                if key in cache:
-                    utility = cache[key]
-                else:
-                    _, utility = self.__move_minimize(neighbor, alpha, beta, depth+1, depth_limit)
-                    cache[key] = utility
+                _, utility = self.__move_minimize(neighbor, alpha, beta, depth+1, depth_limit)
                 expected_utility += (1-trap.probability)/len(neighbors) * utility
 
             if expected_utility > maxUtility:
                 maxTrap, maxUtility = trap, expected_utility
+
         # returns max trap so maximize can cache it
         return maxTrap, maxUtility
 
     def __move_maximize(self, grid: Grid, alpha, beta, depth, depth_limit) -> tuple:
-        """
-        player Min node for making Move
-        returns a list of Grid objects
-        """
         gameover_result = self.__is_over(grid, self.getPlayerNum())
         if gameover_result:
             return self.__evaluate(grid, gameover_result)
 
-        # break if (exceed) hit depth limit
-        if depth > depth_limit:
-            return self.__get_heuristics(grid, is_me=True)
+        # break if hit depth limit
+        if depth == depth_limit:
+            return self.IS_heuristic(grid)
 
         maxMove, maxTrap, maxUtility = None, None, -np.inf
 
         for move in self.__move_children(grid, is_me=True):
             trap, utility = self.__trap_maximize(move, alpha, beta, depth+1, depth_limit)
+
             if utility > maxUtility:
                 maxMove, maxTrap, maxUtility = move, trap, utility
 
@@ -363,18 +267,12 @@ class PlayerAIOppV1(BaseAI):
 
         return maxMove, maxUtility
 
-
-    def __decision(self, grid: Grid, alpha, beta, depth_limit=DEFAULT_DEPTH_LIMIT) -> object:
-        """
-        Helper function to start the Expectiminimax algo
-        returns a Grid object
-        """
+    def __decision(self, grid: Grid, alpha, beta, depth_limit=4) -> object:
         start = time.time()
-        child, _ = self.__move_maximize(grid, alpha, beta, depth=0, depth_limit=depth_limit)
+        child, _ = self.__move_maximize(grid, alpha, beta, 1, depth_limit)
         end = time.time()
-        # print(f'This move took {end-start:.5f} seconds.')
+        print(f'This move took {end-start:.5f} seconds.')
         return child
-
 
     def getTrap(self, grid: Grid) -> tuple:
         """
@@ -390,17 +288,7 @@ class PlayerAIOppV1(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-
-        # TODO: copied from PlayerAI, need to refactor
-        # # if no available valid neighbors around opponent, throw to first available cell, starting from upper-left-most square
-        # # TODO: change the trap position to be somewhere not in the vicinity of current player
-        # if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
-        #     input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
-        #     return grid.getAvailableCells()[0]
-
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
-            input('No optional trap position in cache.') if self.verbose else None
             return grid.getAvailableCells()[0]
-
         return self.optimal_trap_position

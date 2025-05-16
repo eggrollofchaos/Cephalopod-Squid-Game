@@ -1,6 +1,12 @@
 """
+Game Class module.
 2-player turn-based game implenting Adversarial AI search using Expectiminimax and various heuristics.
 Can have Player (AI) vs Computer Opponent (AI), or Player (AI) vs Human Opponent.
+Originally created by @tomcohen13 as a final coding project called Squid Game,
+  for COMS W4701 Artificial Intelligence graduate level course at Columbia University, 2021.
+  See: https://github.com/tomcohen13/AI-Squid-Game/
+Early contributions by teammates @mhr and @gongchen161.
+Enhancements by WAX.
 """
 import time
 import numpy as np

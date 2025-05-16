@@ -1,6 +1,6 @@
 """
-# RandomAI (i.e. no AI) module
-# Commented by wax
+RandomAI (i.e. no AI) Class module.
+Commented by WAX.
 """
 
 from random import choice as rand_choice

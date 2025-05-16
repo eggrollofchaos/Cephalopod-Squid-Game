@@ -1,6 +1,6 @@
 """
-# Displayer Class module
-# Enhanced by wax
+Displayer Class module.
+Enhanced by WAX.
 """
 from BaseDisplayer import BaseDisplayer
 import platform

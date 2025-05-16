@@ -1,6 +1,6 @@
 """
-# MediumAI module
-# Commented by wax
+MediumAI module.
+Commented by WAX.
 """
 import numpy as np
 from random import choice as rand_choice
@@ -78,7 +78,7 @@ class MediumAI(BaseAI):
         else:
 
             # edge case - if there are no available cell around opponent,
-            # then player will win; therefore choosing a random trap position
+            # then MediumAI player will win; therefore choosing a random trap position
             # TODO: change the trap position to be somewhere not in the vicinity of current player
             print('MediumAI')
             input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None

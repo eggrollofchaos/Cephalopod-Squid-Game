@@ -1,6 +1,6 @@
 """
-# RunGames batch module
-# Authored by wax
+RunGames Class batch module.
+Authored by WAX.
 """
 from ast import literal_eval
 from os import system, remove

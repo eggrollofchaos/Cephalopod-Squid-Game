@@ -1,8 +1,6 @@
-"""
-PlayerAIOppV3 Class module.
-Primarily authored by WAX.
-Early contributions by @mhr and @gongchen161.
-"""
+# gc2950
+# mhr2145
+# wax1
 import numpy as np
 import random
 import time
@@ -12,44 +10,27 @@ import queue as Q
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
+from termcolor import cprint
 
-DEFAULT_DEPTH_LIMIT = 4
+DEFAULT_DEPTH_LIMIT = 5
 
-class PlayerAIOppV3(BaseAI):
-    """
-    Custom AI Opponent Version 3.
-    Uses Expectiminimax.
-    Applies most of the same heuristics as PlayerAI.
-    Connected Square Heuristics updated from Custom AI V2 to become a depth-limited DFS.
-    Set DEFAULT_DEPTH_LIMIT = 4.
-    Set starting max_search_traps to minimum of 5.
-    """
-
-    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = None, verbose = 0) -> None:
-
-        super().__init__()
+class PlayerAI(BaseAI):
+    def __init__(self, depth_limit=DEFAULT_DEPTH_LIMIT, heur='graphcut', verbose=False) -> None:
         self.verbose = verbose
+        super().__init__()
         self.pos = None
         self.opp_pos = None
         self.player_num = None
         self.optimal_trap_pos = None
         self.depth_limit = depth_limit
-        if self.depth_limit < 1:
+        if self.depth_limit == 0:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         self.use_advanced_heuristics = heur
-        # self.curr_conn_sq = 48
+        self.curr_conn_sq = 48
         self.search_start_pos = (3, 3)
         self.graph_cut_size_cap = 8
-
         self.max_search_traps = 12
-        # max_search_traps starts at 12, but needs to be adjusted down at early game if depth_level is higher than 5
-        self.max_search_traps += min(2*(5 - self.depth_limit), 0)
-        self.max_search_traps = min(5, abs(self.max_search_traps))      # no less than 5 to begin with
-
-        # TODO:
-        # look at self.reached_max_search logic in Custom AI V2, see if it's helpful at all
-
         self.max_radius = 3
         self.use_graph_me = False
         self.use_graph_d2_me = False
@@ -106,7 +87,6 @@ class PlayerAIOppV3(BaseAI):
             self.printed = False
             self.utility = 0
             self.current_depth = 0
-            self.max_child_nodes = 50000
 
         print(f'Depth limit is {self.depth_limit}.') if self.verbose else None
 
@@ -120,68 +100,65 @@ class PlayerAIOppV3(BaseAI):
         self.curr_conn_sq_list_me = curr_conn_sq_list_me
         self.curr_conn_sq_list_opp = curr_conn_sq_list_opp
         self.search_start_pos = self.__get_search_start_pos(grid, self.pos, self.opp_pos)       # get square to start trap searches on
-        
         if self.verbose:
-            # if self.curr_conn_sq_me >= 28 or self.curr_conn_sq_opp >= 28:
-            #     print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
-            # else:
-            #     print(f'Player\'s component has {int(self.curr_conn_sq_me)} connected squares, opponent\'s component has {int(self.curr_conn_sq_opp)}; max_radius=3.')
+            if self.curr_conn_sq_me >= 28 or self.curr_conn_sq_opp >= 28:
+                print(f'Player\'s and opponent\'s component both have a lot of connected squares.')
+            else:
+                print(f'Player\'s component has {int(self.curr_conn_sq_me)} connected squares, opponent\'s component has {int(self.curr_conn_sq_opp)}; max_radius=3.')
             print(f'Trap search will start at {self.search_start_pos}.')
-
+        
         # get maximum trap candidates to search per call to Expectiminimax
         # get maximum graph_cut candidates
+        self.max_search_traps += min(2*(5 - self.depth_limit), 1) # adjust based on depth_level
+        if self.turns == 2:
+            self.max_search_traps += 1
+        if self.turns == 3:
+            self.max_search_traps += 1
+        if self.turns == 4:                     # graph_cut starts here
+            self.max_search_traps = 9           # reset to 9
+        if self.turns == 5:
+            self.max_search_traps += 1
+        if self.turns == 6:                     # 2-ply graph_cut starts here
+            self.max_search_traps = 7           # reset to 7
+            self.graph_cut_size_cap = 6         # starting lower for graph cut 2-ply
+            self.max_radius = 2                 # starting lower for graph cut 2-ply
+        if self.turns == 7:
+            # self.max_search_traps += 1
+            self.graph_cut_size_cap += 1
+        if self.turns == 8:
+            # self.max_search_traps += 1
+            # self.graph_cut_size_cap += 1
+            pass
+        if self.turns == 9:
+            self.max_search_traps += 1
+            self.graph_cut_size_cap += 1
+            self.max_radius += 1                # back up to 3
+        if self.turns == 10:
+            self.max_search_traps += 1
+            self.graph_cut_size_cap += 1
+        if self.turns == 11:
+            self.max_search_traps += 1
+            self.graph_cut_size_cap += 1
+        if self.turns == 12:
+            self.max_search_traps += 1
+            self.graph_cut_size_cap += 1
+        if self.turns == 13:
+            self.max_search_traps += 1
+            self.graph_cut_size_cap += 1
+        if self.turns == 14:
+            self.graph_cut_size_cap += 1
+            self.max_radius += 1                # pretty overkill at this point
 
-        match self.turns:
-            case 2:
-            # if self.turns == 2:
-                self.max_search_traps += 1
-            case 3:
-            # if self.turns == 3:
-                self.max_search_traps += 1
-            case 4:
-            # if self.turns == 4:                     # graph_cut starts here - but why?
-                self.max_search_traps = 9          # reset to 9
-            case 5:
-            # if self.turns == 5:
-                self.max_search_traps += 1
-            case 6:
-            # if self.turns == 6:                     # 2-ply graph_cut starts here
-                self.max_search_traps = 7           # reset to 7
-                self.graph_cut_size_cap = 5         # starting lower for graph cut 2-ply
-                self.max_radius = 2                 # starting lower for graph cut 2-ply, changed from 2
-            case 7:
-            # if self.turns == 7:
-                # self.max_search_traps += 1
-                self.graph_cut_size_cap += 1
-            case 8:
-            # if self.turns == 8:
-                self.max_search_traps += 1
-                # self.graph_cut_size_cap += 1
-            case 9:
-            # if self.turns == 9:
-                self.max_search_traps += 1
-                self.graph_cut_size_cap += 1
-                self.max_radius += 1                # now to 4, changed from 3
-            case 10:
-            # if self.turns == 10:
-                self.max_search_traps += 1
-                self.graph_cut_size_cap += 1
-            case 11:
-            # if self.turns == 11:
-                self.max_search_traps += 1
-                self.graph_cut_size_cap += 1
-            case 12:
-            # if self.turns == 12:
-                self.max_search_traps += 1
-                self.graph_cut_size_cap += 1
-            case 13:
-            # if self.turns == 13:
-                self.max_search_traps += 1
-                self.graph_cut_size_cap += 1
-            case 14:
-            # if self.turns == 14:
-                self.graph_cut_size_cap += 1
-                self.max_radius += 1                # pretty overkill at this point
+        # graph_cut params
+        self.use_graph_me = True
+        self.use_graph_opp = True
+
+        # start using 2-py graph cut
+        if self.turns >= 6:
+            self.use_graph_me = False
+            self.use_graph_d2_me = True
+            self.use_graph_opp = False
+            self.use_graph_d2_opp = True
 
         self.max_trap_candidates = 0                        # initialize count
         if self.verbose:
@@ -260,14 +237,14 @@ class PlayerAIOppV3(BaseAI):
 
         max_radius = self.max_radius
         if self.turns <= 3:
-            conn_sq_depth_lim_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=2, return_pos=True)
-            conn_sq_depth_lim_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=2, return_pos=True)
+            conn_sq_depth_lim_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=3, return_pos=True)
+            conn_sq_depth_lim_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=3, return_pos=True)
         else:
             size_cap = self.graph_cut_size_cap
             # n_conn_sq_heur_me, conn_sq_list_me = self.__connected_sq_heur(grid, player_pos, max_size=connected_max_size, return_pos=True)
             # n_conn_sq_heur_opp, conn_sq_list_opp = self.__connected_sq_heur(grid, opp_pos, max_size=connected_max_size, return_pos=True)
-            n_conn_sq_heur_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=3, return_pos=True)
-            n_conn_sq_heur_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=3, return_pos=True)
+            n_conn_sq_heur_me, conn_sq_list_me = self.__conn_sq_depth_lim_heur(grid, player_pos, max_radius=4, return_pos=True)
+            n_conn_sq_heur_opp, conn_sq_list_opp = self.__conn_sq_depth_lim_heur(grid, opp_pos, max_radius=4, return_pos=True)
             max_comp_size_me = min(int(n_conn_sq_heur_me/5), size_cap)
             max_comp_size_opp = min(int(n_conn_sq_heur_opp/5), size_cap)
 
@@ -305,7 +282,7 @@ class PlayerAIOppV3(BaseAI):
         n_conn_sq_heur = n_conn_sq_heur_me - n_conn_sq_heur_opp
         graph_cut_heur = graph_cut_heur_me - graph_cut_heur_opp
 
-        return grid, avoid_traps_heur + center_heur + near_opp_heur + 10*conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
+        return grid, avoid_traps_heur + center_heur + near_opp_heur + conn_sq_depth_lim_heur + n_conn_sq_heur + n_neighbors_heur + edge_touch_heur + graph_cut_heur
 
     def __clone(self, grid: Grid) -> object:
         """
@@ -424,7 +401,7 @@ class PlayerAIOppV3(BaseAI):
             new_comp_size = self.__conn_sq_depth_lim_heur(grid_clone, pos, max_radius=max_radius, max_size=comp_size, return_pos=False)
             grid_clone.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
-            utility = 10*size_delta - (comp_size-new_comp_size)**2 - 5*i
+            utility = 10*size_delta - (49-new_comp_size)**2 - 5*i
             graph_cut_heur += utility
         return graph_cut_heur
 
@@ -440,7 +417,7 @@ class PlayerAIOppV3(BaseAI):
             new_comp_size = self.__conn_sq_depth_lim_heur(grid, pos, max_radius=max_radius, max_size=comp_size, return_pos=False)
             grid.map[trap_pos] = 0
             size_delta = new_comp_size - comp_size
-            utility = 10*size_delta - (comp_size-new_comp_size)**2 -5*j
+            utility = 10*size_delta - (49-new_comp_size)**2 - 5*j
 
             return utility
 
@@ -508,29 +485,6 @@ class PlayerAIOppV3(BaseAI):
         return p
 
 
-    def __get_all_neighbors(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_valid_neighbors, but includes trap positions
-        Returns a list of positions
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
-
-
-    # TODO: not currently used
-    def __get_all_neighbors_avoid_edge(self, grid, pos, radius=1) -> list:
-        """
-        Same as __get_all_valid_neighbors, but avoiding edges
-        Returns a list of positions
-        
-        """
-        x,y = pos
-        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
-        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
-
-
     def __get_valid_neighbors(self, grid, pos, radius=1) -> list:
         """
         Modification of original function for returning neighboring cells.
@@ -553,6 +507,28 @@ class PlayerAIOppV3(BaseAI):
         return [(a,b) for a in valid_range(x) for b in valid_range(y) if grid.map[(a,b)] == 0]
 
 
+    def __get_all_neighbors(self, grid, pos, radius=1) -> list:
+        """
+        Same as __get_valid_neighbors, but includes trap positions
+        Returns a list of positions
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 0), min(t+radius+1, 7))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
+
+
+    def __get_all_neighbors_avoid_edge(self, grid, pos, radius=1) -> list:
+        """
+        Same as __get_all_valid_neighbors, but avoiding edges
+        Returns a list of positions
+        
+        """
+        x,y = pos
+        valid_range = lambda t: range(max(t-radius, 1), min(t+radius+1, 6))
+        return [(a,b) for a in valid_range(x) for b in valid_range(y)]
+
+
     def __find_center(self, player_pos, opp_pos):
         inc_ceil = lambda i,j: int(np.ceil( (i + j) / 2 ))
         inc_floor = lambda i,j: int(np.floor( (i + j) / 2 ))
@@ -569,10 +545,10 @@ class PlayerAIOppV3(BaseAI):
 
 
     def __get_search_start_pos(self, grid: Grid, player_pos, opp_pos) -> tuple:
-        """
+        '''
         Start search midway between players, but not on a trap
         Iteratively get closer to the opponent, can be opponent
-        """
+        '''
         start_pos = self.__find_center(player_pos, opp_pos)
         while grid.map[start_pos] == -1 or start_pos not in self.curr_conn_sq_list_opp:
             start_pos = self.__find_center(start_pos, opp_pos)
@@ -649,7 +625,6 @@ class PlayerAIOppV3(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
-        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
         if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
@@ -725,7 +700,6 @@ class PlayerAIOppV3(BaseAI):
             return self.__evaluate(grid, gameover_result, player_num)
 
         # break if hit depth limit
-        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
         if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
@@ -763,9 +737,8 @@ class PlayerAIOppV3(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result, player_num)
 
-        # break if (exceed) hit depth limit
-        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
-        if depth > depth_limit:
+        # break if hit depth limit
+        if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
 
@@ -803,6 +776,7 @@ class PlayerAIOppV3(BaseAI):
                 cache[key] = utility + sum(trap_heur)
             target_prob = self.__probability(player_pos, trap_pos)
             expected_utility = target_prob * utility
+            # backtrack
             grid.map[trap_pos] = 0
 
             neighbors = self.__get_all_neighbors(grid, trap_pos)
@@ -839,9 +813,8 @@ class PlayerAIOppV3(BaseAI):
         if gameover_result:
             return self.__evaluate(grid, gameover_result, player_num)
 
-        # break if (exceed) hit depth limit
-        # if depth >= depth_limit or self.child_nodes_seen >= self.max_child_nodes:
-        if depth > depth_limit:
+        # break if hit depth limit
+        if depth >= depth_limit:
             _, utility = self.__get_heuristics(grid, player_num, opp_num)
             return _, utility
 
@@ -874,6 +847,19 @@ class PlayerAIOppV3(BaseAI):
         if self.verbose:
             # start = time.time()
             child, self.utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth=0, depth_limit=depth_limit)
+            print(f'max trap candidates seen from one child: {self.max_trap_candidates}')
+            if self.use_advanced_heuristics:
+                print(f'Heuristics took {self.heur_time:.3f} seconds to complete.')
+            # if end-start >= 5.05:
+            if self.use_graph_me:
+                cprint(f'Used graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
+            if self.use_graph_d2_me:
+                cprint(f'Used 2-ply graph cut heuristic on player, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'blue')
+            if self.use_graph_opp:
+                cprint(f'Used graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
+            if self.use_graph_d2_opp:
+                cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', 'red')
+            
             if self.utility >= 90000:
                 print(f'Best move found has utility of {self.utility:.2f}. Win imminent? 😱')
             elif self.utility >= 1000:
@@ -905,23 +891,16 @@ class PlayerAIOppV3(BaseAI):
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
         
         """
-
-        # edge case - if there are no available cells around opponent, then OppV2 player will win
-        # throw to first available cell, starting from upper-left-most square
-        # TODO: change the trap position to be somewhere not in the vicinity of current player
         if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
-            print('OppV3')
-            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
             return grid.getAvailableCells()[0]
 
         # use cached optimal trap position that we computed in getMove()
         if not self.optimal_trap_pos:
-            input('No optional trap position in cache.') if self.verbose else None
+            print('No trap positions') if self.verbose else None
             return grid.getAvailableCells()[0]
         if self.optimal_trap_pos == self.current_move:
             # if game ends because we took the last spot
-            # TODO: will this ever happen?
-            input("We've taken up the last spot. Throwing trap randomly because we'll win anyway.") if self.verbose else None
+            print('We\'ve taken up the last spot. Throwing trap randomly because we\'ll win anyway.')
             return grid.getAvailableCells()[0]
         return self.optimal_trap_pos
 

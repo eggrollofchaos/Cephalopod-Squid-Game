@@ -1,4 +1,8 @@
-# wax
+"""
+PlayerAIOppV2 Class module.
+Primarily authored by WAX.
+Early contributions by @mhr and @gongchen161.
+"""
 import numpy as np
 import random
 import time
@@ -697,7 +701,8 @@ class PlayerAIOppV2(BaseAI):
         
         """
 
-        # if no available valid neighbors around opponent, throw to first available cell, starting from upper-left-most square
+        # edge case - if there are no available cells around opponent, then OppV2 player will win
+        # throw to first available cell, starting from upper-left-most square
         # TODO: change the trap position to be somewhere not in the vicinity of current player
         if not self.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
             print('OppV2')

@@ -1,6 +1,6 @@
 """
-# EasyAI module
-# Commented by wax
+EasyAI Class module.
+Commented by WAX.
 """
 
 from random import choice as rand_choice
@@ -58,6 +58,8 @@ class EasyAI(BaseAI):
         if available_neighbors:
             trap_pos = rand_choice(available_neighbors)
         else:
+            # edge case - if there are no available cell around opponent,
+            # then EasyAI player will win; therefore choosing a random trap position
             print('EasyAI')
             input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
             trap_pos = opponent

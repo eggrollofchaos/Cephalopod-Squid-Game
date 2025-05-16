@@ -1,6 +1,7 @@
 """
-# Utilty functions
-# Commented by wax
+Utils module.
+Contains utility functions.
+Commented by WAX.
 """
 import numpy as np
 import math

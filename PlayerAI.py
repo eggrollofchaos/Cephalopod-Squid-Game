@@ -1,6 +1,8 @@
 """
-# wax
-# hard-coded to a 7x7 grid size
+PlayerAI Class module.
+Primarily authoried by WAX.
+Early contributions by @mhr and @gongchen161.
+Hard-coded to a 7x7 grid size.
 """
 import numpy as np
 import random

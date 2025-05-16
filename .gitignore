@@ -1,9 +1,7 @@
 *.icloud
 *.csv
 batch_results*.txt
-oldAI.py
-new.py
-Submission/
+old_batch_results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

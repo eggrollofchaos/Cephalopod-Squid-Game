@@ -1,44 +1,40 @@
-"""
-Grid Class module.
-Contains logic and utility functions.
-Commented by WAX.
-"""
 from copy import deepcopy
 import numpy as np
 
 
 class Grid():
-
-    def __init__(self, N: int = 7) -> None:
-        """
-        Grid constructor (initialization) method.
-        Creates an NxN grid, filled with zeros.
-        """
+    
+    def __init__(self, N = 7) -> None:
         self.dim  = N
         self.map = np.zeros((N,N)) # empty board
     
-    def getAvailableCells(self) -> list[tuple[int, int]]:
-        """ Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)] """
+
+    def getAvailableCells(self):
+        """
+        Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)]
+        """
+        
         return [(x,y) for x,y in np.argwhere(self.map == 0)]
     
-    # not currently used
-    def getMap(self) -> np.ndarray:
+    def getMap(self):
         return self.map
 
-    def setCellValue(self, pos: tuple[int, int], val: int) -> None:
+    def setCellValue(self, pos: tuple, val):
         self.map[pos] = val
 
-    def getCellValue(self, pos: tuple[int, int]) -> int:
+    def getCellValue(self, pos: tuple):
         return self.map[pos]
 
-    def clone(self) -> "Grid":
-        """ Makes a full copy of current grid. """
+    def clone(self):
+        """
+        Makes a full copy of current grid
+        """
         grid_copy = Grid(self.dim)
         grid_copy.map = deepcopy(self.map)
         return grid_copy
 
-    def find(self, player_num: int) -> tuple[int, int]:
-        """ Find a player's position given the player's number. """
+    def find(self, player_num : int):
+        """Find a player given the player's number."""
         
         assert(player_num in [1,2])
         
@@ -46,7 +42,8 @@ class Grid():
 
         return result
 
-    def get_neighbors(self, pos: tuple[int, int], only_available = False) -> list[tuple[int, int]]:
+    def get_neighbors(self, pos, only_available = False):
+
         """
         Description
         -----------
@@ -67,13 +64,15 @@ class Grid():
         # find all neighbors
         neighbors = list({(a,b) for a in valid_range(x) for b in valid_range(y)} - {(x,y)})
         
-        # select only neighboring cells which aren't occupied by a player or trap
+        # select only neighboring cells which aren't occupying by a player or trap
         if only_available:
             return [neighbor for neighbor in neighbors if self.map[neighbor] == 0]
         
         return neighbors
 
-    def move(self, move: tuple[int, int], player: int) -> "Grid":
+
+    def move(self, move, player):
+
         """
         Description 
         -----------
@@ -88,16 +87,17 @@ class Grid():
 
         Returns
         -------
-        Grid instance with the new configuration.
+        the grid with the new configuration. 
 
         """
+
         old_pos = np.where(self.map == player)
         self.map[old_pos] = 0
         self.map[move] = player
 
         return self
 
-    def trap(self, pos) -> "Grid":
+    def trap(self, pos):
         """
         Description 
         -----------
@@ -110,18 +110,12 @@ class Grid():
 
         Returns
         -------
-        Grid instance with the new configuration.
+        the grid with the new configuration.
 
         """
         self.map[pos] = -1
 
         return self
 
-    # not used
-    def print_grid(self) -> None:
-        """
-        Print out the current grid.
-        Not used because displaying the grid is better handled via Displayer.py.
-
-        """
+    def print_grid(self):
         print(self.map)
