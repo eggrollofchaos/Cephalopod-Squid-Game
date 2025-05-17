@@ -3,8 +3,9 @@ Utils module.
 Contains utility functions.
 Commented by WAX.
 """
-import numpy as np
 import math
+
+import numpy as np
 
 
 def manhattan_distance(position, target) -> np.int64:

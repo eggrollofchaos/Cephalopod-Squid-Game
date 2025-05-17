@@ -2,10 +2,11 @@
 RandomAI (i.e. no AI) Class module.
 Commented by WAX.
 """
-
 from random import choice as rand_choice
 import sys
 import os 
+
+
 
 sys.path.append(os.getcwd())        # setting path to parent directory
 from BaseAI import BaseAI

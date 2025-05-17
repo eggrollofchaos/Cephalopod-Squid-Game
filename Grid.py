@@ -4,6 +4,7 @@ Contains logic and utility functions.
 Commented by WAX.
 """
 from copy import deepcopy
+
 import numpy as np
 
 

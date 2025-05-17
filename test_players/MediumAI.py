@@ -2,10 +2,11 @@
 MediumAI module.
 Commented by WAX.
 """
-import numpy as np
 from random import choice as rand_choice
 import sys
 import os 
+
+import numpy as np
 
 sys.path.append(os.getcwd())        # setting path to parent directory
 from BaseAI import BaseAI

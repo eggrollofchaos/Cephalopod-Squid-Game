@@ -2,10 +2,11 @@
 EasyAI Class module.
 Commented by WAX.
 """
-
 from random import choice as rand_choice
 import sys
-import os 
+import os
+
+
 
 sys.path.append(os.getcwd())        # setting path to parent directory
 from BaseAI import BaseAI
@@ -25,16 +26,16 @@ class EasyAI(BaseAI):
         self.pos = initial_position
         self.player_num = None
 
-    def setPosition(self, new_pos: tuple) -> None:
+    def setPosition(self, new_pos: tuple[int, int]) -> None:
         self.pos = new_pos
     
-    def getPosition(self) -> tuple:
+    def getPosition(self) -> tuple[int, int]:
         return self.pos 
 
     def setPlayerNum(self, num) -> None:
         self.player_num = num
 
-    def getMove(self, grid) -> tuple:
+    def getMove(self, grid) -> tuple[int, int]:
         """ Returns a random, valid move. """
         
         # find all available moves 
@@ -45,7 +46,7 @@ class EasyAI(BaseAI):
         
         return new_pos
 
-    def getTrap(self, grid : Grid) -> tuple:
+    def getTrap(self, grid : Grid) -> tuple[int, int]:
         """ EasyAI throws randomly to the immediate neighbors of the opponent. """
         
         # find opponent
