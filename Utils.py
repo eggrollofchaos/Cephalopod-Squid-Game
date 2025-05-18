@@ -8,7 +8,7 @@ import math
 import numpy as np
 
 
-def manhattan_distance(position, target) -> np.int64:
+def manhattan_distance(position: tuple[int, int], target: tuple[int, int]) -> np.int64:
     """
     Computes the Manhattan Distance between two points on a Cartesian plane.
     Manhattan Distance is the distance in horizontal and vertical units, aka Taxicab Distance.
