@@ -18,7 +18,7 @@ def manhattan_distance(position: tuple[int, int], target: tuple[int, int]) -> np
     return np.abs(target[0] - position[0]) + np.abs(target[1] - position[1])
 
 
-def euclidean_distance(position, target) -> float:
+def euclidean_distance(position: tuple[int, int], target: tuple[int, int]) -> float:
     """
     Computes the Euclidian Distance between two points on a Cartesian grid.
     Euclidian Distance is the straight-line distance, aka "as the crow flies".
