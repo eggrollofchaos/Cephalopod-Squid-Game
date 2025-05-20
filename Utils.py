@@ -29,7 +29,7 @@ def euclidean_distance(position: tuple[int, int], target: tuple[int, int]) -> fl
     return math.sqrt(np.abs(target[0] - position[0]) ** 2 + np.abs(target[1] - position[1]) ** 2)
 
 
-def grid_distance(position, target) -> np.int64:
+def grid_distance(position: tuple[int, int], target: tuple[int, int]) -> np.int64:
     """
     Computes the Grid Distance between two points on a Cartesian grid.
     Grid Distance is the number of steps between two points in any direction, with diagonals counting as length one, aka Chebyshev Distance.
