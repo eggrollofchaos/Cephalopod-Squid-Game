@@ -98,7 +98,7 @@ class Grid():
 
         return self
 
-    def trap(self, pos) -> "Grid":
+    def trap(self, pos: tuple[int, int]) -> "Grid":
         """
         Description 
         -----------
@@ -107,7 +107,7 @@ class Grid():
         Parameters
         -----------
 
-        pos: a tuple (x,y) reprsenting the coordinates in which to place trap
+        pos: a tuple (x,y) representing the coordinates in which to place trap
 
         Returns
         -------
