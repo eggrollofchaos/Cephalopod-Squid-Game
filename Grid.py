@@ -47,7 +47,7 @@ class Grid():
 
         return result
 
-    def get_neighbors(self, pos: tuple[int, int], only_available = False) -> list[tuple[int, int]]:
+    def get_neighbors(self, pos: tuple[int, int], only_available: bool = False) -> list[tuple[int, int]]:
         """
         Description
         -----------
