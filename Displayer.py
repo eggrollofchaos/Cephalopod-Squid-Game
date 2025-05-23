@@ -34,7 +34,7 @@ class Displayer(BaseDisplayer):
     def display(self, grid):
         pass
 
-    def winDisplay(self, grid):
+    def winDisplay(self, grid) -> None:
         '''
         Windows Displayer method.
         Slightly updated.
