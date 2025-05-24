@@ -13,7 +13,7 @@ class Grid():
     def __init__(self, N: int = 7) -> None:
         """
         Grid constructor (initialization) method.
-        Creates an NxN grid, filled with zeros.
+        Create an NxN grid, filled with zeros.
         """
         self.dim  = N
         self.map = np.zeros((N,N)) # empty board
@@ -33,13 +33,13 @@ class Grid():
         return self.map[pos]
 
     def clone(self) -> "Grid":
-        """ Makes a full copy of current grid. """
+        """Make a full copy of current grid."""
         grid_copy = Grid(self.dim)
         grid_copy.map = deepcopy(self.map)
         return grid_copy
 
     def find(self, player_num: int) -> tuple[int, int]:
-        """ Find a player's position given the player's number. """
+        """Find a player's position given the player's number."""
         
         assert(player_num in [1,2])
         
@@ -51,13 +51,13 @@ class Grid():
         """
         Description
         -----------
-        The function returns the neighboring cells of a certain cell in the board, given its x,y coordinates
+        Return the neighboring cells of a certain cell in the board, given its x,y coordinates.
 
         Parameters
         -----------
         pos : position (x,y) whose neighbors are desired
 
-        only_available (bool) : if True, the function will return only available neighboring cells. 
+        only_available (bool) : if True, return only available neighboring cells. 
                                 default = False
         
         """
@@ -102,12 +102,12 @@ class Grid():
         """
         Description 
         -----------
-        Apply a trap to specified loaction
+        Apply a trap to specified loaction.
 
         Parameters
         -----------
 
-        pos: a tuple (x,y) representing the coordinates in which to place trap
+        pos: a tuple (x,y) representing the coordinates in which to place trap.
 
         Returns
         -------
