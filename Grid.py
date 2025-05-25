@@ -1,7 +1,7 @@
 """
 Grid Class module.
 Contains logic and utility functions.
-Commented by WAX.
+Fully commented by WAX.
 """
 from copy import deepcopy
 
