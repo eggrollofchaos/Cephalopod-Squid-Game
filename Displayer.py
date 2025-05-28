@@ -1,11 +1,13 @@
 """
 Displayer Class module.
 Enhanced by WAX.
+Fully commented by WAX.
 """
 import platform
 import os
 
 from BaseDisplayer import BaseDisplayer
+from Grid import Grid
 
 
 colorMap = { 0: 100,
@@ -16,9 +18,9 @@ colorMap = { 0: 100,
 # cTemp = "\x1b[%dm%7s\x1b[0m "         # no longer needed, implemented via a dynamic resizer in self.cTemp
 
 class Displayer(BaseDisplayer):
-    '''
+    """
     Modified by WAX Mar 19, 2025
-    '''
+    """
     def __init__(self, N = 7):
         self.dim = N
         self.cellSize = Displayer.half_and_odd(self.dim)
@@ -31,14 +33,14 @@ class Displayer(BaseDisplayer):
             self.display = self.unixDisplayNew
 
     # placeholder for generic display
-    def display(self, grid):
+    def display(self, grid: Grid):
         pass
 
-    def winDisplay(self, grid) -> None:
-        '''
+    def winDisplay(self, grid: Grid) -> None:
+        """
         Windows Displayer method.
         Slightly updated.
-        '''
+        """
         for i in range(self.dim):
             print("------" * self.dim)
             for j in range(self.dim):
@@ -55,8 +57,8 @@ class Displayer(BaseDisplayer):
         print("------" * self.dim)
 
     
-    def unixDisplay(self, grid) -> None:
-        '''Original Unix Displayer method'''
+    def unixDisplay(self, grid: Grid) -> None:
+        """Original Unix Displayer method"""
         
         for i in range(self.dim):
             for j in range(self.dim):
@@ -75,12 +77,12 @@ class Displayer(BaseDisplayer):
         print("")
 
     
-    def unixDisplayNew(self, grid) -> None:
-        '''
+    def unixDisplayNew(self, grid: Grid) -> None:
+        """
         Enhanced Unix Displayer method.
         Shortens the boxes so that the entire grid is closer to a square.
         Displays axes in range(N), where N is dimension.
-        '''
+        """
 
         print()
         for i in range(-1, self.dim):
@@ -117,7 +119,8 @@ class Displayer(BaseDisplayer):
 
     
     @staticmethod
-    def half_and_odd(num) -> int:
+    def half_and_odd(num: int) -> int:
+        """Perform a basic, repeated arithmetic calculation."""
         num = num // 2 + 1
         if num % 2 == 0:
             num += 1

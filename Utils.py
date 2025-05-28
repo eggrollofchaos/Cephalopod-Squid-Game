@@ -1,7 +1,7 @@
 """
 Utils module.
 Contains utility functions.
-Commented by WAX.
+Fully commented by WAX.
 """
 import math
 
