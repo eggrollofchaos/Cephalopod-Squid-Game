@@ -1,6 +1,6 @@
 """
 RandomAI (i.e. no AI) Class module.
-Commented by WAX.
+Fully commented by WAX.
 """
 from random import choice as rand_choice
 import sys
@@ -19,23 +19,23 @@ class RandomAI(BaseAI):
     Selects a random move and trap position.
     """
 
-    def __init__(self, initial_position = None, verbose = 0) -> None:
+    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
         super().__init__()
         print('Running RandomAI()...') if verbose else None
         self.verbose = verbose
         self.pos = initial_position
         self.player_num = None
 
-    def setPosition(self, new_pos: tuple) -> None:
+    def setPosition(self, new_pos: tuple[int, int]) -> None:
         self.pos = new_pos
     
-    def getPosition(self) -> tuple:
+    def getPosition(self) -> tuple[int, int]:
         return self.pos 
 
-    def setPlayerNum(self, num) -> None:
+    def setPlayerNum(self, num: int) -> None:
         self.player_num = num
 
-    def getMove(self, grid) -> tuple:
+    def getMove(self, grid: Grid) -> tuple[int, int]:
         """ Returns a random, valid move. """
         
         # find all available moves 
@@ -46,7 +46,7 @@ class RandomAI(BaseAI):
 
         return new_pos
 
-    def getTrap(self, grid : Grid) -> tuple:
+    def getTrap(self, grid: Grid) -> tuple[int, int]:
         """ RandomAI (not really an AI) returns a random, valid trap position. """
         
         # find all available cells in the grid
