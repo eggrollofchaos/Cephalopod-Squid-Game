@@ -1,6 +1,6 @@
 """
 EasyAI Class module.
-Commented by WAX.
+Fully commented by WAX.
 """
 from random import choice as rand_choice
 import sys
@@ -19,7 +19,7 @@ class EasyAI(BaseAI):
     Trap AI chooses random neighboring square of opponent.
     """
 
-    def __init__(self, initial_position = None, verbose = 0) -> None:
+    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
         super().__init__()
         print('Running EasyAI()...') if verbose else None
         self.verbose = verbose
@@ -32,10 +32,10 @@ class EasyAI(BaseAI):
     def getPosition(self) -> tuple[int, int]:
         return self.pos 
 
-    def setPlayerNum(self, num) -> None:
+    def setPlayerNum(self, num: int) -> None:
         self.player_num = num
 
-    def getMove(self, grid) -> tuple[int, int]:
+    def getMove(self, grid: Grid) -> tuple[int, int]:
         """ Returns a random, valid move. """
         
         # find all available moves 
@@ -46,7 +46,7 @@ class EasyAI(BaseAI):
         
         return new_pos
 
-    def getTrap(self, grid : Grid) -> tuple[int, int]:
+    def getTrap(self, grid: Grid) -> tuple[int, int]:
         """ EasyAI throws randomly to the immediate neighbors of the opponent. """
         
         # find opponent
