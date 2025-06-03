@@ -19,7 +19,7 @@ class MediumAI(BaseAI):
     Trap AI finds position that maximizes difference between current player's available moves vs opponent's.
     """
 
-    def __init__(self, initial_position = None, verbose = 0) -> None:
+    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
         super().__init__()
         print('Running MediumAI()...') if verbose else None
         self.verbose = verbose
