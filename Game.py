@@ -9,22 +9,26 @@ Early contributions by teammates @mhr and @gongchen161.
 Enhancements by WAX.
 """
 import time
-import numpy as np
 from sys import argv
+from os import system
+from platform import system as os_type
+
+import numpy as np
+from termcolor import cprint
+
 from Grid import Grid
 from Displayer import Displayer
-from platform import system as os_type
 from test_players.RandomAI import RandomAI
 from test_players.EasyAI import EasyAI
 from test_players.MediumAI import MediumAI
+from test_players.MinimaxAI import MinimaxAI
+from test_players.HardAI import HardAI
 from PlayerAIOppV1 import PlayerAIOppV1
 from PlayerAIOppV2 import PlayerAIOppV2
 from PlayerAIOppV3 import PlayerAIOppV3
 from PlayerAI import PlayerAI
 from HumanOpp import HumanOpp
 from Utils import *
-from termcolor import cprint
-from os import system
 
 PLAYER_TURN, COMPUTER_TURN = 1,2                                    # convention: set Player to Player 1, AI Opponent to Player 2
 is_unix = os_type()
@@ -235,8 +239,7 @@ class Game():
 
                 total_player_moves += 1
 
-                # if total_player_moves == 1:
-                    # input('<Press enter to begin!>')                      # waiting for input to continue for debugging
+                input('<Press enter to begin!>') if total_player_moves == 1 else None   # waiting for input to continue for debugging
 
                 cprint(f"Player's Turn {total_player_moves}: ", color='green') if is_unix else print(f"Player's Turn {total_player_moves}:")
                 # find best move; should return two coordinates: new player position and position that the trap landed on
@@ -346,7 +349,7 @@ def main():
     # heur = 'graphcut'
     opp_ai_default = True
     opp_ai_int = 0
-    opp_ai_level = 'MediumAI()'
+    opp_ai_level = 'MediumAI()'                 # for eval
     opp_depth_limit = 2                         # only applicable for AI level higher than Easy/Medium AI
     playerAIdebug = False                       # for debugging with random AI
     computerAIdebug = False                     # for debugging with random AI
@@ -358,11 +361,11 @@ def main():
             verbose = 1
         if '-vv' in argv:                       # for extra information
             verbose = 2
-        if '-vvv' in argv:                      # for extra debugging
+        if '-vvv' in argv:                      # for detailed trace logging
             verbose = 3
-        if '-h' in argv:
+        if '-h' in argv:                        # graphcut heuristics
             heur = 'graphcut'
-        if '-h2' in argv:
+        if '-h2' in argv:                       # geodesics heuristics (not implemented)
             heur = 'geodesics'
         if '-d' in argv:                        # Player search depth limit, set to -2 for RandomAI
             try:
@@ -396,7 +399,7 @@ def main():
     # computerAIdebug = True                                  # use random moves / throws via RandomAI.py, for testing only
     
     if depth_limit != -2:                                       # skip if debugging with RandomAI()
-        depth_limit = max(depth_limit, 1)                        # Expectiminimax needs at least a search depth of 1, but really 2
+        depth_limit = max(depth_limit, 1)                       # Expectiminimax needs at least a search depth of 1, but really 2
 
     match heur:
         case False:
@@ -426,51 +429,44 @@ def main():
     opp_pre_string = ''
     opp_string = ''
     if computerAIdebug:
-        opp_ai_level = 'RandomAI(verbose)'
+        opp_ai_level = 'RandomAI(verbose)'                                      # for eval
         opp_pre_string = 'NOTE: Debug mode -- '
-        # print('Note: Opponent is using no AI, all moves/throws are random.')
         opp_string = 'no AI, all moves/throws are random.'
         # print('Here')
     elif opp_ai_default:
-        opp_ai_level = 'MediumAI(verbose)'
-        # print('Opponent is defaulting to Medium AI.') if verbose else None
+        opp_ai_level = 'MediumAI(verbose)'                                      # for eval
         opp_string = 'Medium AI (default) as none was specified.'
     else:
         match opp_ai_int:
             case -1:
-                opp_ai_level = 'EasyAI(verbose)'
-                # print('Opponent is using Easy AI.') if verbose else None
+                opp_ai_level = 'EasyAI(verbose)'                                # for eval
                 opp_string = 'Easy AI.'
             case 0:
-                opp_ai_level = 'MediumAI(verbose)'
-                # print('Opponent is using Medium AI.') if verbose else None
+                opp_ai_level = 'MediumAI(verbose)'                              # for eval
                 opp_string = 'Medium AI.'
             case 1:
-                opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose)'
-                # print('Opponent is using custom AI version 1.')   if verbose else None
+                opp_ai_level = 'MinimaxAI(verbose)'                             # for eval
+                opp_string = 'Minimax AI (Expectiminimax).'
+            case 10:
+                opp_ai_level = 'HardAI(verbose)'                                # for eval
+                opp_string = 'Hard AI (with Expectiminimax + heuristics).'
+            case 11:
+                opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose)'        # for eval
                 opp_string = 'Custom AI version 1.'
-            case 2:
-                opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'
-                # print('Opponent is using custom AI version 2.') if verbose else None
+            case 12:
+                opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'        # for eval
                 opp_string = 'Custom AI version 2.'
-            case 3:
-                opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'
-                # print('Opponent is using custom AI version 3.') if verbose else None
+            case 13:
+                opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'  # for eval
                 opp_string = 'Custom AI version 3.'
             case 9:
-                # if verbose:
-                    # if is_unix:
-                        # print('Opponent will be a human player.👴👵')
-                    # else:
-                        # print('Opponent will be a human player.')
                 if is_unix:
                     opp_string = 'will be a human player.👴👵'
                 else:
                     opp_string = 'will be a human player.'
-            case _:                                             # in standard runtime, this catch-all will never be used
-                opp_ai_level = 'MediumAI()'
-                # print('Opponent is defaulting to Medium AI.') if verbose else None
-                opp_string = 'Medium AI (default) as none was specified.'
+            case _:
+                opp_ai_level = 'MediumAI()'                                     # for eval
+                opp_string = f"Medium AI (default) as input of '{opp_ai_int}' not defined."
                 
 
     # initialize Opponent

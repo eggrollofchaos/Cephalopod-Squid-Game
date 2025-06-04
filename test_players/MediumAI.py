@@ -1,5 +1,6 @@
 """
 MediumAI module.
+Default AI for Opponent player.
 Commented by WAX.
 """
 from random import choice as rand_choice

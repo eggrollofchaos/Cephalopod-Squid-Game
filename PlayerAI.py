@@ -1,6 +1,6 @@
 """
 PlayerAI Class module.
-Primarily authoried by WAX.
+Primarily authored by WAX.
 Early contributions by @mhr and @gongchen161.
 Hard-coded to a 7x7 grid size.
 """

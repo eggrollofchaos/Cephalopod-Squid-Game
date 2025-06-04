@@ -1,10 +1,15 @@
-import numpy as np
-import random
+"""
+Basic MinimaxAI Class module.
+Implements Expectiminimax search algo.
+Commented by WAX.
+"""
 import time
 import sys
 import os 
-# setting path to parent directory
-sys.path.append(os.getcwd())
+
+import numpy as np
+
+sys.path.append(os.getcwd())        # setting path to parent directory
 from BaseAI import BaseAI
 from Grid import Grid
 
@@ -12,10 +17,17 @@ MAX_DEPTH = 3
 MOVE_TIME_LIMIT = 0.49
 TRAP_TIME_LIMIT = 0.49
 
-class HardAI(BaseAI):
+class MinimaxAI(BaseAI):
+    """
+    Minimax Computer AI player, implements Expectiminimax.
+    Default depth limit is 3.
+    TODO: write docstring
+    
+    """
 
-    def __init__(self, position = None) -> None:
+    def __init__(self, position = None, verbose: int = 0) -> None:
         super().__init__()
+        print('Running basic MinimaxAI()...') if verbose else None
         self.pos = position
         self.player_num = None
 

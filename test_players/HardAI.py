@@ -1,23 +1,35 @@
-import numpy as np
-import random
+"""
+HardAI Class module.
+Implements Expectiminimax search algo + basic heuristics.
+Commented by WAX.
+"""
 import time
 import sys
 import os 
-# setting path to parent directory
-sys.path.append(os.getcwd())
+
+import numpy as np
+
+sys.path.append(os.getcwd())        # setting path to parent directory
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance
 
-MAX_DEPTH = 3
+MAX_DEPTH = 4
 MOVE_TIME_LIMIT = 0.48
 TRAP_TIME_LIMIT = 0.48
 N = 7
 
 class HardAI(BaseAI):
+    """
+    Hard Computer AI player, implements Expectiminimax and basic heuristics.
+    Default depth limit is 4.
+    TODO: write docstring
+    
+    """
 
-    def __init__(self, position = None) -> None:
+    def __init__(self, position = None, verbose: int = 0) -> None:
         super().__init__()
+        print('Running HardAI() with Expectiminimax and basic heuristics...') if verbose else None
         self.pos = position
         self.player_num = None
 

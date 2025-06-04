@@ -86,8 +86,11 @@ class RunGames(object):
         # print(f'Filename = {self.filename}')
         with open(self.filename, 'a') as f:
             # print(self.run_arg_list3)
-            f.write(self.run_arg_list3_str)
-            f.write('\n\n')
+            f.write('Batch command line:\n')
+            f.write('  ' + self.run_arg_list3_str + '\n')
+            f.write('Game command line:\n')
+            f.write('  ' + self.run_arg_list3_str + '\n')
+            f.write('\n')
 
         # write optional comment to file
         if self.comment:
@@ -292,11 +295,11 @@ def main():
         case 0:
             opp_ai_level = 'Medium AI'
         case 1:
-            opp_ai_level = 'custom AI version 1'
+            opp_ai_level = 'Custom AI version 1'
         case 2:
-            opp_ai_level = 'custom AI version 2'
+            opp_ai_level = 'Custom AI version 2'
         case 3:
-            opp_ai_level = 'custom AI version 3'
+            opp_ai_level = 'Custom AI version 3'
         case 9:
             opp_ai_level = 'Human player'
         case _:
@@ -306,11 +309,11 @@ def main():
     # output RunGames.py batch parameters to terminal
     if is_unix:                                                                     # if Unix, print in color
         cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
-        cprint(f'Command line:', 'blue')
+        cprint('Command line:', 'blue')
         cprint(f'  $ {run_str}', 'yellow')
-        cprint(f'Setting Player search depth limit to {depth_limit}.', 'blue')      # if depth_limit:
+        cprint(f'Setting Player AI search depth limit to {depth_limit}.', 'blue')      # if depth_limit:
         if heur:
-            cprint(f'Applying advanced heuristics for Player AI.', 'blue')
+            cprint('Applying advanced heuristics for Player AI.', 'blue')
         
         # logic for Opponent AI & depth level 
         cprint(f'Setting Opponent to {opp_ai_level}.', 'blue')
@@ -318,19 +321,19 @@ def main():
             cprint(f'Setting Opponent AI search depth limit to {opp_depth_limit}.', 'blue')
         
         if verbose == 1:
-            cprint(f'Verbose mode.', 'green')
+            cprint('Verbose mode.', 'green')
         if verbose == 2:
-            cprint(f'Extra verbose mode.', 'green')
+            cprint('Extra verbose mode.', 'green')
         if verbose == 3:
-            cprint(f'Extra verbose + debug mode.', 'green')
+            cprint('Extra verbose + trace mode.', 'green')
         print('')
     else:
         print(f'Running batch test via {argv[0]}, {n} times...')
-        print(f'Command line:')
+        print('Command line:')
         print(f'  $ {run_str}')
-        print(f'Setting Player search depth limit to {depth_limit}.')
+        print(f'Setting Player AI search depth limit to {depth_limit}.')
         if heur:
-            print(f'Applying advanced heuristics for Player AI.')
+            print('Applying advanced heuristics for Player AI.')
 
         # logic for Opponent AI & depth level 
         print(f'Setting Opponent to {opp_ai_level}.')
@@ -338,11 +341,11 @@ def main():
             print(f'Setting Opponent AI search depth limit to {opp_depth_limit}.')
 
         if verbose == 1:
-            print(f'Verbose mode.')
+            print('Verbose mode.')
         if verbose == 2:
-            print(f'Extra verbose mode.')
+            print('Extra verbose mode.')
         if verbose == 3:
-            print(f'Extra verbose + debug mode.')
+            print('Extra verbose + trace mode.')
         print('')
 
     # delete log file if exists
@@ -351,6 +354,26 @@ def main():
     if exists(results_filename):
         # print('Deleting existing file')
         remove(results_filename)
+
+    # output RunGames.py batch parameters to file
+    with open(results_filename, 'a') as f:
+        f.write(f'Running batch test via {argv[0]}, {n} times...\n')
+        f.write(f'Setting Player search depth limit to {depth_limit}.\n')
+        if heur:
+            f.write('Applying advanced heuristics for Player AI.\n')
+
+        # logic for Opponent AI & depth level 
+        f.write(f'Setting Opponent to {opp_ai_level}.\n')
+        if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
+            f.write(f'Setting Opponent AI search depth limit to {opp_depth_limit}.\n')
+
+        if verbose == 1:
+            f.write('Verbose mode.\n')
+        if verbose == 2:
+            f.write('Extra verbose mode.\n')
+        if verbose == 3:
+            f.write('Extra verbose + trace mode.\n')
+        f.write('')
         
     # initialize RunGames Class, call `start_batch` Method, get overall stats
     run_games = RunGames(results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment)
