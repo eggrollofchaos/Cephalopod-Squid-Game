@@ -26,7 +26,7 @@ class MediumAI(BaseAI):
         self.pos = initial_position
         self.player_num = None
 
-    def setPosition(self, new_pos: tuple) -> None:
+    def setPosition(self, new_pos: tuple[int, int]) -> None:
         self.pos = new_pos
     
     def getPosition(self) -> tuple:
