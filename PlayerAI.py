@@ -1184,16 +1184,16 @@ class PlayerAI(BaseAI):
         # TODO: change the trap position to be somewhere not in the vicinity of current player
         if not PlayerAI.__get_valid_neighbors(grid, self.getOpponentPosition(grid)):
             print('PlayerAI')
-            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose else None
+            input(f'No available cells around player {3 - self.player_num}! Press enter to continue.') if self.verbose == 3 else None
             return grid.getAvailableCells()[0]
 
         # other edge cases
         if not self.optimal_trap_pos:
-            input('No optional trap position in cache.') if self.verbose else None
+            input('No optional trap position in cache.') if self.verbose == 3 else None
             return grid.getAvailableCells()[0]
         if self.optimal_trap_pos == self.current_move:
             # if game ends because we took the last spot
-            input("We've taken up the last spot. Throwing trap randomly because we'll win anyway.") if self.verbose else None
+            input("We've taken up the last spot. Throwing trap randomly because we'll win anyway.") if self.verbose == 3 else None
             return grid.getAvailableCells()[0]
 
         # use cached optimal trap position that we computed in getMove()

@@ -39,7 +39,7 @@ class RunGames(object):
     See main() for additional notes on flags and arguments.
     '''
 
-    def __init__(self, results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment):
+    def __init__(self, results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment, run_arg_list):
         self.filename = results_filename
         self.n = n
         self.progress = progress
@@ -52,45 +52,15 @@ class RunGames(object):
         self.comment = comment
         self.run_success = 0
         self.player_wins = 0
-        self.run_arg_list = []
-        self.run_arg_list3 = []
+        self.run_arg_list = ['python'] + run_arg_list
+        self.run_arg_list3 = ['python3'] + run_arg_list
+        # self.run_arg_list = []
+        # self.run_arg_list3 = []
 
 
     def start_batch(self):
         # begin batch run
         # print('In start_batch')
-
-        # build command line arguments for Game.py
-        # note that -od (set Opponent AI search depth) is always passed, though ignored by Game.py if -oa not in {1,2,3}
-        self.run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
-        self.run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
-        if self.heur == 'graphcut':
-            self.run_arg_list.append('-h')
-            self.run_arg_list3.append('-h')
-        if self.heur == 'geodesics':
-            self.run_arg_list.append('-h2')
-            self.run_arg_list3.append('-h2')
-        if self.verbose == 1:
-            self.run_arg_list.append('-v')
-            self.run_arg_list3.append('-v')
-        if self.verbose == 2:
-            self.run_arg_list.append('-vv')
-            self.run_arg_list3.append('-vv')
-        if self.verbose == 3:
-            self.run_arg_list.append('-vvv')
-            self.run_arg_list3.append('-vvv')
-
-        # write Game.py command line statement to file for clarity
-        delimiter = ' '
-        self.run_arg_list3_str = delimiter.join(self.run_arg_list3)
-        # print(f'Filename = {self.filename}')
-        with open(self.filename, 'a') as f:
-            # print(self.run_arg_list3)
-            f.write('Batch command line:\n')
-            f.write('  ' + self.run_arg_list3_str + '\n')
-            f.write('Game command line:\n')
-            f.write('  ' + self.run_arg_list3_str + '\n')
-            f.write('\n')
 
         # write optional comment to file
         if self.comment:
@@ -205,31 +175,37 @@ def main():
     verbose = 0                             # verbosity level
     progress = False                        # show progress through all tests
     suppress_output = True                  # this is passed to capture_output argument; counterintuitively, adding '-g' means supress_output = False
-    heur = False                            # advanced heuristics disabled by default
-    depth_limit = 4                         # Player AI search depth defaults to 4
-    depth_str = ''                          # part of results filename
-    opp_ai_int = 0                          # Opponent AI level defaults 0 (Medium AI); if -1 or 0, depth limit won't apply
-    opp_ai_level = 'Medium AI'              # Opponent AI level default to Medium AI
-    opp_ai_level_str = ''                   # part of results filename
-    opp_depth_limit = 2                     # Opponent AI search depth defaults to 2, only applies if AI level in {2,3,4}
-    opp_depth_str = ''                      # part of results filename
-    heur_str = ''                           # part of results filename
-    comment = False                         # default is no comment
-    com_str = ''                            # part of results filename
+    heur = False                            # advanced heuristics, disabled by default
+    heur_str = ''                           # advanced heuristics -> results filename
+    depth_limit = 4                         # Player AI search depth, defaults to 4
+    depth_str = ''                          # Player AI search depth -> results filename
+    opp_ai_int = 0                          # Opponent AI level, defaults  to 0 (Medium AI); if -1 or 0, depth limit won't apply
+    opp_ai_level = 'Medium AI'              # Opponent AI level, defaults to Medium AI
+    opp_ai_level_str = ''                   # Opponent AI level -> results filename
+    opp_depth_limit = 2                     # Opponent AI search depth, defaults to 2, only applies if AI level in {2,3,4}
+    opp_depth_str = ''                      # Opponent AI search depth -> results filename
+    comment = False                         # comment, default is none
+    com_str = ''                            # comment -> results filename
 
     dl_flag_index = -1
     opp_dl_flag_index = -1
     opp_ai_int_flag_index = -1
     com_flag_index = -1
 
-    # rebuild original command line statement
+    # rebuild RunGames.py batch
     delimiter = ' '
-    run_str = delimiter.join(argv)
+    batch_run_str = delimiter.join(argv)
+
+    # build default Game.py command line arguments
+    # -t sets to test mode, which disables the 5 second timer
+    run_arg_list = ['Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
+    # run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
 
     # process command line arguments
     if len(argv)>1:
         
-        if '-d' in argv:                        # set Player AI search depth
+        # set Player AI search depth
+        if '-d' in argv:
             try:
                 dl_flag_index = argv.index('-d')
                 depth_limit = argv[dl_flag_index+1]
@@ -237,7 +213,8 @@ def main():
                 pass
         depth_str = f'_d_{depth_limit}'
         
-        if '-oa' in argv:                       # set Opponent AI level
+        # set Opponent AI level
+        if '-oa' in argv:
             try:
                 opp_ai_int_flag_index = argv.index('-oa')
                 opp_ai_int = int(argv[opp_ai_int_flag_index+1])
@@ -245,7 +222,8 @@ def main():
                 pass
         opp_ai_level_str = f'_oa_{opp_ai_int}'
         
-        if opp_ai_int > 0 and '-od' in argv:    # set Opponent AI search depth
+        # set Opponent AI search depth
+        if opp_ai_int > 0 and '-od' in argv:
             try:
                 opp_dl_flag_index = argv.index('-od')
                 opp_depth_limit = int(argv[opp_dl_flag_index+1])
@@ -253,13 +231,18 @@ def main():
                 pass
             opp_depth_str = f'_od_{opp_depth_limit}'
         
-        if '-m' in argv:                        # set Comment
+        # set Comment
+        if '-m' in argv:
             try:
                 com_flag_index = argv.index('-m')
                 comment = argv[com_flag_index+1]
             except:
                 pass
             com_str = f'_m'
+
+        # update Game.py command line arguments
+        run_arg_list = ['Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
+        # run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
 
         # a fancy way to capture a number anywhere in the command line statement as the number of iterations to run
         num = [ arg for arg_idx, arg in enumerate(argv) if arg.isnumeric()
@@ -269,14 +252,21 @@ def main():
         if num:
             n = int(num[0]) if n>0 else 1
 
+        # process remaining flags
         if '-c' in argv:
             clear()
         if '-v' in argv:
             verbose = 1
+            run_arg_list.append('-v')
+            # run_arg_list3.append('-v')
         if '-vv' in argv:
             verbose = 2
+            run_arg_list.append('-vv')
+            # run_arg_list3.append('-vv')
         if '-vvv' in argv:
             verbose = 3
+            run_arg_list.append('-vvv')
+            # run_arg_list3.append('-vvv')
         if '-p' in argv:
             progress = True
         if '-g' in argv:                # this means to show stdout and stderr in terminal, instead of capturing
@@ -284,9 +274,13 @@ def main():
         if '-h' in argv:
             heur = 'graphcut'
             heur_str = '_h'
+            run_arg_list.append('-h')
+            # run_arg_list3.append('-h')
         if '-h2' in argv:
             heur = 'geodesics'
             heur_str = '_h2'
+            run_arg_list.append('-h2')
+            # run_arg_list3.append('-h2')
 
     # get Opponent AI level text from argument
     match opp_ai_int:
@@ -306,11 +300,37 @@ def main():
             opp_ai_int = 0                                      # default
             opp_ai_level = 'Medium AI'
 
+    # build Game.py command line arguments
+    # note that -od (set Opponent AI search depth) is always passed, though ignored by Game.py if -oa not in {1,2,3}
+    # self.run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+    # self.run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
+    # if self.heur == 'graphcut':
+    #     self.run_arg_list.append('-h')
+    #     self.run_arg_list3.append('-h')
+    # if self.heur == 'geodesics':
+    #     self.run_arg_list.append('-h2')
+    #     self.run_arg_list3.append('-h2')
+    # if self.verbose == 1:
+    #     self.run_arg_list.append('-v')
+    #     self.run_arg_list3.append('-v')
+    # if self.verbose == 2:
+    #     self.run_arg_list.append('-vv')
+    #     self.run_arg_list3.append('-vv')
+    # if self.verbose == 3:
+    #     self.run_arg_list.append('-vvv')
+    #     self.run_arg_list3.append('-vvv')
+
+    # build Game.py command line statement
+    run_arg_list_str = 'python3 ' + delimiter.join(run_arg_list)
+    print(run_arg_list_str)
+
     # output RunGames.py batch parameters to terminal
     if is_unix:                                                                     # if Unix, print in color
         cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
         cprint('Command line:', 'blue')
-        cprint(f'  $ {run_str}', 'yellow')
+        cprint(f'  $ {batch_run_str}', 'yellow')
+        cprint('Game command line:', 'blue')
+        cprint('  $ ' + run_arg_list_str, 'yellow')
         cprint(f'Setting Player AI search depth limit to {depth_limit}.', 'blue')      # if depth_limit:
         if heur:
             cprint('Applying advanced heuristics for Player AI.', 'blue')
@@ -321,16 +341,17 @@ def main():
             cprint(f'Setting Opponent AI search depth limit to {opp_depth_limit}.', 'blue')
         
         if verbose == 1:
-            cprint('Verbose mode.', 'green')
+            cprint('Verbose mode.\n', 'green')
         if verbose == 2:
-            cprint('Extra verbose mode.', 'green')
+            cprint('Extra verbose mode.\n', 'green')
         if verbose == 3:
-            cprint('Extra verbose + trace mode.', 'green')
-        print('')
+            cprint('Extra verbose + trace mode.\n', 'green')
     else:
         print(f'Running batch test via {argv[0]}, {n} times...')
         print('Command line:')
-        print(f'  $ {run_str}')
+        print(f'  $ {batch_run_str}')
+        print('Game command line:')
+        print('  $ ' + run_arg_list_str)
         print(f'Setting Player AI search depth limit to {depth_limit}.')
         if heur:
             print('Applying advanced heuristics for Player AI.')
@@ -341,12 +362,11 @@ def main():
             print(f'Setting Opponent AI search depth limit to {opp_depth_limit}.')
 
         if verbose == 1:
-            print('Verbose mode.')
+            print('Verbose mode.\n')
         if verbose == 2:
-            print('Extra verbose mode.')
+            print('Extra verbose mode.\n')
         if verbose == 3:
-            print('Extra verbose + trace mode.')
-        print('')
+            print('Extra verbose + trace mode.\n')
 
     # delete log file if exists
     results_filename = f"batch_results{depth_str}{opp_ai_level_str}{opp_depth_str}{heur_str}{com_str}.txt"
@@ -355,9 +375,18 @@ def main():
         # print('Deleting existing file')
         remove(results_filename)
 
-    # output RunGames.py batch parameters to file
+    # output all parameters and Game.py command line statement to file
+
+    # print(f'Filename = {self.filename}')
+    # with open(self.filename, 'a') as f:
     with open(results_filename, 'a') as f:
         f.write(f'Running batch test via {argv[0]}, {n} times...\n')
+        f.write('Batch command line:\n')
+        f.write(f'  $ {batch_run_str}\n')
+        f.write('Game command line:\n')
+        f.write('  $ ' + run_arg_list_str + '\n')
+        f.write('\n')
+
         f.write(f'Setting Player search depth limit to {depth_limit}.\n')
         if heur:
             f.write('Applying advanced heuristics for Player AI.\n')
@@ -368,15 +397,14 @@ def main():
             f.write(f'Setting Opponent AI search depth limit to {opp_depth_limit}.\n')
 
         if verbose == 1:
-            f.write('Verbose mode.\n')
+            f.write('Verbose mode.\n\n')
         if verbose == 2:
-            f.write('Extra verbose mode.\n')
+            f.write('Extra verbose mode.\n\n')
         if verbose == 3:
-            f.write('Extra verbose + trace mode.\n')
-        f.write('')
+            f.write('Extra verbose + trace mode.\n\n')
         
     # initialize RunGames Class, call `start_batch` Method, get overall stats
-    run_games = RunGames(results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment)
+    run_games = RunGames(results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment, run_arg_list)
     total_time, run_times, rounds_list, run_success, player_wins = run_games.start_batch()
     total_moves = sum(rounds_list)
     avg_rounds = total_moves/n
@@ -386,6 +414,9 @@ def main():
     except:
         pass
     print('> ... Done.')
+
+    
+    # TODO : move batch summary to different method
 
     # write summary of batch run to results (log) file
     with open(results_filename, 'a') as f:

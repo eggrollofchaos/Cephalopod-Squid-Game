@@ -239,7 +239,7 @@ class Game():
 
                 total_player_moves += 1
 
-                input('<Press enter to begin!>') if total_player_moves == 1 else None   # waiting for input to continue for debugging
+                input('<Press enter to begin!>') if total_player_moves == 1 and not self.test_mode else None   # waiting for input to continue for debugging
 
                 cprint(f"Player's Turn {total_player_moves}: ", color='green') if is_unix else print(f"Player's Turn {total_player_moves}:")
                 # find best move; should return two coordinates: new player position and position that the trap landed on
