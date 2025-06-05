@@ -17,6 +17,7 @@ from Utils import manhattan_distance, grid_distance
 from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 4
+is_unix = os_type()
 
 class PlayerAI(BaseAI):
     # def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = 'graphcut', verbose = False) -> None:
@@ -1128,18 +1129,18 @@ class PlayerAI(BaseAI):
                     cprint(f'Used 2-ply graph cut heuristic on opponent, size_cap={self.graph_cut_size_cap}, max_radius={self.max_radius}.', color='red')
             
             print(f'Best move found has utility of {self.utility:.2f}. ', end='')
-            # if self.utility >= 90000:
-                # print('Win imminent? 😱')
-            # elif self.utility >= 1000:
-                # print('Doing decent! 😲')
-            # elif self.utility <= -1000:
-                # print('Not looking so good. 😟')
-            # elif self.utility <= -90000:
-                # print('OMG no... 😵‍💫')
-            # else:
-                # print('Hey, doing what we can. 😐')
-            # end = time.time()
-            # print(f'This move took {end-start:.5f} seconds.')
+            if self.utility >= 90000:
+                print('Win imminent? 😱') if is_unix else print('Win imminent??') 
+            elif self.utility >= 1000:
+                print('Doing decent! 😲') if is_unix else print('Doing decent!')
+            elif self.utility <= -1000:
+                print('Not looking so good. 😟') if is_unix else print('Not looking so good :/')
+            elif self.utility <= -90000:
+                print('OMG no... 😵‍💫') if is_unix else print('Omg no... T_T')
+            else:
+                print('Hey, doing what we can. 😐') if is_unix else print('Hey, doing what we can :|')
+            end = time.time()
+            print(f'This move took {end-start:.5f} seconds.')
         else:
             child, _ = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth=0, depth_limit=depth_limit)
         return child
