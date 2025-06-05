@@ -2,9 +2,9 @@
 EasyAI Class module.
 Fully commented by WAX.
 """
+import os
 from random import choice as rand_choice
 import sys
-import os
 
 
 

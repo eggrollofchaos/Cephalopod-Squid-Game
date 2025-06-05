@@ -3,9 +3,9 @@ MediumAI module.
 Default AI for Opponent player.
 Commented by WAX.
 """
+import os 
 from random import choice as rand_choice
 import sys
-import os 
 
 import numpy as np
 

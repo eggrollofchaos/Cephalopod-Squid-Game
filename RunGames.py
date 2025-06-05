@@ -8,8 +8,9 @@ from os.path import exists
 from platform import system as os_type
 from sys import argv
 from subprocess import run
-from termcolor import cprint
 from time import time, sleep
+
+from termcolor import cprint
 from tqdm import tqdm
 
 is_unix = os_type()
@@ -182,7 +183,8 @@ def main():
     opp_ai_int = 0                          # Opponent AI level, defaults  to 0 (Medium AI); if -1 or 0, depth limit won't apply
     opp_ai_level = 'Medium AI'              # Opponent AI level, defaults to Medium AI
     opp_ai_level_str = ''                   # Opponent AI level -> results filename
-    opp_depth_limit = 2                     # Opponent AI search depth, defaults to 2, only applies if AI level in {2,3,4}
+    opp_depth_limit = 2                     # Opponent AI search depth, only applies if AI uses Minimax, i.e. level in {1,10,11,12,13}
+    opp_depth_limit_def = False             # flag for if we need to set the default depth limit for AI using Minimax
     opp_depth_str = ''                      # Opponent AI search depth -> results filename
     comment = False                         # comment, default is none
     com_str = ''                            # comment -> results filename
@@ -196,9 +198,9 @@ def main():
     delimiter = ' '
     batch_run_str = delimiter.join(argv)
 
-    # build default Game.py command line arguments
+    # default Game.py command line arguments
     # -t sets to test mode, which disables the 5 second timer
-    run_arg_list = ['Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
+    # run_arg_list = ['Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
     # run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
 
     # process command line arguments
@@ -221,7 +223,7 @@ def main():
             except:
                 pass
         opp_ai_level_str = f'_oa_{opp_ai_int}'
-        
+
         # set Opponent AI search depth
         if opp_ai_int > 0 and '-od' in argv:
             try:
@@ -230,7 +232,40 @@ def main():
             except:
                 pass
             opp_depth_str = f'_od_{opp_depth_limit}'
+            # input(f'opp_depth_limit = {opp_depth_limit}')
+        elif opp_ai_int > 0:    # for Minimax AI but depth limit not specified
+            opp_depth_limit_def = True
+        elif '-od' in argv:     # for Easy AI, Medium AI, or Human Opponent but depth limit argument passed
+            None                # argument will be silently ignored
         
+        # get Opponent AI level text from argument, set default depth limit if needed
+        # defaults are taken from each Opponent AI's module file
+        match opp_ai_int:
+            case -1:
+                opp_ai_level = 'Easy AI'
+            case 0:
+                opp_ai_level = 'Medium AI'
+            case 1:
+                opp_ai_level = 'Minimax AI'
+                opp_depth_limit = 3 if opp_depth_limit_def else opp_depth_limit
+            case 10:
+                opp_ai_level = 'Hard AI'
+                opp_depth_limit = 4 if opp_depth_limit_def else opp_depth_limit
+            case 11:
+                opp_ai_level = 'Custom AI version 1'
+                opp_depth_limit = 2 if opp_depth_limit_def else opp_depth_limit
+            case 12:
+                opp_ai_level = 'Custom AI version 2'
+                opp_depth_limit = 3 if opp_depth_limit_def else opp_depth_limit
+            case 13:
+                opp_ai_level = 'Custom AI version 3'
+                opp_depth_limit = 4 if opp_depth_limit_def else opp_depth_limit
+            case 9:
+                opp_ai_level = 'Human player'
+            case _:
+                opp_ai_int = 0                                      # default
+                opp_ai_level = 'Medium AI'
+
         # set Comment
         if '-m' in argv:
             try:
@@ -243,6 +278,7 @@ def main():
         # update Game.py command line arguments
         run_arg_list = ['Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
         # run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
+        # input(f'run_arg_list = {run_arg_list}')
 
         # a fancy way to capture a number anywhere in the command line statement as the number of iterations to run
         num = [ arg for arg_idx, arg in enumerate(argv) if arg.isnumeric()
@@ -282,24 +318,6 @@ def main():
             run_arg_list.append('-h2')
             # run_arg_list3.append('-h2')
 
-    # get Opponent AI level text from argument
-    match opp_ai_int:
-        case -1:
-            opp_ai_level = 'Easy AI'
-        case 0:
-            opp_ai_level = 'Medium AI'
-        case 1:
-            opp_ai_level = 'Custom AI version 1'
-        case 2:
-            opp_ai_level = 'Custom AI version 2'
-        case 3:
-            opp_ai_level = 'Custom AI version 3'
-        case 9:
-            opp_ai_level = 'Human player'
-        case _:
-            opp_ai_int = 0                                      # default
-            opp_ai_level = 'Medium AI'
-
     # build Game.py command line arguments
     # note that -od (set Opponent AI search depth) is always passed, though ignored by Game.py if -oa not in {1,2,3}
     # self.run_arg_list = ['python', 'Game.py', '-t', '-d', str(self.depth_limit), '-oa', str(self.opp_ai_int), '-od', str(self.opp_depth_limit)]
@@ -322,36 +340,46 @@ def main():
 
     # build Game.py command line statement
     run_arg_list_str = 'python3 ' + delimiter.join(run_arg_list)
-    print(run_arg_list_str)
+    # print(run_arg_list_str)
 
     # output RunGames.py batch parameters to terminal
     if is_unix:                                                                     # if Unix, print in color
-        cprint(f'Running batch test via {argv[0]}, {n} times...', 'blue')
-        cprint('Command line:', 'blue')
+        cprint(' ' * 55, on_color='on_yellow')
+        cprint(' ' * 11 + 'AI SQUID GAME - BATCH TEST SCRIPT' + ' ' * 11, color='blue', on_color='on_yellow', attrs=['bold'])
+        cprint(' ' * 55, on_color='on_yellow')
+        cprint(f'\nRunning batch test via {argv[0]}, {n} times...', 'blue')
+        cprint('Batch command line:', 'blue')
         cprint(f'  $ {batch_run_str}', 'yellow')
         cprint('Game command line:', 'blue')
-        cprint('  $ ' + run_arg_list_str, 'yellow')
-        cprint(f'Setting Player AI search depth limit to {depth_limit}.', 'blue')      # if depth_limit:
+        cprint('  $ ' + run_arg_list_str + '\n', 'yellow')
+        cprint(f'Setting Player AI search depth limit to {depth_limit}.', 'green')      # if depth_limit:
         if heur:
-            cprint('Applying advanced heuristics for Player AI.', 'blue')
+            cprint('Applying advanced heuristics for Player AI.', 'green')
         
         # logic for Opponent AI & depth level 
-        cprint(f'Setting Opponent to {opp_ai_level}.', 'blue')
+        cprint(f'Setting Opponent to {opp_ai_level}.', 'magenta')
         if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
-            cprint(f'Setting Opponent AI search depth limit to {opp_depth_limit}.', 'blue')
+            if opp_depth_limit_def:
+                cprint('Opponent AI search depth limit not specified, defaulting to ', 'magenta', end='')
+            else:
+                cprint('Setting Opponent AI search depth limit to ', 'magenta', end='')
+            cprint(f'{opp_depth_limit}.', 'magenta')
         
         if verbose == 1:
-            cprint('Verbose mode.\n', 'green')
+            cprint('Verbose mode.\n', 'cyan')
         if verbose == 2:
-            cprint('Extra verbose mode.\n', 'green')
+            cprint('Extra verbose mode.\n', 'cyan')
         if verbose == 3:
-            cprint('Extra verbose + trace mode.\n', 'green')
+            cprint('Extra verbose + trace mode.\n', 'cyan')
     else:
-        print(f'Running batch test via {argv[0]}, {n} times...')
-        print('Command line:')
+        print(' ' * 55)
+        print(' ' * 11 + 'AI SQUID GAME - BATCH TEST SCRIPT' + ' ' * 11)
+        print(' ' * 55)
+        print(f'\nRunning batch test via {argv[0]}, {n} times...')
+        print('Batch command line:')
         print(f'  $ {batch_run_str}')
         print('Game command line:')
-        print('  $ ' + run_arg_list_str)
+        print('  $ ' + run_arg_list_str + '\n')
         print(f'Setting Player AI search depth limit to {depth_limit}.')
         if heur:
             print('Applying advanced heuristics for Player AI.')
@@ -359,7 +387,11 @@ def main():
         # logic for Opponent AI & depth level 
         print(f'Setting Opponent to {opp_ai_level}.')
         if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
-            print(f'Setting Opponent AI search depth limit to {opp_depth_limit}.')
+            if opp_depth_limit_def:
+                print('Opponent AI search depth limit not specified, defaulting to ', end='')
+            else:
+                print('Setting Opponent AI search depth limit to ', end='')
+            print(f'{opp_depth_limit}.')
 
         if verbose == 1:
             print('Verbose mode.\n')
@@ -380,7 +412,10 @@ def main():
     # print(f'Filename = {self.filename}')
     # with open(self.filename, 'a') as f:
     with open(results_filename, 'a') as f:
-        f.write(f'Running batch test via {argv[0]}, {n} times...\n')
+        f.write(' ' * 55 + '\n')
+        f.write(' ' * 11 + 'AI SQUID GAME - BATCH TEST SCRIPT' + ' ' * 11 + '\n')
+        f.write(' ' * 55 + '\n')
+        f.write(f'\nRunning batch test via {argv[0]}, {n} times...\n')
         f.write('Batch command line:\n')
         f.write(f'  $ {batch_run_str}\n')
         f.write('Game command line:\n')
@@ -394,7 +429,11 @@ def main():
         # logic for Opponent AI & depth level 
         f.write(f'Setting Opponent to {opp_ai_level}.\n')
         if opp_ai_int > 0 and opp_ai_int != 9 and opp_depth_limit:                  # if above Easy/Medium AI and not Human Opponent
-            f.write(f'Setting Opponent AI search depth limit to {opp_depth_limit}.\n')
+            if opp_depth_limit_def:
+                f.write('Opponent AI search depth limit not specified, defaulting to ')
+            else:
+                f.write('Setting Opponent AI search depth limit to ')
+            f.write(f'{opp_depth_limit}.\n')
 
         if verbose == 1:
             f.write('Verbose mode.\n\n')

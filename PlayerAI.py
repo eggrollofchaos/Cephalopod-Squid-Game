@@ -4,17 +4,20 @@ Primarily authored by WAX.
 Early contributions by @mhr and @gongchen161.
 Hard-coded to a 7x7 grid size.
 """
-import numpy as np
-import random
-import time
-import sys
 import os
+from platform import system as os_type
+import random
 import queue as Q
+import sys
+import time
+
+import numpy as np
 from statistics import fmean
+from termcolor import cprint
+
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
-from termcolor import cprint
 
 DEFAULT_DEPTH_LIMIT = 4
 is_unix = os_type()
@@ -1113,7 +1116,7 @@ class PlayerAI(BaseAI):
         Returns a Grid object.
         '''
         if self.verbose:
-            # start = time.time()
+            start = time.time()
             child, self.utility = self.__move_maximize(grid, alpha, beta, player_num, opp_num, depth=0, depth_limit=depth_limit)
             print(f'Max trap candidates seen from one child: {self.max_trap_candidates}')
             if self.use_advanced_heuristics:

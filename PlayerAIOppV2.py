@@ -3,12 +3,14 @@ PlayerAIOppV2 Class module.
 Primarily authored by WAX.
 Early contributions by @mhr and @gongchen161.
 """
-import numpy as np
-import random
-import time
-import sys
 import os
 import queue as Q
+import random
+import sys
+import time
+
+import numpy as np
+
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance

@@ -3,14 +3,16 @@ HumanOpp Class module.
 Contains logic for handling a human opponent's inputs.
 Authored by WAX.
 """
-import numpy as np
+import os 
+from platform import system as os_type
 import random
 import sys
-import os 
+
+import numpy as np
+from termcolor import cprint
+
 from BaseAI import BaseAI
 from Grid import Grid
-from platform import system as os_type
-from termcolor import cprint
 from Utils import manhattan_distance, grid_distance
 
 is_unix = os_type()

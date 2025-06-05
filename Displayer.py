@@ -3,8 +3,8 @@ Displayer Class module.
 Enhanced by WAX.
 Fully commented by WAX.
 """
-import platform
 import os
+import platform
 
 from BaseDisplayer import BaseDisplayer
 from Grid import Grid

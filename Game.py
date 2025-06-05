@@ -8,26 +8,26 @@ Originally created by @tomcohen13 as a final coding project called Squid Game,
 Early contributions by teammates @mhr and @gongchen161.
 Enhancements by WAX.
 """
-import time
-from sys import argv
 from os import system
 from platform import system as os_type
+from sys import argv
+import time
 
 import numpy as np
 from termcolor import cprint
 
 from Grid import Grid
 from Displayer import Displayer
+from HumanOpp import HumanOpp
+from PlayerAI import PlayerAI
+from PlayerAIOppV1 import PlayerAIOppV1
+from PlayerAIOppV2 import PlayerAIOppV2
+from PlayerAIOppV3 import PlayerAIOppV3
 from test_players.RandomAI import RandomAI
 from test_players.EasyAI import EasyAI
 from test_players.MediumAI import MediumAI
 from test_players.MinimaxAI import MinimaxAI
 from test_players.HardAI import HardAI
-from PlayerAIOppV1 import PlayerAIOppV1
-from PlayerAIOppV2 import PlayerAIOppV2
-from PlayerAIOppV3 import PlayerAIOppV3
-from PlayerAI import PlayerAI
-from HumanOpp import HumanOpp
 from Utils import *
 
 PLAYER_TURN, COMPUTER_TURN = 1,2                                    # convention: set Player to Player 1, AI Opponent to Player 2
@@ -445,20 +445,20 @@ def main():
                 opp_ai_level = 'MediumAI(verbose)'                              # for eval
                 opp_string = 'Medium AI.'
             case 1:
-                opp_ai_level = 'MinimaxAI(verbose)'                             # for eval
-                opp_string = 'Minimax AI (Expectiminimax).'
+                opp_ai_level = 'MinimaxAI(opp_depth_limit, verbose)'            # for eval
+                opp_string = 'Minimax AI (Expectiminimax)'
             case 10:
-                opp_ai_level = 'HardAI(verbose)'                                # for eval
-                opp_string = 'Hard AI (with Expectiminimax + heuristics).'
+                opp_ai_level = 'HardAI(opp_depth_limit, verbose)'               # for eval
+                opp_string = 'Hard AI (with Expectiminimax + heuristics)'
             case 11:
                 opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose)'        # for eval
-                opp_string = 'Custom AI version 1.'
+                opp_string = 'Custom AI version 1'
             case 12:
                 opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'        # for eval
-                opp_string = 'Custom AI version 2.'
+                opp_string = 'Custom AI version 2'
             case 13:
                 opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'  # for eval
-                opp_string = 'Custom AI version 3.'
+                opp_string = 'Custom AI version 3'
             case 9:
                 if is_unix:
                     opp_string = 'will be a human player.👴👵'
@@ -477,9 +477,13 @@ def main():
 
     # output Opponent selection
     if verbose and is_unix:
-        cprint(f'{opp_pre_string}Opponent is using {opp_string}', color='magenta')
+        cprint(f'{opp_pre_string}Opponent is using {opp_string}', color='magenta', end='')
+        if opp_ai_int > 0:
+            cprint(f', with depth limit of {opp_depth_limit}.', color='magenta')
     elif verbose:
-        print(f'{opp_pre_string}Opponent is using {opp_string}')
+        print(f'{opp_pre_string}Opponent is using {opp_string}', end='')
+        if opp_ai_int > 0:
+            print(f', with depth limit of {opp_depth_limit}.')
 
     # depth_limit = 0                                   # for testing
     
@@ -515,9 +519,13 @@ def main():
             print('Computer opponent who used no AI, with all random moves and throws.\n')
         else:
             if is_unix:
-                cprint(f'Computer opponent, who used {opp_string}\n', color='magenta')
+                cprint(f'Computer opponent, who used {opp_string}', color='magenta', end='')
+                if opp_ai_int > 0:
+                    cprint(f', with depth limit of {opp_depth_limit}.\n', color='magenta')
             else:
-                print(f'Computer opponent, who used {opp_string}\n')
+                print(f'Computer opponent, who used {opp_string}', end='')
+                if opp_ai_int > 0:
+                    print(f', with depth limit of {opp_depth_limit}.\n')
 
         print(f'Total rounds: {moves}\n\n')
         

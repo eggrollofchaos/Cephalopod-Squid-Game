@@ -3,9 +3,9 @@ HardAI Class module.
 Implements Expectiminimax search algo + basic heuristics.
 Commented by WAX.
 """
-import time
+import os
 import sys
-import os 
+import time
 
 import numpy as np
 
@@ -27,9 +27,10 @@ class HardAI(BaseAI):
     
     """
 
-    def __init__(self, position = None, verbose: int = 0) -> None:
+    def __init__(self, depth_limit = MAX_DEPTH, position = None, verbose: int = 0) -> None:
         super().__init__()
         print('Running HardAI() with Expectiminimax and basic heuristics...') if verbose else None
+        self.depth_limit = depth_limit
         self.pos = position
         self.player_num = None
 
@@ -196,9 +197,11 @@ class HardAI(BaseAI):
         win  = not state.get_neighbors(state.find(3 - self.player_num), only_available=True)
 
         if mode == 'move' :
-            return lose or win or time >= MOVE_TIME_LIMIT or depth >= MAX_DEPTH
+            # return lose or win or time >= MOVE_TIME_LIMIT or depth >= MAX_DEPTH
+            return lose or win or time >= MOVE_TIME_LIMIT or depth >= self.depth_limit
         else :
-            return lose or win or time >= TRAP_TIME_LIMIT or depth >= MAX_DEPTH
+            # return lose or win or time >= MOVE_TIME_LIMIT or depth >= MAX_DEPTH
+            return lose or win or time >= TRAP_TIME_LIMIT or depth >= self.depth_limit
 
     def getTrap(self, grid : Grid):
         trap, _ = self._best_trap(grid)
