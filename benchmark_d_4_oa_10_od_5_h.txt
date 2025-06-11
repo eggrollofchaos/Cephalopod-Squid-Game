@@ -1,0 +1,125 @@
+                                                       
+           AI SQUID GAME - BATCH TEST SCRIPT           
+                                                       
+
+Running batch test via RunGames.py, 100 times...
+Batch command line:
+  $ RunGames.py 100 -c -p -h -d 4 -oa 10 -od 5 -vv -g
+Game command line:
+  $ python3 Game.py -t -d 4 -oa 10 -od 5 -vv -h
+
+Setting Player search depth limit to 4.
+Applying advanced heuristics for Player AI.
+Setting Opponent to Hard AI.
+Setting Opponent AI search depth limit to 5.
+Extra verbose mode.
+
+Run 1: Player Loses! Process completed in 5.635 seconds.
+Run 2: Player Wins! Process completed in 20.475 seconds.
+Run 3: Player Wins! Process completed in 18.201 seconds.
+Run 4: Player Loses! Process completed in 25.892 seconds.
+Run 5: Player Loses! Process completed in 6.957 seconds.
+Run 6: Player Wins! Process completed in 33.678 seconds.
+Run 7: Player Loses! Process completed in 15.053 seconds.
+Run 8: Player Loses! Process completed in 24.934 seconds.
+Run 9: Player Wins! Process completed in 13.645 seconds.
+Run 10: Player Wins! Process completed in 7.489 seconds.
+Run 11: Player Wins! Process completed in 7.116 seconds.
+Run 12: Player Wins! Process completed in 20.552 seconds.
+Run 13: Player Wins! Process completed in 16.094 seconds.
+Run 14: Player Wins! Process completed in 15.183 seconds.
+Run 15: Player Wins! Process completed in 17.437 seconds.
+Run 16: Player Wins! Process completed in 21.536 seconds.
+Run 17: Player Loses! Process completed in 8.515 seconds.
+Run 18: Player Wins! Process completed in 7.185 seconds.
+Run 19: Player Wins! Process completed in 6.406 seconds.
+Run 20: Player Loses! Process completed in 12.573 seconds.
+Run 21: Player Wins! Process completed in 7.501 seconds.
+Run 22: Player Wins! Process completed in 23.151 seconds.
+Run 23: Player Wins! Process completed in 12.281 seconds.
+Run 24: Player Wins! Process completed in 17.406 seconds.
+Run 25: Player Wins! Process completed in 10.560 seconds.
+Run 26: Player Wins! Process completed in 35.004 seconds.
+Run 27: Player Wins! Process completed in 11.391 seconds.
+Run 28: Player Loses! Process completed in 12.312 seconds.
+Run 29: Player Wins! Process completed in 7.473 seconds.
+Run 30: Player Wins! Process completed in 15.682 seconds.
+Run 31: Player Wins! Process completed in 9.354 seconds.
+Run 32: Player Wins! Process completed in 15.746 seconds.
+Run 33: Player Wins! Process completed in 18.934 seconds.
+Run 34: Player Wins! Process completed in 9.284 seconds.
+Run 35: Player Wins! Process completed in 10.534 seconds.
+Run 36: Player Loses! Process completed in 7.463 seconds.
+Run 37: Player Wins! Process completed in 7.033 seconds.
+Run 38: Player Wins! Process completed in 9.809 seconds.
+Run 39: Player Loses! Process completed in 14.714 seconds.
+Run 40: Player Wins! Process completed in 7.919 seconds.
+Run 41: Player Wins! Process completed in 11.841 seconds.
+Run 42: Player Loses! Process completed in 13.944 seconds.
+Run 43: Player Wins! Process completed in 17.183 seconds.
+Run 44: Player Wins! Process completed in 10.446 seconds.
+Run 45: Player Wins! Process completed in 11.297 seconds.
+Run 46: Player Wins! Process completed in 5.625 seconds.
+Run 47: Player Loses! Process completed in 24.741 seconds.
+Run 48: Player Loses! Process completed in 12.323 seconds.
+Run 49: Player Wins! Process completed in 11.955 seconds.
+Run 50: Player Wins! Process completed in 6.809 seconds.
+Run 51: Player Wins! Process completed in 11.207 seconds.
+Run 52: Player Wins! Process completed in 20.977 seconds.
+Run 53: Player Wins! Process completed in 8.011 seconds.
+Run 54: Player Wins! Process completed in 6.844 seconds.
+Run 55: Player Wins! Process completed in 11.518 seconds.
+Run 56: Player Wins! Process completed in 16.288 seconds.
+Run 57: Player Wins! Process completed in 6.921 seconds.
+Run 58: Player Wins! Process completed in 7.835 seconds.
+Run 59: Player Wins! Process completed in 11.152 seconds.
+Run 60: Player Wins! Process completed in 12.220 seconds.
+Run 61: Player Wins! Process completed in 7.078 seconds.
+Run 62: Player Wins! Process completed in 6.902 seconds.
+Run 63: Player Wins! Process completed in 8.839 seconds.
+Run 64: Player Wins! Process completed in 6.971 seconds.
+Run 65: Player Loses! Process completed in 8.041 seconds.
+Run 66: Player Wins! Process completed in 15.905 seconds.
+Run 67: Player Loses! Process completed in 22.812 seconds.
+Run 68: Player Loses! Process completed in 23.227 seconds.
+Run 69: Player Wins! Process completed in 16.666 seconds.
+Run 70: Player Wins! Process completed in 18.295 seconds.
+Run 71: Player Wins! Process completed in 8.430 seconds.
+Run 72: Player Wins! Process completed in 13.781 seconds.
+Run 73: Player Wins! Process completed in 8.698 seconds.
+Run 74: Player Wins! Process completed in 8.959 seconds.
+Run 75: Player Loses! Process completed in 7.515 seconds.
+Run 76: Player Wins! Process completed in 15.417 seconds.
+Run 77: Player Loses! Process completed in 9.924 seconds.
+Run 78: Player Wins! Process completed in 6.973 seconds.
+Run 79: Player Wins! Process completed in 9.773 seconds.
+Run 80: Player Wins! Process completed in 13.366 seconds.
+Run 81: Player Loses! Process completed in 14.039 seconds.
+Run 82: Player Wins! Process completed in 6.966 seconds.
+Run 83: Player Wins! Process completed in 27.678 seconds.
+Run 84: Player Wins! Process completed in 13.735 seconds.
+Run 85: Player Wins! Process completed in 20.417 seconds.
+Run 86: Player Wins! Process completed in 19.084 seconds.
+Run 87: Player Wins! Process completed in 18.656 seconds.
+Run 88: Player Wins! Process completed in 7.257 seconds.
+Run 89: Player Wins! Process completed in 9.604 seconds.
+Run 90: Player Loses! Process completed in 17.565 seconds.
+Run 91: Player Wins! Process completed in 15.044 seconds.
+Run 92: Player Wins! Process completed in 8.099 seconds.
+Run 93: Player Loses! Process completed in 24.806 seconds.
+Run 94: Player Wins! Process completed in 17.752 seconds.
+Run 95: Player Wins! Process completed in 7.179 seconds.
+Run 96: Player Wins! Process completed in 9.542 seconds.
+Run 97: Player Loses! Process completed in 17.037 seconds.
+Run 98: Player Wins! Process completed in 13.163 seconds.
+Run 99: Player Wins! Process completed in 8.551 seconds.
+Run 100: Player Wins! Process completed in 13.599 seconds.
+------------------------------
+100 games ran successfully out of 100.
+Of those, Player won 78 times, for a win rate of 78.00%.
+Each run took an average of 13.35 seconds to complete.
+Max runtime: 35.00 seconds; min runtime: 5.63 seconds.
+The average game length is 13.6 rounds.
+Max game length: 20 rounds; min game length: 8 rounds.
+The average player move time is 0.9814 seconds.
+All processes took 1334.70 seconds to complete.

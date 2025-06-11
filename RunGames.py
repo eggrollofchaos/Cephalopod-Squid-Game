@@ -40,7 +40,8 @@ class RunGames(object):
     See main() for additional notes on flags and arguments.
     '''
 
-    def __init__(self, results_filename, n, progress, verbose, suppress_output, heur, depth_limit, opp_ai_int, opp_depth_limit, comment, run_arg_list):
+    def __init__(self, results_filename: str, n: int, progress: bool, verbose: bool, suppress_output: bool, heur: bool, \
+        depth_limit: int, opp_ai_int: int, opp_depth_limit: int, comment: str, run_arg_list: list[str]):
         self.filename = results_filename
         self.n = n
         self.progress = progress
