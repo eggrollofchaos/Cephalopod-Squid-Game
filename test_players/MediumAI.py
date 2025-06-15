@@ -1,7 +1,7 @@
 """
 MediumAI module.
 Default AI for Opponent player.
-Commented by WAX.
+Fully commented by WAX.
 """
 import os 
 from random import choice as rand_choice
@@ -33,11 +33,11 @@ class MediumAI(BaseAI):
     def getPosition(self) -> tuple:
         return self.pos 
 
-    def setPlayerNum(self, num) -> None:
+    def setPlayerNum(self, num: int) -> None:
         self.player_num = num
 
-    def getMove(self, grid : Grid) -> tuple:
-        """ Find the move that results in the most available cells around player. """
+    def getMove(self, grid: Grid) -> tuple:
+        """Find the move that results in the most available cells around current player."""
         
         # find all available moves 
         available_moves = grid.get_neighbors(self.pos, only_available = True)
@@ -54,8 +54,8 @@ class MediumAI(BaseAI):
         
         return new_pos
 
-    def getTrap(self, grid : Grid) -> tuple:
-        """ Finds a trap position that results in the greatest difference between number of available cells around player vs opponent. """
+    def getTrap(self, grid: Grid) -> tuple:
+        """Finds a trap position that results in the greatest difference between number of available cells around current player vs opponent."""
         
         # find opponent
         opponent = grid.find(3 - self.player_num)
@@ -87,17 +87,23 @@ class MediumAI(BaseAI):
             trap = rand_choice(grid.getAvailableCells())
 
         return trap
-        
 
-def AM(grid : Grid, player_num) -> int:
-    """ Get number of available moves for the Grid argument passed. """
+def AM(grid: Grid, player_num: int) -> int:
+    """
+    Get number of available moves (AM) for the specified player, in the Grid argument passed.
+    Calls get_neighbors with only_available = True.
+    """
 
     available_moves = grid.get_neighbors(grid.find(player_num), only_available = True)
 
     return len(available_moves)
 
-def IS(grid : Grid, player_num) -> int:
-    """ Get the difference between number of available moves for the current player vs opponent, in the Grid argument passed. """
+def IS(grid: Grid, player_num: int) -> int:
+    """
+    Get the difference between number of available moves for the specified player vs opponent, in the Grid argument passed.
+    Improved Score (IS) method, a basic heuristics calculation.
+    """
+
 
     # find all available moves by current player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
