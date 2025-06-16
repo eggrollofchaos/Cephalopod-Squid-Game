@@ -1,7 +1,7 @@
 """
 HumanOpp Class module.
 Contains logic for handling a human opponent's inputs.
-Authored by WAX.
+Authored and fully commented by WAX.
 """
 import os 
 from platform import system as os_type
@@ -20,22 +20,23 @@ OPPONENT = lambda player: 3 - player                    # TODO: may not be neede
 TO_CLEAN = str.maketrans('', '', ".()")                 # for sanitizing user input
 
 class HumanOpp(BaseAI):
-    def __init__(self, initial_position = None, verbose = 0) -> None:
+    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
         super().__init__()
+        print('Running HumanOpp()...') if verbose else None
         self.verbose = verbose
         self.pos = initial_position
         self.player_num = None
 
-    def setPosition(self, new_pos: tuple):
+    def setPosition(self, new_pos: tuple[int, int]):
         self.pos = new_pos
     
     def getPosition(self):
         return self.pos 
 
-    def setPlayerNum(self, num):
+    def setPlayerNum(self, num: int):
         self.player_num = num
 
-    def getMove(self, grid):
+    def getMove(self, grid: Grid):
         '''
         Requests keyboard input from human player as coordinates to Move to.
         Input must be in the form of a tuple, e.g. (1,3).
@@ -78,7 +79,7 @@ class HumanOpp(BaseAI):
                 cprint('That move is invalid.', 'yellow') if is_unix else print('That move is invalid.')
                 print(f'Intended square ({x}, {y}) has value of {cell_value} and is a distance {grid_distance(self.pos,(x,y))} from current position.') if self.verbose else None
 
-    def getTrap(self, grid : Grid):
+    def getTrap(self, grid: Grid):
 
         '''
         Requests keyboard input from human player as coordinates to throw a Trap to. 
