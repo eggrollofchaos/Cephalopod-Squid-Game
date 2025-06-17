@@ -25,7 +25,7 @@ class MinimaxAI(BaseAI):
     
     """
 
-    def __init__(self, depth_limit = MAX_DEPTH, position = None, verbose: int = 0) -> None:
+    def __init__(self, depth_limit: int = MAX_DEPTH, position: tuple[int, int] = None, verbose: int = 0) -> None:
         super().__init__()
         print('Running basic MinimaxAI()...') if verbose else None
         self.depth_limit = depth_limit
