@@ -35,21 +35,21 @@ class MinimaxAI(BaseAI):
     def getPosition(self):
         return self.pos
     
-    def setPosition(self, new_position):
+    def setPosition(self, new_position: tuple[int, int] = None):
         self.pos = new_position
     
     def getPlayerNum(self):
         return self.player_num
         
-    def setPlayerNum(self, num):
+    def setPlayerNum(self, num: int):
         self.player_num = num
 
-    def getMove(self, grid : Grid):
+    def getMove(self, grid: Grid):
         move, util = self._best_move(grid)
 
         return move
 
-    def _best_move(self, grid : Grid):
+    def _best_move(self, grid: Grid):
 
         start = time.process_time()
 
@@ -59,7 +59,7 @@ class MinimaxAI(BaseAI):
         
         return self.maximize_move(grid, alpha = -np.inf, beta = np.inf, depth = 0, start_time = start)
 
-    def maximize_move(self, grid : Grid, alpha : float, beta : float, depth : int, start_time):
+    def maximize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time):
         """ 
         Description
         -----------
