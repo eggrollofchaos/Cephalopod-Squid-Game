@@ -299,7 +299,7 @@ class MinimaxAI(BaseAI):
         return IS(state, player_num = self.player_num)
         
 
-def IS(grid : Grid, player_num):
+def IS(grid: Grid, player_num: int):
 
     # find all available moves by Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
