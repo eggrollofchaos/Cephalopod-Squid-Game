@@ -287,7 +287,7 @@ class MinimaxAI(BaseAI):
         return minMove, minUtility
 
 
-    def utility(self, state : Grid) -> float:
+    def utility(self, state: Grid) -> float:
 
         # if win
         if not state.get_neighbors(state.find(3 - self.player_num), only_available=True):
