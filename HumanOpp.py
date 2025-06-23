@@ -37,10 +37,10 @@ class HumanOpp(BaseAI):
         self.player_num = num
 
     def getMove(self, grid: Grid):
-        '''
-        Requests keyboard input from human player as coordinates to Move to.
+        """
+        Request keyboard input from human player as coordinates to Move to.
         Input must be in the form of a tuple, e.g. (1,3).
-        '''
+        """
         
         # find all available moves 
         available_moves = grid.get_neighbors(self.pos, only_available = True)
@@ -81,10 +81,10 @@ class HumanOpp(BaseAI):
 
     def getTrap(self, grid: Grid):
 
-        '''
-        Requests keyboard input from human player as coordinates to throw a Trap to. 
+        """
+        Request keyboard input from human player as coordinates to which a Trap should be thrown.
         Input must be in the form of a tuple, e.g. (1,3).
-        '''
+        """
         
         # find opponent
         opp_pos = grid.find(3 - self.player_num)

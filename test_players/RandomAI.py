@@ -36,7 +36,7 @@ class RandomAI(BaseAI):
         self.player_num = num
 
     def getMove(self, grid: Grid) -> tuple[int, int]:
-        """ Returns a random, valid move. """
+        """Generic: Return a random, valid move."""
         
         # find all available moves 
         available_moves = grid.get_neighbors(self.pos, only_available = True)
@@ -47,7 +47,7 @@ class RandomAI(BaseAI):
         return new_pos
 
     def getTrap(self, grid: Grid) -> tuple[int, int]:
-        """ RandomAI (not really an AI) returns a random, valid trap position. """
+        """RandomAI (not really an AI) returns a random, valid trap position. """
         
         # find all available cells in the grid
         available_cells = grid.getAvailableCells()

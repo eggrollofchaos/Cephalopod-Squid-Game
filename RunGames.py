@@ -93,7 +93,6 @@ class RunGames(object):
         return total_time, run_times, rounds_list, self.run_success, self.player_wins
 
     def __run_process(self, it):
-                
         # start individual process, capture elapsed time
         start_run = time()
 
@@ -170,8 +169,11 @@ class RunGames(object):
 
         return run_time, rounds
 
-# main method, called when running this script directly
 def main():
+    """
+    Main method, called when running this script directly.
+    Parses command line arguments and sets up the batch run.
+    """
     clear = lambda: system('clear')         # pretty cool way to clear the output, should look into more
     n = 100                                 # number of iterations (processes)
     verbose = 0                             # verbosity level

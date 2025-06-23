@@ -36,7 +36,7 @@ class EasyAI(BaseAI):
         self.player_num = num
 
     def getMove(self, grid: Grid) -> tuple[int, int]:
-        """ Returns a random, valid move. """
+        """Generic: Return a random, valid move."""
         
         # find all available moves 
         available_moves = grid.get_neighbors(self.pos, only_available = True)
@@ -47,7 +47,7 @@ class EasyAI(BaseAI):
         return new_pos
 
     def getTrap(self, grid: Grid) -> tuple[int, int]:
-        """ EasyAI throws randomly to the immediate neighbors of the opponent. """
+        """EasyAI throws randomly to the immediate neighbors of the opponent."""
         
         # find opponent
         opponent = grid.find(3 - self.player_num)

@@ -55,7 +55,7 @@ class MediumAI(BaseAI):
         return new_pos
 
     def getTrap(self, grid: Grid) -> tuple:
-        """Finds a trap position that results in the greatest difference between number of available cells around current player vs opponent."""
+        """Find a trap position that results in the greatest difference between number of available cells around current player vs opponent."""
         
         # find opponent
         opponent = grid.find(3 - self.player_num)

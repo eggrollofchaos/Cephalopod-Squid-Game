@@ -288,6 +288,7 @@ class MinimaxAI(BaseAI):
 
 
     def utility(self, state: Grid) -> float:
+        """Set a numeric utility for win and loss states."""
 
         # if win
         if not state.get_neighbors(state.find(3 - self.player_num), only_available=True):
