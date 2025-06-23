@@ -32,7 +32,7 @@ class MinimaxAI(BaseAI):
         self.pos = position
         self.player_num = None
 
-    def getPosition(self):
+    def getPosition(self) -> tuple[int, int]:
         return self.pos
     
     def setPosition(self, new_position: tuple[int, int] = None):
