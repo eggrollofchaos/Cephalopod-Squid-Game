@@ -41,7 +41,7 @@ class MinimaxAI(BaseAI):
     def getPlayerNum(self) -> int:
         return self.player_num
         
-    def setPlayerNum(self, num: int):
+    def setPlayerNum(self, num: int) -> None:
         self.player_num = num
 
     def getMove(self, grid: Grid) -> tuple[int, int]:
