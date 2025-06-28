@@ -49,7 +49,7 @@ class MinimaxAI(BaseAI):
 
         return move
 
-    def _best_move(self, grid: Grid):
+    def _best_move(self, grid: Grid) -> tuple[int, int]:
 
         start = time.process_time()
 
