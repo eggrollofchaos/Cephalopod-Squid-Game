@@ -59,7 +59,7 @@ class MinimaxAI(BaseAI):
         
         return self.maximize_move(grid, alpha = -np.inf, beta = np.inf, depth = 0, start_time = start)
 
-    def maximize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time):
+    def maximize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time) -> tuple[int, int], int:
         """ 
         Description
         -----------
