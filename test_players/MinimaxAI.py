@@ -111,7 +111,7 @@ class MinimaxAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def minimize_move(self, grid : Grid, alpha, beta, depth, start_time):
+    def minimize_move(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
         """ 
         Description
         -----------
