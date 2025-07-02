@@ -162,7 +162,7 @@ class MinimaxAI(BaseAI):
         return minChild, minUtility
 
 
-    def terminal_test(self, state: Grid, time, depth, mode = 'move') -> bool:
+    def terminal_test(self, state: Grid, time, depth: int, mode = 'move') -> bool:
         
         lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
         
@@ -175,8 +175,9 @@ class MinimaxAI(BaseAI):
             # return lose or win or time >= TRAP_TIME_LIMIT or depth >= MAX_DEPTH
             return lose or win or time >= TRAP_TIME_LIMIT or depth >= self.depth_limit
 
-    def getTrap(self, grid : Grid):
+    def getTrap(self, grid: Grid):
         trap, _ = self._best_trap(grid)
+
         return trap
 
     def _best_trap(self, grid: Grid):
