@@ -302,6 +302,7 @@ class MinimaxAI(BaseAI):
         
 
 def IS(grid: Grid, player_num: int) -> int:
+    """Calculates Improved Score -- based on Player Moves minus Opp Moves."""
 
     # find all available moves by Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
