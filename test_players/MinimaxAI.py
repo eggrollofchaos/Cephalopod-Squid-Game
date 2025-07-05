@@ -237,7 +237,7 @@ class MinimaxAI(BaseAI):
 
         return maxTrap, maxUtility
         
-    def minimize_trap(self, grid : Grid, alpha, beta, depth, start_time):
+    def minimize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
         """ 
         Description
         -----------
