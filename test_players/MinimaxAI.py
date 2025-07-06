@@ -187,7 +187,7 @@ class MinimaxAI(BaseAI):
             return grid.getAvailableCells()[0], 100
         return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
 
-    def maximize_trap(self, grid : Grid, alpha, beta, depth, start_time):
+    def maximize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
         """ 
         Description
         -----------
