@@ -176,15 +176,25 @@ class MinimaxAI(BaseAI):
             return lose or win or time >= TRAP_TIME_LIMIT or depth >= self.depth_limit
 
     def getTrap(self, grid: Grid) -> tuple[int, int]:
+        """
+        Calculate the best trap for current player.
+
+        Starting point for calculating best trap.
+        Called from Game.py.
+        """
         trap, _ = self._best_trap(grid)
 
         return trap
 
     def _best_trap(self, grid: Grid):
+        
+
         start = time.process_time()
         # Funny edge case: check if player has won by trapping Opponent with previous move. Throwing randomly.
+        
         if len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True)) == 0:
             return grid.getAvailableCells()[0], 100
+
         return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
 
     def maximize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
