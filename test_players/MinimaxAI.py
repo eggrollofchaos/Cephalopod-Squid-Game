@@ -186,12 +186,17 @@ class MinimaxAI(BaseAI):
 
         return trap
 
-    def _best_trap(self, grid: Grid):
-        
+    def _best_trap(self, grid: Grid) -> tuple[int, int]:
+        """
+        Returns best trap for current player.
 
+        First checks edge case where the current player's location (after the move) has taken
+        opponent's last open square, and game is already over.
+        Starts Minimax algorithm.
+        """
         start = time.process_time()
-        # Funny edge case: check if player has won by trapping Opponent with previous move. Throwing randomly.
         
+        # Funny edge case: check if player has won by trapping Opponent with previous move. Throwing randomly.
         if len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True)) == 0:
             return grid.getAvailableCells()[0], 100
 
