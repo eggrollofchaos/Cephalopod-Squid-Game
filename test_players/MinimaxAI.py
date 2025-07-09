@@ -192,6 +192,7 @@ class MinimaxAI(BaseAI):
 
         First checks edge case where the current player's location (after the move) has taken
         opponent's last open square, and game is already over.
+        Called from getTrap()
         Starts Minimax algorithm.
         """
         start = time.process_time()
