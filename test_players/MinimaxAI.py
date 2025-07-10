@@ -163,6 +163,13 @@ class MinimaxAI(BaseAI):
 
 
     def terminal_test(self, state: Grid, time, depth: int, mode = 'move') -> bool:
+        """
+        Check whether Move/Trap search algo is done and, if so, return True.
+        Algo is done if any of these are true:
+            - Either player has no more neighbors
+            - Move or Trap time limit exceeded
+            - Depth limit exceeded
+        """
         
         lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
         
