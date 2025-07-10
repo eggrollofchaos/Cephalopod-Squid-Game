@@ -100,10 +100,9 @@ def AM(grid: Grid, player_num: int) -> int:
 
 def IS(grid: Grid, player_num: int) -> int:
     """
-    Get the difference between number of available moves for the specified player vs opponent, in the Grid argument passed.
+    Get the difference between number of available moves for specified player vs opponent, in the Grid argument passed.
     Improved Score (IS) method, a basic heuristics calculation.
     """
-
 
     # find all available moves by current player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)

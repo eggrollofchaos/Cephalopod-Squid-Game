@@ -170,7 +170,6 @@ class MinimaxAI(BaseAI):
             - Move or Trap time limit exceeded
             - Depth limit exceeded
         """
-        
         lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
         
         win  = not state.get_neighbors(state.find(3 - self.player_num), only_available=True)
@@ -325,9 +324,12 @@ class MinimaxAI(BaseAI):
         
 
 def IS(grid: Grid, player_num: int) -> int:
-    """Calculates Improved Score -- based on Player Moves minus Opp Moves."""
+    """
+    Get the difference between number of available moves for specified player vs opponent, in the Grid argument passed.
+    Improved Score (IS) method, a basic heuristics calculation.
+    """
 
-    # find all available moves by Player
+    # find all available moves by Current Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
     
     # find all available moves by Opponent
