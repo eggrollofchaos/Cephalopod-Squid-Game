@@ -45,11 +45,18 @@ class MinimaxAI(BaseAI):
         self.player_num = num
 
     def getMove(self, grid: Grid) -> tuple[int, int]:
+        """
+        Calculate the best move for current player.
+
+        Starting point for calculating best move.
+        Called from Game.py.
+        """
         move, util = self._best_move(grid)
 
         return move
 
     def _best_move(self, grid: Grid) -> tuple[int, int]:
+
 
         start = time.process_time()
 
