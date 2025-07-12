@@ -56,8 +56,14 @@ class MinimaxAI(BaseAI):
         return move
 
     def _best_move(self, grid: Grid) -> tuple[int, int]:
+        """
+        Returns best move for current player.
 
-
+        First checks edge case where the current player's location (after the move) has taken
+        opponent's last open square, and game is already over.
+        Called from getMove()
+        Starts Minimax algorithm.
+        """
         start = time.process_time()
 
         # Funny edge case: check if player has won by trapping Opponent with previous move. Throwing randomly.
