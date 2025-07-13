@@ -48,7 +48,7 @@ class MinimaxAI(BaseAI):
         """
         Calculate the best move for current player.
 
-        Starting point for calculating best move.
+        Starting point (wrapper) for calculating best move.
         Called from Game.py.
         """
         move, util = self._best_move(grid)
@@ -198,7 +198,7 @@ class MinimaxAI(BaseAI):
         """
         Calculate the best trap for current player.
 
-        Starting point for calculating best trap.
+        Starting point (wrapper) for calculating best trap.
         Called from Game.py.
         """
         trap, _ = self._best_trap(grid)
