@@ -16,7 +16,7 @@ from tqdm import tqdm
 is_unix = os_type()
 
 class RunGames(object):
-    '''
+    """
     Helper script to run Game.py n times to test successful execution, win/loss, and gather statistics.
     Outputs results to "batch_results[ ... ].txt" with various additional filename decorations based on arguments used.
 
@@ -38,7 +38,7 @@ class RunGames(object):
     $ python3 RunGames.py 10 -c -p -h -d 6 -oa 3 -od 2 -m "Trying something new"
     
     See main() for additional notes on flags and arguments.
-    '''
+    """
 
     def __init__(self, results_filename: str, n: int, progress: bool, verbose: bool, suppress_output: bool, heur: bool, \
         depth_limit: int, opp_ai_int: int, opp_depth_limit: int, comment: str, run_arg_list: list[str]):
