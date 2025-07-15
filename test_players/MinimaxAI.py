@@ -21,7 +21,9 @@ class MinimaxAI(BaseAI):
     """
     Minimax Computer AI player, implements Expectiminimax.
     Default depth limit is 3.
-    TODO: write docstring
+    When the search tree reaches a terminal node or max depth limit, calculate heuristics.
+    Uses minimal heuristics of Improved Score, similar to MediumAI, which is simply
+       (number of current player possible moves) - (number of opponent possible moves)
     
     """
 
@@ -179,9 +181,9 @@ class MinimaxAI(BaseAI):
         """
         Check whether Move/Trap search algo is done and, if so, return True.
         Algo is done if any of these are true:
-            - Either player has no more neighbors
-            - Move or Trap time limit exceeded
-            - Depth limit exceeded
+            - Either player has no more neighbors (game end state)
+            - Move or Trap time limit exceeded (rule violation if implemented, also game end state)
+            - Depth limit reached (proxy for skill level, or to reduce thinking time)
         """
         lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
         
