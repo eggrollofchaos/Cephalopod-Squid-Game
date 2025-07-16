@@ -21,8 +21,8 @@ class Displayer(BaseDisplayer):
     """
     Modified by WAX Mar 19, 2025
     """
-    def __init__(self, N = 7):
-        self.dim = N
+    def __init__(self, gridSize: int = 7) -> None:
+        self.dim = gridSize
         self.cellSize = Displayer.half_and_odd(self.dim)
         self.cTemp = "\x1b[%dm%" + str(self.cellSize) + "s\x1b[0m "
         
@@ -33,7 +33,7 @@ class Displayer(BaseDisplayer):
             self.display = self.unixDisplayNew
 
     # placeholder for generic display
-    def display(self, grid: Grid):
+    def display(self, grid: Grid) -> None:
         pass
 
     def winDisplay(self, grid: Grid) -> None:
@@ -81,7 +81,7 @@ class Displayer(BaseDisplayer):
         """
         Enhanced Unix Displayer method.
         Shortens the boxes so that the entire grid is closer to a square.
-        Displays axes in range(N), where N is dimension.
+        Displays axes in range(gridSize), where gridSize is dimension.
         """
 
         print()

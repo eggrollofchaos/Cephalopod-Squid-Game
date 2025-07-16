@@ -1,6 +1,6 @@
 """
 MediumAI module.
-Default AI for Opponent player.
+Default AI for opponent player.
 Fully commented by WAX.
 """
 import os 
@@ -15,12 +15,12 @@ from Grid import Grid
 
 class MediumAI(BaseAI):
     """
-    Medium Computer AI player, default.
+    Medium AI, default AI for opponent player.
     Move AI finds move that maximizes number of available moves for current player.
     Trap AI finds position that maximizes difference between current player's available moves vs opponent's.
     """
 
-    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
+    def __init__(self, verbose: int = 0, initial_position: tuple[int, int] = None) -> None:
         super().__init__()
         print('Running MediumAI()...') if verbose else None
         self.verbose = verbose

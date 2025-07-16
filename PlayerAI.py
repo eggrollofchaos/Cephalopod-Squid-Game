@@ -2,7 +2,7 @@
 PlayerAI Class module.
 Primarily authored by WAX.
 Early contributions by @mhr and @gongchen161.
-Hard-coded to a 7x7 grid size.
+Hard-coded to a 7x7 grid size. TODO: Make dynamic.
 """
 import os
 from platform import system as os_type
@@ -241,9 +241,10 @@ class PlayerAI(BaseAI):
 
     @staticmethod
     def __clone(grid: Grid) -> object:
-        '''
-        Makes a full copy of current grid
-        '''
+        """
+        Make a full copy of current grid.
+        TODO: Replace with existing grid.clone? Look into copy vs deecopy, memory, speed, etc.
+        """
         grid_copy = Grid(7)
         grid_copy.map = grid.map.copy()
         return grid_copy

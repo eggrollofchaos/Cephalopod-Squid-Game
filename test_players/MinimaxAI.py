@@ -2,6 +2,7 @@
 Basic MinimaxAI Class module.
 Implements Expectiminimax search algo.
 Commented by WAX.
+TODO: make Size dynamic from Game
 """
 import os 
 import sys
@@ -13,9 +14,11 @@ sys.path.append(os.getcwd())        # setting path to parent directory
 from BaseAI import BaseAI
 from Grid import Grid
 
+
 MAX_DEPTH = 3
 MOVE_TIME_LIMIT = 0.49
 TRAP_TIME_LIMIT = 0.49
+
 
 class MinimaxAI(BaseAI):
     """
@@ -23,11 +26,10 @@ class MinimaxAI(BaseAI):
     Default depth limit is 3.
     When the search tree reaches a terminal node or max depth limit, calculate heuristics.
     Uses minimal heuristics of Improved Score, similar to MediumAI, which is simply
-       (number of current player possible moves) - (number of opponent possible moves)
-    
+       (number of current player possible moves) - (number of opponent possible moves).
     """
 
-    def __init__(self, depth_limit: int = MAX_DEPTH, position: tuple[int, int] = None, verbose: int = 0) -> None:
+    def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, position: tuple[int, int] = None) -> None:
         super().__init__()
         print('Running basic MinimaxAI()...') if verbose else None
         self.depth_limit = depth_limit
@@ -37,7 +39,7 @@ class MinimaxAI(BaseAI):
     def getPosition(self) -> tuple[int, int]:
         return self.pos
     
-    def setPosition(self, new_position: tuple[int, int] = None) -> None:
+    def setPosition(self, new_position: tuple[int, int]) -> None:
         self.pos = new_position
     
     def getPlayerNum(self) -> int:
@@ -61,9 +63,9 @@ class MinimaxAI(BaseAI):
         """
         Returns best move for current player.
 
-        First checks edge case where the current player's location (after the move) has taken
+        First checks edge case where the current player's location (after the move) has taken.
         opponent's last open square, and game is already over.
-        Called from getMove()
+        Called from getMove().
         Starts Minimax algorithm.
         """
         start = time.process_time()
@@ -74,7 +76,7 @@ class MinimaxAI(BaseAI):
         
         return self.maximize_move(grid, alpha = -np.inf, beta = np.inf, depth = 0, start_time = start)
 
-    def maximize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time) -> tuple[int, int], int:
+    def maximize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time) -> (tuple[int, int], int):
         """ 
         Description
         -----------
@@ -126,7 +128,7 @@ class MinimaxAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def minimize_move(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
+    def minimize_move(self, grid: Grid, alpha, beta, depth, start_time) -> (tuple[int, int], int):
         """ 
         Description
         -----------
@@ -181,9 +183,9 @@ class MinimaxAI(BaseAI):
         """
         Check whether Move/Trap search algo is done and, if so, return True.
         Algo is done if any of these are true:
-            - Either player has no more neighbors (game end state)
-            - Move or Trap time limit exceeded (rule violation if implemented, also game end state)
-            - Depth limit reached (proxy for skill level, or to reduce thinking time)
+            - Either player has no more neighbors (game end state).
+            - Move or Trap time limit exceeded (rule violation if implemented, also game end state).
+            - Depth limit reached (proxy for skill level, or to reduce thinking time).
         """
         lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
         
@@ -211,9 +213,9 @@ class MinimaxAI(BaseAI):
         """
         Returns best trap for current player.
 
-        First checks edge case where the current player's location (after the move) has taken
+        First checks edge case where the current player's location (after the move) has taken.
         opponent's last open square, and game is already over.
-        Called from getTrap()
+        Called from getTrap().
         Starts Minimax algorithm.
         """
         start = time.process_time()
@@ -224,7 +226,7 @@ class MinimaxAI(BaseAI):
 
         return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
 
-    def maximize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
+    def maximize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> (tuple[int, int], int):
         """ 
         Description
         -----------
@@ -274,7 +276,7 @@ class MinimaxAI(BaseAI):
 
         return maxTrap, maxUtility
         
-    def minimize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> tuple[int, int], int:
+    def minimize_trap(self, grid: Grid, alpha, beta, depth, start_time) -> (tuple[int, int], int):
         """ 
         Description
         -----------

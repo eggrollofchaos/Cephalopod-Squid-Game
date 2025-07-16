@@ -1,5 +1,6 @@
 """
 EasyAI Class module.
+Easiest AI option for opponent player.
 Fully commented by WAX.
 """
 import os
@@ -14,12 +15,12 @@ from Grid import Grid
 
 class EasyAI(BaseAI):
     """
-    Easy Computer AI player.
+    Easy AI, indended for basic testing.
     Move AI is random.
     Trap AI chooses random neighboring square of opponent.
     """
 
-    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
+    def __init__(self, verbose: int = 0, initial_position: tuple[int, int] = None) -> None:
         super().__init__()
         print('Running EasyAI()...') if verbose else None
         self.verbose = verbose

@@ -20,7 +20,8 @@ class RunGames(object):
     Helper script to run Game.py n times to test successful execution, win/loss, and gather statistics.
     Outputs results to "batch_results[ ... ].txt" with various additional filename decorations based on arguments used.
 
-    Usage:
+    Usage
+    --------
     $ python3 RunGames.py [n] -c -p -v|-vv|-vvv -g -h -d [depth_limit] -oa [opp_ai_level] -od [opp_depth_limit] -m [comment]
      n  : number of processes to run, default 100
     -c  : clear terminal screen prior to running
@@ -29,13 +30,15 @@ class RunGames(object):
     -g  : show game output (note: can be very verbose)
     -h  : enable advanced heuristics
     -d  : set Player search depth limit; min 1, default 4
-    -oa : set Opponent AI level of {-2,-1,0,1,2,3}; default = 0 (Medium); level = 9 indicates Human Opponent, however batch run is intended for AI
-    -od : set Opponent AI search depth limit; min 1, default = 2, only applicable if Opponent AI level in {1,2,3}
+    -oa : set Opponent AI level of {-2,-1,0,1,9,10,11,12,13}; default = 0 (Medium); level = 9 indicates Human Opponent
+          note that batch run is intended for AI opponent
+    -od : set Opponent AI search depth limit; min 1, default = 2, only applicable if Opponent AI level in {1,10,11,12,13}
     -m  : add a comment to the log file, must enclose in quotes
     
-    Examples:
+    Examples
+    --------
     $ python3 RunGames.py 100 -c -v -p -g -h -d 4 -oa 0 -od 1
-    $ python3 RunGames.py 10 -c -p -h -d 6 -oa 3 -od 2 -m "Trying something new"
+    $ python3 RunGames.py 10 -c -p -h -d 6 -oa 13 -od 2 -m "Trying something new"
     
     See main() for additional notes on flags and arguments.
     """
@@ -283,7 +286,7 @@ def main():
         # run_arg_list3 = ['python3', 'Game.py', '-t', '-d', str(depth_limit), '-oa', str(opp_ai_int), '-od', str(opp_depth_limit)]
         # input(f'run_arg_list = {run_arg_list}')
 
-        # a fancy way to capture a number anywhere in the command line statement as the number of iterations to run
+        # a fancy way to capture a number anywhere in the command line statement as the [number of iterations to run]
         num = [ arg for arg_idx, arg in enumerate(argv) if arg.isnumeric()
             and arg_idx!=dl_flag_index+1
             and arg_idx!=opp_ai_int_flag_index+1

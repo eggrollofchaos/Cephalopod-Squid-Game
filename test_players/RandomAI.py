@@ -1,5 +1,6 @@
 """
 RandomAI (i.e. no AI) Class module.
+All actions are randomized.
 Fully commented by WAX.
 """
 import os 
@@ -14,12 +15,12 @@ from Grid import Grid
 
 class RandomAI(BaseAI):
     """
-    Random AI.
-    Debug AI for testing purposes.
+    Random AI, for debuging purposes.
+    Can be used for Player or Computer opponent.
     Selects a random move and trap position.
     """
 
-    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
+    def __init__(self, verbose: int = 0, initial_position: tuple[int, int] = None) -> None:
         super().__init__()
         print('Running RandomAI()...') if verbose else None
         self.verbose = verbose
@@ -47,7 +48,7 @@ class RandomAI(BaseAI):
         return new_pos
 
     def getTrap(self, grid: Grid) -> tuple[int, int]:
-        """RandomAI (not really an AI) returns a random, valid trap position. """
+        """Generic: Return a random, valid trap position."""
         
         # find all available cells in the grid
         available_cells = grid.getAvailableCells()

@@ -31,7 +31,8 @@ from test_players.HardAI import HardAI
 from Utils import *
 
 PLAYER_TURN, COMPUTER_TURN = 1,2                                    # convention: set Player to Player 1, AI Opponent to Player 2
-is_unix = os_type()
+SIZE = 7                                                            # dimensions of square grid
+is_unix = os_type()                                                 # for Unix-based systems, can show colors and emojis
 
 # Time Limit Before Losing
 timeLimit = 5
@@ -40,10 +41,27 @@ clear = lambda: system('clear') if is_unix else system('cls')       # clear scre
 
 class Game():
     """
-    Set Player AI depth limit to -2 to debug using Random AI.
-    Set Opponent AI level to -2 to debug using Random AI.
+    Command Line Switches
+    ----------
+    -oa : set Opponent AI level of {-2,-1,0,1,9,10,11,12,13}; default = 0 (Medium); level = 9 indicates Human Opponent
+          -2 : Random AI                                -- for debugging
+          -1 : Easy AI
+           0 : Medium AI
+           1 : Basic Expectiminimax AI
+           9 : Human Opponent                           -- NOT AI 
+          10 : Hard Expectiminimax AI w/ Heuristics
+          11 : CustomV1 AI using Expectiminimax
+          12 : CustomV2 AI using Expectiminimax
+          13 : CustomV3 AI using Expectiminimax
+    -od : set Opponent AI search depth limit; min 1, default = 2, only applicable if Opponent AI level in {1,10,11,12,13}
+
+    Debug Note
+    ----------
+    Set Player AI depth limit to -2 to have player make moves/traps using Random AI.
+    Set Opponent AI level to -2 to have opponent make moves/traps using Random AI.
+
     """
-    def __init__(self, playerAI = None, computerAI = None, N = 7, displayer = None, test_mode = False, verbose = 0):
+    def __init__(self, playerAI = None, computerAI = None, grid_size = SIZE, displayer = None, test_mode = False, verbose = 0):
         """
         Description
         ----------
@@ -59,7 +77,7 @@ class Game():
                     - If Computer opponent, there is a choice of Easy, Medium, CustomV1, CustomV2, or CustomV3.
                     - There is also a RandomAI class, but it is only used for testing.
         
-        N           - Dimension of grid.
+        grid_size   - Dimension of square grid.
 
         displayer   - Class for handling drawing of the game board aka grid.
 
@@ -68,10 +86,10 @@ class Game():
         verbose     - Verbosity level of output in [0,1,2,3].
 
         """
-        self.grid       = Grid(N)
+        self.grid       = Grid(grid_size)
         self.playerAI   = playerAI or RandomAI(verbose) 
         self.computerAI = computerAI or RandomAI(verbose) 
-        self.dim        = N
+        self.dim        = grid_size
         self.over       = False
         self.displayer  = displayer
         self.test_mode  = test_mode   # don't wait 5 seconds between moves
@@ -440,10 +458,10 @@ def main():
         match opp_ai_int:
             case -1:
                 opp_ai_level = 'EasyAI(verbose)'                                # for eval
-                opp_string = 'Easy AI.'
+                opp_string = 'Easy AI.\n'
             case 0:
                 opp_ai_level = 'MediumAI(verbose)'                              # for eval
-                opp_string = 'Medium AI.'
+                opp_string = 'Medium AI.\n'
             case 1:
                 opp_ai_level = 'MinimaxAI(opp_depth_limit, verbose)'            # for eval
                 opp_string = 'Minimax AI (Expectiminimax)'
@@ -488,8 +506,8 @@ def main():
     # depth_limit = 0                                   # for testing
     
     # initialize Displayer, Game, start gameplay
-    displayer = Displayer(N = 7)
-    game = Game(playerAI = playerAI, computerAI = computerAI, N = 7, displayer = displayer, test_mode = test_mode, verbose = verbose)
+    displayer = Displayer(grid_size = 7)
+    game = Game(playerAI = playerAI, computerAI = computerAI, grid_size = 7, displayer = displayer, test_mode = test_mode, verbose = verbose)
     result, moves, traps = game.play()
 
     # game has ended

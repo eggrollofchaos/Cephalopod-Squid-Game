@@ -2,6 +2,7 @@
 HardAI Class module.
 Implements Expectiminimax search algo + basic heuristics.
 Commented by WAX.
+TODO: make Size dynamic from Game
 """
 import os
 import sys
@@ -17,7 +18,7 @@ from Utils import manhattan_distance
 MAX_DEPTH = 4
 MOVE_TIME_LIMIT = 0.48
 TRAP_TIME_LIMIT = 0.48
-N = 7
+SIZE = 7                            # size of square, SIZE = side length
 
 class HardAI(BaseAI):
     """
@@ -25,9 +26,11 @@ class HardAI(BaseAI):
     Default depth limit is 4.
     TODO: write docstring
     
+    
     """
 
-    def __init__(self, depth_limit = MAX_DEPTH, position = None, verbose: int = 0) -> None:
+    def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, position: tuple[int, int] = None) -> None:
+        # print(locals())
         super().__init__()
         print('Running HardAI() with Expectiminimax and basic heuristics...') if verbose else None
         self.depth_limit = depth_limit
@@ -326,7 +329,7 @@ def OTD(state : Grid, player_num) -> float:
     Formula : H(S,player) = available_cells/size_of_board *
     
     """
-    m = len(state.getAvailableCells()) / N ** 2 
+    m = len(state.getAvailableCells()) / SIZE ** 2 
     p = len(state.get_neighbors(state.find(player_num), only_available = True)) # player moves
     o = len(state.get_neighbors(state.find(3 - player_num), only_available = True))
     return 1.5*p - o if m > 0.5 else p - 2*o
