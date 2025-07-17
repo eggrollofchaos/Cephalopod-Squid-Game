@@ -2,7 +2,6 @@
 Basic MinimaxAI Class module.
 Implements Expectiminimax search algo.
 Commented by WAX.
-TODO: make Size dynamic from Game
 """
 import os 
 import sys
@@ -30,11 +29,13 @@ class MinimaxAI(BaseAI):
     """
 
     def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, position: tuple[int, int] = None) -> None:
+        # print(locals())
         super().__init__()
         print('Running basic MinimaxAI()...') if verbose else None
         self.depth_limit = depth_limit
         self.pos = position
         self.player_num = None
+        # self.dim = 7                              # not needed
 
     def getPosition(self) -> tuple[int, int]:
         return self.pos

@@ -7,16 +7,17 @@ from copy import deepcopy
 
 import numpy as np
 
+SIZE = 7                        # default dimension of square grid
 
 class Grid():
 
-    def __init__(self, gridSize: int = 7) -> None:
+    def __init__(self, grid_size: int = SIZE) -> None:
         """
         Grid constructor (initialization) method.
         Create an NxN grid, filled with zeros.
         """
-        self.dim = gridSize
-        self.map = np.zeros((gridSize,gridSize))                    # empty board
+        self.dim = grid_size
+        self.map = np.zeros((grid_size,grid_size))                    # empty board
     
     def getAvailableCells(self) -> list[tuple[int, int]]:
         """ Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)] """

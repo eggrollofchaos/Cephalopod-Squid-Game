@@ -9,7 +9,7 @@ import platform
 from BaseDisplayer import BaseDisplayer
 from Grid import Grid
 
-
+SIZE = 7                                # default dimension of square grid
 colorMap = { 0: 100,
              1: 102,
              2: 105,
@@ -21,10 +21,10 @@ class Displayer(BaseDisplayer):
     """
     Modified by WAX Mar 19, 2025
     """
-    def __init__(self, gridSize: int = 7) -> None:
-        self.dim = gridSize
-        self.cellSize = Displayer.half_and_odd(self.dim)
-        self.cTemp = "\x1b[%dm%" + str(self.cellSize) + "s\x1b[0m "
+    def __init__(self, grid_size: int = SIZE) -> None:
+        self.dim = grid_size
+        self.cell_size = Displayer.half_and_odd(self.dim)
+        self.cTemp = "\x1b[%dm%" + str(self.cell_size) + "s\x1b[0m "
         
         if "Windows" == platform.system():
             self.display = self.winDisplay
@@ -66,9 +66,9 @@ class Displayer(BaseDisplayer):
                 if v == 0:
                     string = ""
                 elif v == -1:
-                    string = "x".center(self.cellSize, " ")
+                    string = "x".center(self.cell_size, " ")
                 else:
-                    string = str(int(v)).center(self.cellSize, " ")
+                    string = str(int(v)).center(self.cell_size, " ")
 
                 print(self.cTemp %(colorMap[v], string), end="")
             print("")
@@ -81,7 +81,7 @@ class Displayer(BaseDisplayer):
         """
         Enhanced Unix Displayer method.
         Shortens the boxes so that the entire grid is closer to a square.
-        Displays axes in range(gridSize), where gridSize is dimension.
+        Displays axes in range(self.dim), where self.dim = grid_size = dimension.
         """
 
         print()
@@ -97,8 +97,8 @@ class Displayer(BaseDisplayer):
                 if i == -1:
                     if j != -1:
                         # pass
-                        coor = str(j).center(self.cellSize, " ")
-                        sf = "%" + str(self.cellSize) + "s"                    
+                        coor = str(j).center(self.cell_size, " ")
+                        sf = "%" + str(self.cell_size) + "s"                    
                         print(sf % coor, end = " ")
                         # print(" ", end = "")
                     continue
@@ -108,9 +108,9 @@ class Displayer(BaseDisplayer):
                     if v == 0:
                         string = ""
                     elif v == -1:
-                        string = "x".center(self.cellSize, " ")
+                        string = "x".center(self.cell_size, " ")
                     else:
-                        string = str(int(v)).center(self.cellSize, " ")
+                        string = str(int(v)).center(self.cell_size, " ")
     
                     print(self.cTemp %(colorMap[v], string), end="")
             print("")

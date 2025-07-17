@@ -31,7 +31,7 @@ from test_players.HardAI import HardAI
 from Utils import *
 
 PLAYER_TURN, COMPUTER_TURN = 1,2                                    # convention: set Player to Player 1, AI Opponent to Player 2
-SIZE = 7                                                            # dimensions of square grid
+SIZE = 7                                                            # default dimension of square grid
 is_unix = os_type()                                                 # for Unix-based systems, can show colors and emojis
 
 # Time Limit Before Losing
@@ -466,7 +466,7 @@ def main():
                 opp_ai_level = 'MinimaxAI(opp_depth_limit, verbose)'            # for eval
                 opp_string = 'Minimax AI (Expectiminimax)'
             case 10:
-                opp_ai_level = 'HardAI(opp_depth_limit, verbose)'               # for eval
+                opp_ai_level = 'HardAI(opp_depth_limit, verbose, SIZE)'         # for eval
                 opp_string = 'Hard AI (with Expectiminimax + heuristics)'
             case 11:
                 opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose)'        # for eval
@@ -506,8 +506,8 @@ def main():
     # depth_limit = 0                                   # for testing
     
     # initialize Displayer, Game, start gameplay
-    displayer = Displayer(grid_size = 7)
-    game = Game(playerAI = playerAI, computerAI = computerAI, grid_size = 7, displayer = displayer, test_mode = test_mode, verbose = verbose)
+    displayer = Displayer(grid_size = SIZE)
+    game = Game(playerAI = playerAI, computerAI = computerAI, grid_size = SIZE, displayer = displayer, test_mode = test_mode, verbose = verbose)
     result, moves, traps = game.play()
 
     # game has ended
