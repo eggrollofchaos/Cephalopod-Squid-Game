@@ -17,7 +17,7 @@ from Grid import Grid
 MAX_DEPTH = 3
 MOVE_TIME_LIMIT = 0.49
 TRAP_TIME_LIMIT = 0.49
-
+SIZE = 7                            # default dimension of square grid, SIZE = side length; not current used
 
 class MinimaxAI(BaseAI):
     """
@@ -28,14 +28,15 @@ class MinimaxAI(BaseAI):
        (number of current player possible moves) - (number of opponent possible moves).
     """
 
-    def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, position: tuple[int, int] = None) -> None:
+    def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, grid_size: int = SIZE, position: tuple[int, int] = None) -> None:
         # print(locals())
         super().__init__()
         print('Running basic MinimaxAI()...') if verbose else None
+        self.verbose = verbose                              # not currently used
         self.depth_limit = depth_limit
         self.pos = position
         self.player_num = None
-        # self.dim = 7                              # not needed
+        self.dim = grid_size                                # not currently used
 
     def getPosition(self) -> tuple[int, int]:
         return self.pos

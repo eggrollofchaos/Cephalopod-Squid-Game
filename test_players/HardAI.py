@@ -17,7 +17,7 @@ from Utils import manhattan_distance
 MAX_DEPTH = 4
 MOVE_TIME_LIMIT = 0.48
 TRAP_TIME_LIMIT = 0.48
-SIZE = 7                            # size of square, SIZE = side length
+SIZE = 7                            # default dimension of square grid, SIZE = side length
 
 class HardAI(BaseAI):
     """
@@ -29,9 +29,10 @@ class HardAI(BaseAI):
     """
 
     def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, grid_size: int = SIZE, position: tuple[int, int] = None) -> None:
-        print(locals())
+        # print(locals())
         super().__init__()
         print('Running HardAI() with Expectiminimax and basic heuristics...') if verbose else None
+        self.verbose = verbose                              # not currently used
         self.depth_limit = depth_limit
         self.pos = position
         self.player_num = None

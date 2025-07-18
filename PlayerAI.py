@@ -20,11 +20,12 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 
 DEFAULT_DEPTH_LIMIT = 4
+SIZE = 7                            # default dimension of square grid, SIZE = side length
 is_unix = os_type()
 
 class PlayerAI(BaseAI):
     # def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = 'graphcut', verbose = False) -> None:
-    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, heur = None, verbose = 0) -> None:
+    def __init__(self, depth_limit: int = DEFAULT_DEPTH_LIMIT, heur: int = None, verbose: int = 0, grid_size: int = SIZE) -> None:
         '''
         Player AI.
         Uses Expectiminimax.
@@ -37,6 +38,7 @@ class PlayerAI(BaseAI):
         '''
 
         super().__init__()
+        print('Running PlayerAI()...') if verbose else None
         self.verbose = verbose
         self.pos = None
         self.opp_pos = None
@@ -46,6 +48,7 @@ class PlayerAI(BaseAI):
         # print(f'Depth limit arg is {depth_limit}, setting depth_limit to {self.depth_limit}.')
         # if self.depth_limit < 1:
         #     self.depth_limit = DEFAULT_DEPTH_LIMIT
+        self.dim = grid_size                    # TODO: make a few heuristics dynamic based on this variable
         self.turns = 1                          # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         self.use_advanced_heuristics = heur     # graphcut, geodesics, None
         # self.curr_conn_sq = 48                # essentially dim^2 - 1
@@ -766,7 +769,7 @@ class PlayerAI(BaseAI):
         start_pos = self.__get_search_start_pos(grid, curr_conn_sq_list, attack_pos, target_pos)       # making this dynamic too
 
         radius = 1                                          # initialize at 1
-        max_radius = 7                                      # not really meaningful but good to be rigorous
+        max_radius = self.dim - 1                           # not really meaningful but good to be rigorous
         search_frontier = [start_pos]                       # initialize with position
         explored = []                                       # initialize with position
         trap_candidates = []                                # initialize list of trap candidates to return

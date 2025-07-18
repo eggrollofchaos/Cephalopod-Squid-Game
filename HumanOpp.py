@@ -20,7 +20,8 @@ OPPONENT = lambda player: 3 - player                    # TODO: may not be neede
 TO_CLEAN = str.maketrans('', '', ".()")                 # for sanitizing user input
 
 class HumanOpp(BaseAI):
-    def __init__(self, initial_position: tuple[int, int] = None, verbose: int = 0) -> None:
+    def __init__(self, verbose: int = 0, initial_position: tuple[int, int] = None) -> None:
+        # print(locals())
         super().__init__()
         print('Running HumanOpp()...') if verbose else None
         self.verbose = verbose

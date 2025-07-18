@@ -23,7 +23,7 @@ class RandomAI(BaseAI):
     def __init__(self, verbose: int = 0, initial_position: tuple[int, int] = None) -> None:
         super().__init__()
         print('Running RandomAI()...') if verbose else None
-        self.verbose = verbose
+        self.verbose = verbose                              # not currently used
         self.pos = initial_position
         self.player_num = None
 

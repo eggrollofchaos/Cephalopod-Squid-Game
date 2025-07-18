@@ -425,83 +425,84 @@ def main():
         case 'graphcut':
             heur_str = 'standard + graph cut advanced'
 
-    # initialize Player and display to stdout
-    if playerAIdebug:                                       # for random moves
-        playerAI = RandomAI(verbose)
-        print('\n')
-        if verbose:
+    # introduce game, initialize Player and display to stdout
+    if verbose:
+        print('\n\nRunning AI Squid Game with ', end='')
+        cprint('verbose', color='blue', end='') if is_unix else print('verbose', end='')
+        print(f' level = {verbose}.\n')
+        if playerAIdebug:                                           # for random moves
+            # print('\n')
             cprint('NOTE: Debug mode -- Player is using no AI, all moves/throws are random.', color='green') if is_unix \
             else print('NOTE: Debug mode -- Player is using no AI, all moves/throws are random.')
-    else:
-        playerAI = PlayerAI(depth_limit, heur, verbose)     # PlayerAI is the primary Expectiminimax adversarial search AI for this game
-        if verbose:
-            print('\n\nRunning AI Squid Game with ', end='')
-            cprint('verbose', color='blue', end='') if is_unix else print('verbose', end='')
-            print(f' level = {verbose}.\n')
-            print(f'Player is using Expectiminimax with ', end='')
+        else:
+            print(f'Player is using Expectiminimax search algo with ', end='')
             cprint(f'depth limit of {depth_limit}', color='green', end='') if is_unix else print(f'{depth_limit}', end='')
             print(' and ', end='')
-            cprint(f'{heur_str} heuristics.', color='cyan') if is_unix else print(f'and {heur_str} heuristics.')
+            cprint(f'{heur_str} heuristics.', color='cyan') if is_unix else print(f'and {heur_str} heuristics.')    
+    if playerAIdebug:
+        playerAI = RandomAI(verbose)
+    else:
+        playerAI = PlayerAI(depth_limit, heur, verbose, SIZE)   # PlayerAI is the primary Expectiminimax adversarial search AI for this game
 
     # logic for handling what AI level Opponent will use, or if it will be a Human player
     opp_pre_string = ''
     opp_string = ''
     if computerAIdebug:
-        opp_ai_level = 'RandomAI(verbose)'                                      # for eval
+        opp_ai_level = 'RandomAI(verbose)'                                              # for eval
         opp_pre_string = 'NOTE: Debug mode -- '
-        opp_string = 'no AI, all moves/throws are random.'
+        opp_string = 'no AI, all moves/throws are random.\n'
         # print('Here')
     elif opp_ai_default:
-        opp_ai_level = 'MediumAI(verbose)'                                      # for eval
-        opp_string = 'Medium AI (default) as none was specified.'
+        opp_ai_level = 'MediumAI(verbose)'                                              # for eval
+        opp_string = 'Medium AI (default) as none was specified.\n'
     else:
         match opp_ai_int:
             case -1:
-                opp_ai_level = 'EasyAI(verbose)'                                # for eval
+                opp_ai_level = 'EasyAI(verbose)'                                        # for eval
                 opp_string = 'Easy AI.\n'
             case 0:
-                opp_ai_level = 'MediumAI(verbose)'                              # for eval
+                opp_ai_level = 'MediumAI(verbose)'                                      # for eval
                 opp_string = 'Medium AI.\n'
             case 1:
-                opp_ai_level = 'MinimaxAI(opp_depth_limit, verbose)'            # for eval
-                opp_string = 'Minimax AI (Expectiminimax)'
+                opp_ai_level = 'MinimaxAI(opp_depth_limit, verbose, SIZE)'              # for eval
+                opp_string = 'Minimax AI (with Expectiminimax search algo)'
             case 10:
-                opp_ai_level = 'HardAI(opp_depth_limit, verbose, SIZE)'         # for eval
-                opp_string = 'Hard AI (with Expectiminimax + heuristics)'
+                opp_ai_level = 'HardAI(opp_depth_limit, verbose, SIZE)'                 # for eval
+                opp_string = 'Hard AI (with Expectiminimax seach algo + heuristics)'
             case 11:
-                opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose)'        # for eval
+                opp_ai_level = 'PlayerAIOppV1(opp_depth_limit, verbose, SIZE)'          # for eval
                 opp_string = 'Custom AI version 1'
             case 12:
-                opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose)'        # for eval
+                opp_ai_level = 'PlayerAIOppV2(opp_depth_limit, verbose, SIZE)'          # for eval
                 opp_string = 'Custom AI version 2'
             case 13:
-                opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose)'  # for eval
+                opp_ai_level = 'PlayerAIOppV3(opp_depth_limit, heur, verbose, SIZE)'    # for eval
                 opp_string = 'Custom AI version 3'
             case 9:
                 if is_unix:
-                    opp_string = 'will be a human player.👴👵'
+                    opp_string = 'will be a human player. 👴👵\n'
                 else:
-                    opp_string = 'will be a human player.'
+                    opp_string = 'will be a human player.\n'
             case _:
-                opp_ai_level = 'MediumAI()'                                     # for eval
-                opp_string = f"Medium AI (default) as input of '{opp_ai_int}' not defined."
-                
+                opp_ai_level = 'MediumAI()'                                             # for eval
+                opp_ai_int = 0                                                          # setting as default
+                opp_string = f"Medium AI (default) as input of '{opp_ai_int}' not defined.\n"
+
+    # output Opponent selection
+    if verbose and is_unix:
+        cprint(f'\n{opp_pre_string}Opponent is using {opp_string}', color='magenta', end='')
+        if opp_ai_int > 0 and opp_ai_int != 9:
+            cprint(f', with depth limit of {opp_depth_limit}.', color='magenta')
+    elif verbose:
+        print(f'\n{opp_pre_string}Opponent is using {opp_string}', end='')
+        if opp_ai_int > 0 and opp_ai_int != 9:
+            print(f', with depth limit of {opp_depth_limit}.')
 
     # initialize Opponent
     if opp_ai_int == 9:
         computerAI = HumanOpp(verbose = verbose)
     else:
         computerAI = eval(opp_ai_level)
-
-    # output Opponent selection
-    if verbose and is_unix:
-        cprint(f'{opp_pre_string}Opponent is using {opp_string}', color='magenta', end='')
-        if opp_ai_int > 0:
-            cprint(f', with depth limit of {opp_depth_limit}.', color='magenta')
-    elif verbose:
-        print(f'{opp_pre_string}Opponent is using {opp_string}', end='')
-        if opp_ai_int > 0:
-            print(f', with depth limit of {opp_depth_limit}.')
 
     # depth_limit = 0                                   # for testing
     

@@ -16,6 +16,7 @@ from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 
 DEFAULT_DEPTH_LIMIT = 2
+SIZE = 7                            # default dimension of square grid, SIZE = side length
 
 class PlayerAIOppV1(BaseAI):
     """
@@ -25,7 +26,7 @@ class PlayerAIOppV1(BaseAI):
     Set DEFAULT_DEPTH_LIMIT = 2.
     """
 
-    def __init__(self, depth_limit = DEFAULT_DEPTH_LIMIT, verbose = 0) -> None:
+    def __init__(self, depth_limit: int = DEFAULT_DEPTH_LIMIT, verbose: int = 0, grid_size: int = SIZE) -> None:
 
         super().__init__()
         # self.cape_color = 'blue'
@@ -36,6 +37,7 @@ class PlayerAIOppV1(BaseAI):
         self.depth_limit = depth_limit
         if self.depth_limit < 1:
             self.depth_limit = DEFAULT_DEPTH_LIMIT
+        self.dim = grid_size
         self.turns = 1              # early game = 1-3, mid = 4-6, late to 7+; generally early game <= grid.dim/2, mid = 2xearly
         # self.use_advanced_heuristics = heur        # none implemented
 
