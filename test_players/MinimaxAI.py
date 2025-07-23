@@ -1,7 +1,7 @@
 """
 Basic MinimaxAI Class module.
 Implements Expectiminimax search algo.
-Commented by WAX.
+Fully commented by WAX.
 """
 import os 
 import sys
