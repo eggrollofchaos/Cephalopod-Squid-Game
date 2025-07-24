@@ -38,7 +38,7 @@ class HardAI(BaseAI):
         self.player_num = None
         self.dim = grid_size
 
-    def getPosition(self):
+    def getPosition(self) -> tuple[int, int]:
         return self.pos
     
     def setPosition(self, new_position):
