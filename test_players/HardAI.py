@@ -41,7 +41,7 @@ class HardAI(BaseAI):
     def getPosition(self) -> tuple[int, int]:
         return self.pos
     
-    def setPosition(self, new_position) -> None:
+    def setPosition(self, new_position: tuple[int, int]) -> None:
         self.pos = new_position
     
     def getPlayerNum(self) -> int:
@@ -50,7 +50,7 @@ class HardAI(BaseAI):
     def setPlayerNum(self, num) -> None:
         self.player_num = num
 
-    def getMove(self, grid : Grid):
+    def getMove(self, grid : Grid) -> tuple[int, int]:
         move, util = self._best_move(grid)
 
         return move
