@@ -47,10 +47,10 @@ class HardAI(BaseAI):
     def getPlayerNum(self) -> int:
         return self.player_num
         
-    def setPlayerNum(self, num) -> None:
+    def setPlayerNum(self, num: int) -> None:
         self.player_num = num
 
-    def getMove(self, grid : Grid) -> tuple[int, int]:
+    def getMove(self, grid: Grid) -> tuple[int, int]:
         move, util = self._best_move(grid)
 
         return move
