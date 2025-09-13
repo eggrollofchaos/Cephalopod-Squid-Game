@@ -120,7 +120,7 @@ class HardAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def chance_move(self, state: Grid, p: float, alpha: float, beta, depth, start_time) -> (None, int):
+    def chance_move(self, state: Grid, p: float, alpha: float, beta: float, depth, start_time) -> (None, int):
         """
         Description
         -----------
