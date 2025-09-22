@@ -193,7 +193,7 @@ class HardAI(BaseAI):
 
         return minChild, minUtility
 
-    def terminal_test(self, state: Grid, time: float, depth, mode = 'move') -> bool:
+    def terminal_test(self, state: Grid, time: float, depth: int, mode = 'move') -> bool:
         
         lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
         
