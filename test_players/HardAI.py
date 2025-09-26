@@ -207,7 +207,9 @@ class HardAI(BaseAI):
             return lose or win or time >= TRAP_TIME_LIMIT or depth >= self.depth_limit
 
     def getTrap(self, grid: Grid) -> tuple[int, int]:
+
         trap, _ = self._best_trap(grid)
+        
         return trap
 
     def _best_trap(self, grid: Grid):
