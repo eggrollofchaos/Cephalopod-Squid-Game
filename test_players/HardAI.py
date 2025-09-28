@@ -209,10 +209,10 @@ class HardAI(BaseAI):
     def getTrap(self, grid: Grid) -> tuple[int, int]:
 
         trap, _ = self._best_trap(grid)
-        
+
         return trap
 
-    def _best_trap(self, grid: Grid):
+    def _best_trap(self, grid: Grid) -> (tuple[int, int], int):
         start = time.process_time()
         if len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True)) == 0:
             return grid.getAvailableCells()[0], 100
