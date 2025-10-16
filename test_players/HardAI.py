@@ -120,7 +120,7 @@ class HardAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def chance_move(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> (None, int):
+    def chance_move(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> (None, float):
         """
         Description
         -----------
@@ -249,7 +249,7 @@ class HardAI(BaseAI):
 
         return maxTrap, maxUtility
         
-    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float):
+    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], int):
         # if p > 0.85:
         expected_utility = p * self.minimize_trap(state, alpha, beta, depth + 1, start_time)[1]
                                     
