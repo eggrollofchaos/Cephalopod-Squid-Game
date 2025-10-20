@@ -220,7 +220,7 @@ class HardAI(BaseAI):
         return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
 
 
-    def maximize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], int):
+    def maximize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], float):
 
         if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
             return None, AIS(grid, self.player_num)
