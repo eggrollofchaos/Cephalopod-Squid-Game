@@ -249,7 +249,7 @@ class HardAI(BaseAI):
 
         return maxTrap, maxUtility
         
-    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], int):
+    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], float):
         # if p > 0.85:
         expected_utility = p * self.minimize_trap(state, alpha, beta, depth + 1, start_time)[1]
                                     
