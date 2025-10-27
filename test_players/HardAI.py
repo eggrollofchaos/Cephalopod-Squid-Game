@@ -255,7 +255,7 @@ class HardAI(BaseAI):
                                     
         return None, expected_utility
 
-    def minimize_trap(self, grid: Grid, alpha: float, beta: float, depth; int, start_time):
+    def minimize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time):
         
         if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
             return None, AIS(grid, self.player_num)
