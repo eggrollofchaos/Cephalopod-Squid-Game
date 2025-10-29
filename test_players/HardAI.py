@@ -220,7 +220,7 @@ class HardAI(BaseAI):
         return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
 
 
-    def maximize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], float):
+    def maximize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
 
         if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
             return None, AIS(grid, self.player_num)
@@ -249,13 +249,13 @@ class HardAI(BaseAI):
 
         return maxTrap, maxUtility
         
-    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], float):
+    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[None, float]]:
         # if p > 0.85:
         expected_utility = p * self.minimize_trap(state, alpha, beta, depth + 1, start_time)[1]
                                     
         return None, expected_utility
 
-    def minimize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float):
+    def minimize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
         
         if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
             return None, AIS(grid, self.player_num)
