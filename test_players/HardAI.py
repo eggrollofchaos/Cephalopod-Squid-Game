@@ -138,7 +138,7 @@ class HardAI(BaseAI):
 
         return None, expected_utility
 
-    def minimize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> (tuple[int, int], float):
+    def minimize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
         """ 
         Description
         -----------
