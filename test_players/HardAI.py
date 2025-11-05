@@ -283,7 +283,7 @@ class HardAI(BaseAI):
         return minMove, minUtility
 
 
-    def utility(self, state : Grid, action = 'move') -> float:
+    def utility(self, state: Grid, action = 'move') -> float:
 
         # if win
         if not state.get_neighbors(state.find(3 - self.player_num), only_available=True):
