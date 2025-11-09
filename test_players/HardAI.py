@@ -298,7 +298,7 @@ class HardAI(BaseAI):
         return IS(state, self.player_num)
         
         
-def IS(grid: Grid, player_num) -> int:
+def IS(grid: Grid, player_num: int) -> int:
 
     # find all available moves by Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
