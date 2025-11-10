@@ -308,7 +308,7 @@ def IS(grid: Grid, player_num: int) -> int:
     
     return len(player_moves) - len(opp_moves)
 
-def M2B(state : Grid, player_num : int) -> float:
+def M2B(state: Grid, player_num : int) -> float:
     """
     Moves to Board
     """
