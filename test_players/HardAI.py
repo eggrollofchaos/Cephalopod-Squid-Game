@@ -308,7 +308,7 @@ def IS(grid: Grid, player_num: int) -> int:
     
     return len(player_moves) - len(opp_moves)
 
-def M2B(state: Grid, player_num : int) -> float:
+def M2B(state: Grid, player_num: int) -> float:
     """
     Moves to Board
     """
@@ -318,7 +318,6 @@ def M2B(state: Grid, player_num : int) -> float:
     n = state.getMap().shape[0]
 
     return 2 * p * m / n - o
-
 
 
 def OTD(state : Grid, player_num) -> float:
