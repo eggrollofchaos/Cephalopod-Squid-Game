@@ -320,7 +320,7 @@ def M2B(state: Grid, player_num: int) -> float:
     return 2 * p * m / n - o
 
 
-def OTD(state : Grid, player_num) -> float:
+def OTD(state: Grid, player_num) -> float:
     """
     Description
     ----------
