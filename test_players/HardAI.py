@@ -337,7 +337,7 @@ def OTD(state: Grid, player_num: int) -> float:
 
 
 
-def AIS(grid : Grid, player_num):
+def AIS(grid: Grid, player_num):
 
     # find all available moves by Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
