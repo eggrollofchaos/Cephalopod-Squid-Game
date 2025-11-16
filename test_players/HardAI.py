@@ -219,7 +219,6 @@ class HardAI(BaseAI):
 
         return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
 
-
     def maximize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
 
         if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
@@ -282,7 +281,6 @@ class HardAI(BaseAI):
 
         return minMove, minUtility
 
-
     def utility(self, state: Grid, action: string = 'move') -> float:
 
         # if win
@@ -296,7 +294,6 @@ class HardAI(BaseAI):
             return AM(state, self.player_num) + 0.5 * OSL(state, self.player_num)
         
         return IS(state, self.player_num)
-        
         
 def IS(grid: Grid, player_num: int) -> int:
 
@@ -319,7 +316,6 @@ def M2B(state: Grid, player_num: int) -> float:
 
     return 2 * p * m / n - o
 
-
 def OTD(state: Grid, player_num: int) -> float:
     """
     Description
@@ -333,11 +329,10 @@ def OTD(state: Grid, player_num: int) -> float:
     m = len(state.getAvailableCells()) / self.dim ** 2 
     p = len(state.get_neighbors(state.find(player_num), only_available = True)) # player moves
     o = len(state.get_neighbors(state.find(3 - player_num), only_available = True))
+    
     return 1.5*p - o if m > 0.5 else p - 2*o
 
-
-
-def AIS(grid: Grid, player_num: int):
+def AIS(grid: Grid, player_num: int) -> float:
 
     # find all available moves by Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
@@ -359,7 +354,6 @@ def OSL(state : Grid, player_num) -> float:
     - state (Grid) : a game state, containing board, players, traps.
 
     - player_num : player number
-
 
     """
     available_moves = state.get_neighbors(state.find(player_num))
