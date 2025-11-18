@@ -342,7 +342,7 @@ def AIS(grid: Grid, player_num: int) -> float:
     
     return 2 * len(player_moves) - len(opp_moves)
 
-def OSL(state : Grid, player_num) -> float:
+def OSL(state: Grid, player_num) -> float:
     """
     One-Step-Lookahead heuristics
 
