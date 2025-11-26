@@ -368,7 +368,7 @@ def AM(grid: Grid, player_num: int) -> int:
 
     return len(available_moves)
 
-def compute_p(position: tuple[int, int], target):
+def compute_p(position: tuple[int, int], target: tuple[int, int]):
     
     p = 1 - 0.05*(manhattan_distance(position, target) - 1)
     return p
