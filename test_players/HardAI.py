@@ -363,6 +363,9 @@ def OSL(state: Grid, player_num: int) -> float:
     return sum([len(s.get_neighbors(pos, only_available = True)) for pos, s in zip(available_moves, child_states)])
 
 def AM(grid: Grid, player_num: int) -> int:
+    """
+    Available Moves
+    """
 
     available_moves = grid.get_neighbors(grid.find(player_num), only_available = True)
 
