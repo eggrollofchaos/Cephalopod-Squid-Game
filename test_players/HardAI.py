@@ -364,7 +364,8 @@ def OSL(state: Grid, player_num: int) -> float:
 
 def AM(grid: Grid, player_num: int) -> int:
     """
-    Available Moves
+    Get number of available moves (AM) for the specified player, in the Grid argument passed.
+    Calls get_neighbors with only_available = True.
     """
 
     available_moves = grid.get_neighbors(grid.find(player_num), only_available = True)
