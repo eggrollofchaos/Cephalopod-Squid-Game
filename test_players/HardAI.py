@@ -381,6 +381,9 @@ def AM(grid: Grid, player_num: int) -> int:
     return len(available_moves)
 
 def compute_p(position: tuple[int, int], target: tuple[int, int]) -> float:
+    """
+    Compute probability of a throw landing in a square based on Manhattan Distance.
+    """
     
     p = 1 - 0.05*(manhattan_distance(position, target) - 1)
 
