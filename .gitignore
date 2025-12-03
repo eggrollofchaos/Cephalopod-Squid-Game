@@ -3,6 +3,7 @@
 *.csv
 batch_results*.txt
 old_batch_results/
+*.sublime-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
