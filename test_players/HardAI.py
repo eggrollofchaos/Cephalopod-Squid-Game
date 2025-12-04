@@ -364,6 +364,7 @@ def OSL(state: Grid, player_num: int) -> float:
     - player_num : player number
 
     """
+    
     available_moves = state.get_neighbors(state.find(player_num))
 
     child_states = [state.clone().move(pos, player_num) for pos in available_moves]
