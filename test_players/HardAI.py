@@ -359,9 +359,9 @@ def OSL(state: Grid, player_num: int) -> float:
     function computes the sum of the num of available moves one step ahead.
 
     Parameters:
-    - state (Grid) : a game state, containing board, players, traps.
+    - state (Grid): a game state -- contains board, players, traps
 
-    - player_num : player number
+    - player_num: player number
 
     """
     
