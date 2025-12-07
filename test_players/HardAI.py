@@ -334,7 +334,7 @@ def OTD(state: Grid, player_num: int) -> float:
 
 def AIS(grid: Grid, player_num: int) -> float:
     """
-    A simple heuristic based on
+    A simple heuristic based on available moves for player vs opponent.
 
     Desription
     ----------
