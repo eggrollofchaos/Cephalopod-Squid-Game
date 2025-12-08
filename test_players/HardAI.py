@@ -296,6 +296,14 @@ class HardAI(BaseAI):
         return IS(state, self.player_num)
         
 def IS(grid: Grid, player_num: int) -> int:
+    """
+    Improved-Score heuristic.
+
+    Desription
+    ----------
+    Finds number of available moves (AM) for the specified player.
+    subtracts number of available moves (AM) for Opponent.
+    """
 
     # find all available moves by Player
     player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
@@ -334,7 +342,7 @@ def OTD(state: Grid, player_num: int) -> float:
 
 def AIS(grid: Grid, player_num: int) -> float:
     """
-    A simple heuristic based on available moves for player vs opponent.
+    Augmented Improved-Score heuristic.
 
     Desription
     ----------
@@ -352,7 +360,7 @@ def AIS(grid: Grid, player_num: int) -> float:
 
 def OSL(state: Grid, player_num: int) -> float:
     """
-    One-Step-Lookahead heuristics
+    One-Step-Lookahead heuristics.
 
     Description
     ----------
