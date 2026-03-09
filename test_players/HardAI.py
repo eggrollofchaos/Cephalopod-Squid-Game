@@ -3,13 +3,14 @@ HardAI Class module.
 Implements Expectiminimax search algo + basic heuristics.
 Commented by WAX.
 """
+
 import os
 import sys
 import time
 
 import numpy as np
 
-sys.path.append(os.getcwd())        # setting path to parent directory
+sys.path.append(os.getcwd())  # setting path to parent directory
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance
@@ -17,22 +18,33 @@ from Utils import manhattan_distance
 MAX_DEPTH = 4
 MOVE_TIME_LIMIT = 0.48
 TRAP_TIME_LIMIT = 0.48
-SIZE = 7                            # default dimension of square grid, SIZE = side length
+SIZE = 7  # default dimension of square grid, SIZE = side length
+
 
 class HardAI(BaseAI):
     """
     Hard Computer AI player, implements Expectiminimax and basic heuristics.
     Default depth limit is 4.
     TODO: write docstring
-    
+
 
     """
 
-    def __init__(self, depth_limit: int = MAX_DEPTH, verbose: int = 0, grid_size: int = SIZE, position: tuple[int, int] = None) -> None:
+    def __init__(
+        self,
+        depth_limit: int = MAX_DEPTH,
+        verbose: int = 0,
+        grid_size: int = SIZE,
+        position: tuple[int, int] = None,
+    ) -> None:
         # print(locals())
         super().__init__()
-        print('Running HardAI() with Expectiminimax and basic heuristics...') if verbose else None
-        self.verbose = verbose                              # not currently used
+        (
+            print("Running HardAI() with Expectiminimax and basic heuristics...")
+            if verbose
+            else None
+        )
+        self.verbose = verbose  # not currently used
         self.depth_limit = depth_limit
         self.pos = position
         self.player_num = None
@@ -40,13 +52,13 @@ class HardAI(BaseAI):
 
     def getPosition(self) -> tuple[int, int]:
         return self.pos
-    
+
     def setPosition(self, new_position: tuple[int, int]) -> None:
         self.pos = new_position
-    
+
     def getPlayerNum(self) -> int:
         return self.player_num
-        
+
     def setPlayerNum(self, num: int) -> None:
         self.player_num = num
 
@@ -60,13 +72,20 @@ class HardAI(BaseAI):
         start = time.process_time()
 
         # Funny edge case: check if player has won by trapping Opponent with previous move.
-        if len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True)) == 0:
+        if (
+            len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True))
+            == 0
+        ):
             return grid.getAvailableCells()[0], 1000
-        
-        return self.maximize_move(grid, alpha = -np.inf, beta = np.inf, depth = 0, start_time = start)
 
-    def maximize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
-        """ 
+        return self.maximize_move(
+            grid, alpha=-np.inf, beta=np.inf, depth=0, start_time=start
+        )
+
+    def maximize_move(
+        self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float
+    ) -> tuple[tuple[int, int], float]:
+        """
         Description
         -----------
         The Max node of the Minimax search tree of Move.
@@ -90,27 +109,31 @@ class HardAI(BaseAI):
         The action corresponding to the maximum utility move, given an intelligent opponent.
 
         """
-        if self.terminal_test(grid, time = time.process_time() - start_time, depth = depth, mode = 'move'):
+        if self.terminal_test(
+            grid, time=time.process_time() - start_time, depth=depth, mode="move"
+        ):
             return None, self.utility(grid)
 
         maxMove, maxUtility = None, -np.inf
-        
-        available_moves = grid.get_neighbors(grid.find(self.player_num), only_available = True)
+
+        available_moves = grid.get_neighbors(
+            grid.find(self.player_num), only_available=True
+        )
 
         states = [grid.clone().move(mv, self.player_num) for mv in available_moves]
-       
+
         ## Sort states before exploring
         children = list(zip(available_moves, states))
 
-        children.sort(key = lambda x: AM(x[1], self.player_num))
+        children.sort(key=lambda x: AM(x[1], self.player_num))
 
-        for (move, state) in children:
+        for move, state in children:
 
             _, utility = self.minimize_move(state, alpha, beta, depth + 1, start_time)
 
             if utility > maxUtility:
                 maxMove, maxUtility = move, utility
-            
+
             # if Max lower bound crosses Min's upper bound - break
             if maxUtility >= beta:
                 break
@@ -120,7 +143,15 @@ class HardAI(BaseAI):
 
         return maxMove, maxUtility
 
-    def chance_move(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> tuple[None, float]:
+    def chance_move(
+        self,
+        state: Grid,
+        p: float,
+        alpha: float,
+        beta: float,
+        depth: int,
+        start_time: float,
+    ) -> tuple[None, float]:
         """
         Description
         -----------
@@ -134,18 +165,22 @@ class HardAI(BaseAI):
         Returns: a tuple (_, Utility) with the expected utility of the following nodes.
         """
 
-        expected_utility = p * self.maximize_move(state, alpha, beta, depth + 1, start_time)[1]
+        expected_utility = (
+            p * self.maximize_move(state, alpha, beta, depth + 1, start_time)[1]
+        )
 
         return None, expected_utility
 
-    def minimize_move(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
-        """ 
+    def minimize_move(
+        self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float
+    ) -> tuple[tuple[int, int], float]:
+        """
         Description
         -----------
-        The Min node of the Minimax search tree of Move, which simulates Opponent's throw actions. 
-        
+        The Min node of the Minimax search tree of Move, which simulates Opponent's throw actions.
+
         The function minimizes utility over the player's future moves by finding ideal position to place a trap.
-        
+
         Uses Alpha-Beta Pruning to skip unpromising branches of the tree.
 
         Parameters
@@ -163,29 +198,31 @@ class HardAI(BaseAI):
         Returns
         -------
         The action corresponding to the maximum utility move, given an intelligent opponent.
-        
+
         """
-        if self.terminal_test(grid, time = time.process_time() - start_time, depth = depth, mode = 'move'):
+        if self.terminal_test(
+            grid, time=time.process_time() - start_time, depth=depth, mode="move"
+        ):
             return None, self.utility(grid)
 
         minChild, minUtility = None, np.inf
-        # 
+        #
         actions = grid.get_neighbors(grid.find(self.player_num), only_available=True)
-        
-        states = [grid.clone().trap(pos = a) for a in actions]
-        
+
+        states = [grid.clone().trap(pos=a) for a in actions]
+
         opponent_pos = grid.find(3 - self.player_num)
 
         probabilities = [compute_p(opponent_pos, a) for a in actions]
         # probably sort moves based on heuristic
 
-        for (action, state, p) in zip(actions, states, probabilities):
+        for action, state, p in zip(actions, states, probabilities):
 
             _, utility = self.chance_move(state, p, alpha, beta, depth, start_time)
 
             if utility < minUtility:
                 minChild, minUtility = action, utility
-            
+
             if minUtility <= alpha:
                 break
 
@@ -193,16 +230,20 @@ class HardAI(BaseAI):
 
         return minChild, minUtility
 
-    def terminal_test(self, state: Grid, time: float, depth: int, mode: str = 'move') -> bool:
-        
-        lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
-        
-        win  = not state.get_neighbors(state.find(3 - self.player_num), only_available=True)
+    def terminal_test(
+        self, state: Grid, time: float, depth: int, mode: str = "move"
+    ) -> bool:
 
-        if mode == 'move' :
+        lose = not state.get_neighbors(state.find(self.player_num), only_available=True)
+
+        win = not state.get_neighbors(
+            state.find(3 - self.player_num), only_available=True
+        )
+
+        if mode == "move":
             # return lose or win or time >= MOVE_TIME_LIMIT or depth >= MAX_DEPTH
             return lose or win or time >= MOVE_TIME_LIMIT or depth >= self.depth_limit
-        else :
+        else:
             # return lose or win or time >= MOVE_TIME_LIMIT or depth >= MAX_DEPTH
             return lose or win or time >= TRAP_TIME_LIMIT or depth >= self.depth_limit
 
@@ -214,27 +255,38 @@ class HardAI(BaseAI):
 
     def _best_trap(self, grid: Grid) -> tuple[tuple[int, int], float]:
         start = time.process_time()
-        if len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True)) == 0:
+        if (
+            len(grid.get_neighbors(grid.find(3 - self.player_num), only_available=True))
+            == 0
+        ):
             return grid.getAvailableCells()[0], 100
 
-        return self.maximize_trap(grid, -np.inf, np.inf, depth = 0, start_time = start)
+        return self.maximize_trap(grid, -np.inf, np.inf, depth=0, start_time=start)
 
-    def maximize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
+    def maximize_trap(
+        self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float
+    ) -> tuple[tuple[int, int], float]:
 
-        if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
+        if self.terminal_test(
+            grid, time.process_time() - start_time, depth, mode="trap"
+        ):
             return None, AIS(grid, self.player_num)
-        
+
         maxUtility = -np.inf
-        
+
         # consider immediate neighbors of Opponent
-        actions = [a for a in grid.get_neighbors(grid.find(3 - self.player_num)) if grid.getCellValue(a) <= 0]
+        actions = [
+            a
+            for a in grid.get_neighbors(grid.find(3 - self.player_num))
+            if grid.getCellValue(a) <= 0
+        ]
 
         # create states corresponding to each action
         states = [grid.clone().trap(target) for target in actions]
 
         probabilities = [compute_p(self.pos, target) for target in actions]
 
-        for (action, state, p) in zip(actions, states, probabilities):
+        for action, state, p in zip(actions, states, probabilities):
 
             _, utility = self.chance_trap(state, p, alpha, beta, depth, start_time)
 
@@ -243,58 +295,79 @@ class HardAI(BaseAI):
 
             if utility >= beta:
                 break
-            
+
             alpha = max(alpha, utility)
 
         return maxTrap, maxUtility
-        
-    def chance_trap(self, state: Grid, p: float, alpha: float, beta: float, depth: int, start_time: float) -> tuple[None, float]:
+
+    def chance_trap(
+        self,
+        state: Grid,
+        p: float,
+        alpha: float,
+        beta: float,
+        depth: int,
+        start_time: float,
+    ) -> tuple[None, float]:
         # if p > 0.85:
-        expected_utility = p * self.minimize_trap(state, alpha, beta, depth + 1, start_time)[1]
-                                    
+        expected_utility = (
+            p * self.minimize_trap(state, alpha, beta, depth + 1, start_time)[1]
+        )
+
         return None, expected_utility
 
-    def minimize_trap(self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float) -> tuple[tuple[int, int], float]:
-        
-        if self.terminal_test(grid, time.process_time() - start_time, depth, mode = 'trap'):
+    def minimize_trap(
+        self, grid: Grid, alpha: float, beta: float, depth: int, start_time: float
+    ) -> tuple[tuple[int, int], float]:
+
+        if self.terminal_test(
+            grid, time.process_time() - start_time, depth, mode="trap"
+        ):
             return None, AIS(grid, self.player_num)
 
         minMove, minUtility = None, np.inf
-        
+
         # find all possible immediate moves by Opponent
-        available_moves = grid.get_neighbors(grid.find(3 - self.player_num), only_available = True)
+        available_moves = grid.get_neighbors(
+            grid.find(3 - self.player_num), only_available=True
+        )
 
         # create states corresponding to those possible moves
-        states = [grid.clone().move(mv, player = 3 - self.player_num) for mv in available_moves]
+        states = [
+            grid.clone().move(mv, player=3 - self.player_num) for mv in available_moves
+        ]
 
-        for (move, state) in zip(available_moves, states):
+        for move, state in zip(available_moves, states):
 
             _, utility = self.maximize_trap(state, alpha, beta, depth + 1, start_time)
-            
+
             if utility < minUtility:
                 minMove, minUtility = move, utility
 
-            if utility <= alpha: 
+            if utility <= alpha:
                 break
 
             beta = min(beta, minUtility)
 
         return minMove, minUtility
 
-    def utility(self, state: Grid, action: string = 'move') -> float:
+    def utility(self, state: Grid, action: string = "move") -> float:
 
         # if win
-        if not state.get_neighbors(state.find(3 - self.player_num), only_available=True):
+        if not state.get_neighbors(
+            state.find(3 - self.player_num), only_available=True
+        ):
             return 1000
         # if lose
         if not state.get_neighbors(state.find(self.player_num), only_available=True):
             return -1000
-        
-        if action == "move": 
+
+        if action == "move":
             return AM(state, self.player_num) + 0.5 * OSL(state, self.player_num)
-        
+
         return IS(state, self.player_num)
-        
+
+
 def IS(grid: Grid, player_num: int) -> int:
     """
     Improved-Score heuristic.
@@ -306,12 +379,13 @@ def IS(grid: Grid, player_num: int) -> int:
     """
 
     # find all available moves by Player
-    player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
-    
+    player_moves = grid.get_neighbors(grid.find(player_num), only_available=True)
+
     # find all available moves by Opponent
-    opp_moves       = grid.get_neighbors(grid.find(3 - player_num), only_available = True)
-    
+    opp_moves = grid.get_neighbors(grid.find(3 - player_num), only_available=True)
+
     return len(player_moves) - len(opp_moves)
+
 
 def M2B(state: Grid, player_num: int) -> float:
     """
@@ -324,21 +398,25 @@ def M2B(state: Grid, player_num: int) -> float:
 
     return 2 * p * m / n - o
 
+
 def OTD(state: Grid, player_num: int) -> float:
     """
     Description
     ----------
     Switch from Offensive to Defensive halfway through the game.
     Utilizes the proportion of available cells in the grid to the size of the grid.
-    More delicate to maximize opponents 
+    More delicate to maximize opponents
     Formula : H(S,player) = available_cells/size_of_board *
-    
+
     """
-    m = len(state.getAvailableCells()) / self.dim ** 2 
-    p = len(state.get_neighbors(state.find(player_num), only_available = True)) # player moves
-    o = len(state.get_neighbors(state.find(3 - player_num), only_available = True))
-    
-    return 1.5*p - o if m > 0.5 else p - 2*o
+    m = len(state.getAvailableCells()) / self.dim**2
+    p = len(
+        state.get_neighbors(state.find(player_num), only_available=True)
+    )  # player moves
+    o = len(state.get_neighbors(state.find(3 - player_num), only_available=True))
+
+    return 1.5 * p - o if m > 0.5 else p - 2 * o
+
 
 def AIS(grid: Grid, player_num: int) -> float:
     """
@@ -351,12 +429,13 @@ def AIS(grid: Grid, player_num: int) -> float:
     """
 
     # find all available moves by Player
-    player_moves    = grid.get_neighbors(grid.find(player_num), only_available = True)
-    
+    player_moves = grid.get_neighbors(grid.find(player_num), only_available=True)
+
     # find all available moves by Opponent
-    opp_moves       = grid.get_neighbors(grid.find(3 - player_num), only_available = True)
-    
+    opp_moves = grid.get_neighbors(grid.find(3 - player_num), only_available=True)
+
     return 2 * len(player_moves) - len(opp_moves)
+
 
 def OSL(state: Grid, player_num: int) -> float:
     """
@@ -372,12 +451,18 @@ def OSL(state: Grid, player_num: int) -> float:
     - player_num: player number
 
     """
-    
+
     available_moves = state.get_neighbors(state.find(player_num))
 
     child_states = [state.clone().move(pos, player_num) for pos in available_moves]
 
-    return sum([len(s.get_neighbors(pos, only_available = True)) for pos, s in zip(available_moves, child_states)])
+    return sum(
+        [
+            len(s.get_neighbors(pos, only_available=True))
+            for pos, s in zip(available_moves, child_states)
+        ]
+    )
+
 
 def AM(grid: Grid, player_num: int) -> int:
     """
@@ -385,15 +470,16 @@ def AM(grid: Grid, player_num: int) -> int:
     Calls get_neighbors with only_available = True.
     """
 
-    available_moves = grid.get_neighbors(grid.find(player_num), only_available = True)
+    available_moves = grid.get_neighbors(grid.find(player_num), only_available=True)
 
     return len(available_moves)
+
 
 def compute_p(position: tuple[int, int], target: tuple[int, int]) -> float:
     """
     Compute probability of a throw landing in a square based on Manhattan Distance.
     """
-    
-    p = 1 - 0.05*(manhattan_distance(position, target) - 1)
+
+    p = 1 - 0.05 * (manhattan_distance(position, target) - 1)
 
     return p

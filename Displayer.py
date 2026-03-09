@@ -3,29 +3,29 @@ Displayer Class module.
 Enhanced by WAX.
 Fully commented by WAX.
 """
+
 import os
 import platform
 
 from BaseDisplayer import BaseDisplayer
 from Grid import Grid
 
-SIZE = 7                                # default dimension of square grid
-colorMap = { 0: 100,
-             1: 102,
-             2: 105,
-             -1: 40}
+SIZE = 7  # default dimension of square grid
+colorMap = {0: 100, 1: 102, 2: 105, -1: 40}
 
 # cTemp = "\x1b[%dm%7s\x1b[0m "         # no longer needed, implemented via a dynamic resizer in self.cTemp
+
 
 class Displayer(BaseDisplayer):
     """
     Modified by WAX Mar 19, 2025
     """
+
     def __init__(self, grid_size: int = SIZE) -> None:
         self.dim = grid_size
         self.cell_size = Displayer.half_and_odd(self.dim)
         self.cTemp = "\x1b[%dm%" + str(self.cell_size) + "s\x1b[0m "
-        
+
         if "Windows" == platform.system():
             self.display = self.winDisplay
         else:
@@ -52,14 +52,13 @@ class Displayer(BaseDisplayer):
                     string = " "
                 else:
                     string = str(int(v))
-                print("  "+ string + "  ", end="")
+                print("  " + string + "  ", end="")
             print("|")
         print("------" * self.dim)
 
-    
     def unixDisplay(self, grid: Grid) -> None:
         """Original Unix Displayer method"""
-        
+
         for i in range(self.dim):
             for j in range(self.dim):
                 v = grid.map[int(i)][j]
@@ -70,13 +69,12 @@ class Displayer(BaseDisplayer):
                 else:
                     string = str(int(v)).center(self.cell_size, " ")
 
-                print(self.cTemp %(colorMap[v], string), end="")
+                print(self.cTemp % (colorMap[v], string), end="")
             print("")
             print("")
         print("")
         print("")
 
-    
     def unixDisplayNew(self, grid: Grid) -> None:
         """
         Enhanced Unix Displayer method.
@@ -86,23 +84,23 @@ class Displayer(BaseDisplayer):
 
         print()
         for i in range(-1, self.dim):
-            print("  ", end = "")
+            print("  ", end="")
             if i == -1:
-                print(" ", end = "")
+                print(" ", end="")
             else:
-                print(i, end = "")
-            print("  ", end = "")
-            
+                print(i, end="")
+            print("  ", end="")
+
             for j in range(-1, self.dim):
                 if i == -1:
                     if j != -1:
                         # pass
                         coor = str(j).center(self.cell_size, " ")
-                        sf = "%" + str(self.cell_size) + "s"                    
-                        print(sf % coor, end = " ")
+                        sf = "%" + str(self.cell_size) + "s"
+                        print(sf % coor, end=" ")
                         # print(" ", end = "")
                     continue
-                    
+
                 if j != -1:
                     v = grid.map[int(i)][j]
                     if v == 0:
@@ -111,19 +109,17 @@ class Displayer(BaseDisplayer):
                         string = "x".center(self.cell_size, " ")
                     else:
                         string = str(int(v)).center(self.cell_size, " ")
-    
-                    print(self.cTemp %(colorMap[v], string), end="")
+
+                    print(self.cTemp % (colorMap[v], string), end="")
             print("")
             print("")
         print("")
 
-    
     @staticmethod
     def half_and_odd(num: int) -> int:
         """Perform a basic, repeated arithmetic calculation."""
         num = num // 2 + 1
         if num % 2 == 0:
             num += 1
-            
+
         return num
-        

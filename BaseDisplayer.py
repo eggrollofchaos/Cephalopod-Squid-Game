@@ -2,8 +2,10 @@
 BaseDisplayer Class module.
 Barebones functions.
 """
+
+
 class BaseDisplayer:
-    """ Barebones Display class. """
+    """Barebones Display class."""
 
     def __init__(self):
         pass

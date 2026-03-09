@@ -3,13 +3,15 @@ Grid Class module.
 Contains logic and utility functions.
 Fully commented by WAX.
 """
+
 from copy import deepcopy
 
 import numpy as np
 
-SIZE = 7                        # default dimension of square grid
+SIZE = 7  # default dimension of square grid
 
-class Grid():
+
+class Grid:
 
     def __init__(self, grid_size: int = SIZE) -> None:
         """
@@ -17,12 +19,12 @@ class Grid():
         Create an NxN grid, filled with zeros.
         """
         self.dim = grid_size
-        self.map = np.zeros((grid_size,grid_size))                    # empty board
-    
+        self.map = np.zeros((grid_size, grid_size))  # empty board
+
     def getAvailableCells(self) -> list[tuple[int, int]]:
-        """ Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)] """
-        return [(x,y) for x,y in np.argwhere(self.map == 0)]
-    
+        """Returns all available cells in the grid in the form of [(x_0,y_0), ..., (x_n, y_n)]"""
+        return [(x, y) for x, y in np.argwhere(self.map == 0)]
+
     # not currently used
     def getMap(self) -> np.ndarray:
         return self.map
@@ -41,14 +43,16 @@ class Grid():
 
     def find(self, player_num: int) -> tuple[int, int]:
         """Find a player's position given the player's number."""
-        
-        assert(player_num in [1,2])
-        
+
+        assert player_num in [1, 2]
+
         result = tuple(np.argwhere(self.map == player_num)[0])
 
         return result
 
-    def get_neighbors(self, pos: tuple[int, int], only_available: bool = False) -> list[tuple[int, int]]:
+    def get_neighbors(
+        self, pos: tuple[int, int], only_available: bool = False
+    ) -> list[tuple[int, int]]:
         """
         Description
         -----------
@@ -58,28 +62,30 @@ class Grid():
         -----------
         pos : position (x,y) whose neighbors are desired
 
-        only_available (bool) : if True, return only available neighboring cells. 
+        only_available (bool) : if True, return only available neighboring cells.
                                 default = False
-        
+
         """
-        x,y = pos
-        
-        valid_range = lambda t: range(max(t-1, 0), min(t+2, self.dim))
+        x, y = pos
+
+        valid_range = lambda t: range(max(t - 1, 0), min(t + 2, self.dim))
 
         # find all neighbors
-        neighbors = list({(a,b) for a in valid_range(x) for b in valid_range(y)} - {(x,y)})
-        
+        neighbors = list(
+            {(a, b) for a in valid_range(x) for b in valid_range(y)} - {(x, y)}
+        )
+
         # select only neighboring cells which aren't occupied by a player or trap
         if only_available:
             return [neighbor for neighbor in neighbors if self.map[neighbor] == 0]
-        
+
         return neighbors
 
     def move(self, move: tuple[int, int], player: int) -> "Grid":
         """
-        Description 
+        Description
         -----------
-        Apply a move by specified player to the grid. 
+        Apply a move by specified player to the grid.
 
         Parameters
         -----------
@@ -101,7 +107,7 @@ class Grid():
 
     def trap(self, pos: tuple[int, int]) -> "Grid":
         """
-        Description 
+        Description
         -----------
         Apply a trap to specified loaction.
 

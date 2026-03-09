@@ -2,9 +2,10 @@
 BaseAI Class module.
 Barebones functions.
 """
-class BaseAI():
-    """ Barebones AI class. """
 
+
+class BaseAI:
+    """Barebones AI class."""
 
     def getMove(self, grid):
         pass

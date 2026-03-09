@@ -2,18 +2,20 @@
 Older version of PlayerAI, no longer used.
 Authored by @mhr, @gongchen161, and WAX.
 """
+
 import numpy as np
 import random
 import time
 import sys
-import os 
+import os
 from BaseAI import BaseAI
 from Grid import Grid
 from Utils import manhattan_distance, grid_distance
 
+
 class PlayerAI(BaseAI):
     def __init__(self) -> None:
-        self.cape_color = 'blue'
+        self.cape_color = "blue"
         super().__init__()
         self.pos = None
         self.player_num = None
@@ -46,13 +48,13 @@ class PlayerAI(BaseAI):
 
         The function should return a tuple of (x,y) coordinates to which the player moves.
 
-        It should be the result of the ExpectiMinimax algorithm, maximizing over the Opponent's *Trap* actions, 
+        It should be the result of the ExpectiMinimax algorithm, maximizing over the Opponent's *Trap* actions,
         taking into account the probabilities of them landing in the positions you believe they'd throw to.
 
         Note that you are not required to account for the probabilities of it landing in a different cell.
 
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
-        
+
         """
         alpha = -np.inf
         beta = np.inf
@@ -66,12 +68,16 @@ class PlayerAI(BaseAI):
         Check if game is over, i.e., Player or Opponent has no moves to make
         """
         # check if Player has won
-        opponent_neighbors = grid.get_neighbors(self.getOpponentPosition(grid), only_available=True)
+        opponent_neighbors = grid.get_neighbors(
+            self.getOpponentPosition(grid), only_available=True
+        )
         if len(opponent_neighbors) == 0:
             return self.getPlayerNum()
 
         # check if Opponent has won
-        player_neighbors = grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)
+        player_neighbors = grid.get_neighbors(
+            self.getPlayerPosition(grid), only_available=True
+        )
         if len(player_neighbors) == 0:
             return self.getOpponentNum()
 
@@ -83,8 +89,9 @@ class PlayerAI(BaseAI):
                 return grid, -99999
 
     def IS_heuristic(self, grid):
-        return grid, len(grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)) - len(
-            grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
+        return grid, len(
+            grid.get_neighbors(self.getPlayerPosition(grid), only_available=True)
+        ) - len(grid.get_neighbors(self.getOpponentPosition(grid), only_available=True))
 
     def __probability(self, position, trap_position):
         # alpha = manhattan_distance(position, trap_position)
@@ -128,11 +135,11 @@ class PlayerAI(BaseAI):
     def __trap_children(self, grid, is_me=True):
         if is_me:
             player = self.getPlayerNum()
-            position = grid.move_position # hypothetical move
+            position = grid.move_position  # hypothetical move
             other_position = self.getOpponentPosition(grid)
         else:
             player = self.getOpponentNum()
-            position = grid.move_position # hypothetical move
+            position = grid.move_position  # hypothetical move
             other_position = self.getPlayerPosition(grid)
 
         children = []
@@ -173,13 +180,15 @@ class PlayerAI(BaseAI):
 
         for trap in self.__trap_children(grid, is_me=False):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
-            _, utility = self.__move_maximize(trap, alpha, beta, depth+1, depth_limit)
+            _, utility = self.__move_maximize(trap, alpha, beta, depth + 1, depth_limit)
             expected_utility = trap.probability * utility
 
             neighbors = self.__trap_neighbors(grid, trap.trap_position)
             for neighbor in neighbors:
-                _, utility = self.__move_maximize(neighbor, alpha, beta, depth+1, depth_limit)
-                expected_utility += (1-trap.probability)/len(neighbors) * utility
+                _, utility = self.__move_maximize(
+                    neighbor, alpha, beta, depth + 1, depth_limit
+                )
+                expected_utility += (1 - trap.probability) / len(neighbors) * utility
 
             if expected_utility < minUtility:
                 minUtility = expected_utility
@@ -198,7 +207,9 @@ class PlayerAI(BaseAI):
         minChild, minUtility = None, np.inf
 
         for child in self.__move_children(grid, is_me=False):
-            _, utility = self.__trap_minimize(child, alpha, beta, depth+1, depth_limit)
+            _, utility = self.__trap_minimize(
+                child, alpha, beta, depth + 1, depth_limit
+            )
 
             if utility < minUtility:
                 minChild, minUtility = child, utility
@@ -225,13 +236,15 @@ class PlayerAI(BaseAI):
         cache = {}
         for trap in self.__trap_children(grid, is_me=True):
             # initialize with the main trap's probability-weighted utility, then move on to those of the neighbors
-            _, utility = self.__move_minimize(trap, alpha, beta, depth_limit, depth+1)
+            _, utility = self.__move_minimize(trap, alpha, beta, depth_limit, depth + 1)
             expected_utility = trap.probability * utility
 
             neighbors = self.__trap_neighbors(grid, trap.trap_position)
             for neighbor in neighbors:
-                _, utility = self.__move_minimize(neighbor, alpha, beta, depth+1, depth_limit)
-                expected_utility += (1-trap.probability)/len(neighbors) * utility
+                _, utility = self.__move_minimize(
+                    neighbor, alpha, beta, depth + 1, depth_limit
+                )
+                expected_utility += (1 - trap.probability) / len(neighbors) * utility
 
             if expected_utility > maxUtility:
                 maxTrap, maxUtility = trap, expected_utility
@@ -251,7 +264,9 @@ class PlayerAI(BaseAI):
         maxMove, maxTrap, maxUtility = None, None, -np.inf
 
         for move in self.__move_children(grid, is_me=True):
-            trap, utility = self.__trap_maximize(move, alpha, beta, depth+1, depth_limit)
+            trap, utility = self.__trap_maximize(
+                move, alpha, beta, depth + 1, depth_limit
+            )
 
             if utility > maxUtility:
                 maxMove, maxTrap, maxUtility = move, trap, utility
@@ -262,7 +277,7 @@ class PlayerAI(BaseAI):
             if maxUtility > alpha:
                 alpha = maxUtility
 
-        if hasattr(maxTrap, 'trap_position'):
+        if hasattr(maxTrap, "trap_position"):
             self.optimal_trap_position = maxTrap.trap_position
 
         return maxMove, maxUtility
@@ -271,7 +286,7 @@ class PlayerAI(BaseAI):
         start = time.time()
         child, _ = self.__move_maximize(grid, alpha, beta, 1, depth_limit)
         end = time.time()
-        print(f'This move took {end-start:.5f} seconds.')
+        print(f"This move took {end-start:.5f} seconds.")
         return child
 
     def getTrap(self, grid: Grid) -> tuple:
@@ -279,14 +294,14 @@ class PlayerAI(BaseAI):
         YOUR CODE GOES HERE
 
         The function should return a tuple of (x,y) coordinates to which the player *WANTS* to throw the trap.
-        
-        It should be the result of the ExpectiMinimax algorithm, maximizing over the Opponent's *Move* actions, 
-        taking into account the probabilities of it landing in the positions you want. 
-        
+
+        It should be the result of the ExpectiMinimax algorithm, maximizing over the Opponent's *Move* actions,
+        taking into account the probabilities of it landing in the positions you want.
+
         Note that you are not required to account for the probabilities of it landing in a different cell.
 
         You may adjust the input variables as you wish (though it is not necessary). Output has to be (x,y) coordinates.
-        
+
         """
         # use cached optimal trap position that we computed in getMove()
         if self.optimal_trap_position is None:
