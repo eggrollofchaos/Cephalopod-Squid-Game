@@ -134,3 +134,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+git-status.sh
+
+.agent-sessions/
+.claude/
+.codex/
+review/
